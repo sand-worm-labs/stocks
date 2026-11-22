@@ -1,7 +1,9 @@
 "use client"
 
 import { type ReactNode, useState } from "react"
-import { PiSparkle, PiX } from "react-icons/pi"
+import { PiSparkle } from "react-icons/pi"
+
+import { AgentPanelContext } from "@/components/Agent/AgentPanelContext"
 
 import { cn } from "@/lib/utils"
 
@@ -25,17 +27,9 @@ export function AgentDock({ aside, children }: AgentDockProps) {
       {opened && (
         <div
           hidden={!open}
-          className="animate-panel relative max-lg:h-[36rem] lg:fixed lg:inset-y-0 lg:top-[var(--shell-top)] lg:right-0 lg:z-30 lg:w-[var(--panel)]"
+          className="animate-panel max-lg:h-[36rem] lg:fixed lg:inset-y-0 lg:top-[var(--shell-top)] lg:right-0 lg:z-30 lg:w-[var(--panel)]"
         >
-          {aside}
-          <button
-            type="button"
-            aria-label="Close the agent"
-            onClick={() => toggle(false)}
-            className="text-ink-400 hover:text-ink-100 hover:bg-hover-bg absolute top-2.5 right-3 flex size-7 items-center justify-center rounded-lg transition-colors"
-          >
-            <PiX size={16} aria-hidden="true" />
-          </button>
+          <AgentPanelContext value={{ close: () => toggle(false) }}>{aside}</AgentPanelContext>
         </div>
       )}
       {!open && (

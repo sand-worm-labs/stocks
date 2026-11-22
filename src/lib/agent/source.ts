@@ -1,4 +1,5 @@
 import { agentMockData } from "@/_mockdata/agent"
+import { routeHref } from "@/config/routes"
 import { RESEARCH_STEPS } from "@/constants/flow"
 import type { Portfolio } from "@/lib/portfolios/types"
 import type { Rule, StrategyRow } from "@/lib/rules/types"
@@ -41,8 +42,8 @@ export async function getRulesScript(
           {
             type: "actions",
             actions: [
-              { label: "Confirm & research", route: "research", slug: portfolio.id, intent: "dark" },
-              { label: "Edit", route: "rules", slug: portfolio.id, intent: "outline" },
+              { label: "Confirm & research", route: "research", slug: portfolio.id, intent: "link" },
+              { label: "Edit", route: "rules", slug: portfolio.id, intent: "outline", icon: "edit" },
             ],
           },
         ],
@@ -149,6 +150,7 @@ export async function getLiveScript(portfolio: Portfolio): Promise<AgentScript> 
 
   return {
     status: { label: status, tone: "positive" },
+    activityHref: routeHref("portfolioActivity", undefined, portfolio.id) ?? undefined,
     messages: [
       say("live", "agent", { type: "text", text: intro }),
       say("ask", "user", { type: "text", text: refusal.ask }),

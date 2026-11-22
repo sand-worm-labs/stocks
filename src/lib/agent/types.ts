@@ -2,7 +2,13 @@ import type { RouteId } from "@/config/routes"
 import type { Tone } from "@/constants/tone"
 import type { Rule, StrategyRow } from "@/lib/rules/types"
 
-export type AgentAction = { label: string; route: RouteId; slug?: string; intent: "dark" | "outline" }
+export type AgentAction = {
+  label: string
+  route: RouteId
+  slug?: string
+  intent: "dark" | "outline" | "link"
+  icon?: "edit"
+}
 
 export type AgentStep = { label: string; state: "done" | "running" | "waiting"; note?: string }
 
@@ -23,4 +29,9 @@ export type AgentMessage = { id: string; from: "user" | "agent"; blocks: AgentBl
 export type AgentStatus = { label: string; tone: Tone }
 
 // The conversation a flow screen opens with
-export type AgentScript = { status: AgentStatus; messages: AgentMessage[] }
+export type AgentScript = {
+  status: AgentStatus
+  // Where everything the agent has done for the portfolio can be read
+  activityHref?: string
+  messages: AgentMessage[]
+}

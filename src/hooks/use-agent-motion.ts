@@ -5,6 +5,9 @@ import { type RefObject, useEffect } from "react"
 // Started when this file is first loaded in the browser, so the library is usually there by the time it is needed
 const gsapReady = typeof window === "undefined" ? undefined : import("gsap")
 
+// How long the agent is shown at work before the first thing it says
+const THINKING_MS = 1.1
+
 const all = <T extends Element>(root: ParentNode, selector: string) => Array.from(root.querySelectorAll<T>(selector))
 
 // The agent's entrance: each message rises in, the agent "thinks" for a moment, then its blocks follow one by one, text
@@ -50,11 +53,7 @@ export function useAgentMotion(stream: RefObject<HTMLElement | null>, messageCou
             const thinking = message.querySelector<HTMLElement>("[data-thinking]")
             if (thinking) {
               timeline
-                .fromTo(
-                  all(thinking, "[data-dot]"),
-                  { y: 0 },
-                  { y: -3, duration: 0.2, repeat: 1, yoyo: true, stagger: 0.1, ease: "sine.inOut" }
-                )
+                .to({}, { duration: THINKING_MS })
                 .to(thinking, { autoAlpha: 0, duration: 0.15 })
                 .set(thinking, { display: "none" })
             }

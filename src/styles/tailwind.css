@@ -1,0 +1,405 @@
+@import "tailwindcss";
+
+/* Sandworm fonts, the same files and names as sandworm-web. */
+@font-face {
+  font-family: "Moderat";
+  src: url("/fonts/moderat/Moderat-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Moderat";
+  src: url("/fonts/moderat/Moderat-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Moderat";
+  src: url("/fonts/moderat/Moderat-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Moderat Mono";
+  src: url("/fonts/moderat/Moderat-Mono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Azeret Mono";
+  src: url("/fonts/azeret-mono/AzeretMono-Latin-Variable.woff2") format("woff2");
+  font-weight: 300 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* font-body is Moderat, font-body-mono is Moderat Mono, font-tertiary is Azeret Mono. */
+/* Dark mode is the .dark class (next-themes), as in sandworm-web. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Sandworm theme tokens: same names and values as sandworm-web's globals.scss, trimmed to what this app uses.
+   Colours that are HSL triplets there stay triplets here, so web's hsl(var(--x)) pattern carries over. */
+:root {
+  --primary: 276 90% 49%; /* #A308F0 */
+  --primary-foreground: 0 0% 98%;
+  --accent: 258 98% 66%; /* #8053FE */
+  --accent-foreground: 0 0% 100%;
+  --error: 0 100% 50%;
+  --page-surface: 0 0% 100%;
+  --block-surface: 0 0% 100%;
+  --dropdown-bg: 0 0% 100%;
+  --dropdown-hover: 210 17% 96%;
+  --dropdown-text: #1a1a1a;
+  --create-project-tint: 60 3% 46%;
+  --border-cool: #e7ebf0;
+  --hover-bg: #f1f2f4;
+  --hover-border: #e6e0f1;
+  --border: 210 14% 89%; /* #DEE2E6 */
+  --bg-input: 210 17% 98%; /* #F8F9FA */
+  --base-100: 0 0% 100%;
+  --base-400: 0 0% 6%; /* #0F0F0F */
+  --base-600: 180 43% 95%; /* #EBF7F7 */
+  --btn-disabled: 210 7% 56%;
+  --placeholder-muted: #868e96;
+  --beta-badge-bg: #e4eaec;
+  --beta-badge-text: #3f1814;
+  --beta-badge-border: transparent;
+  --border-secondary: 210 3% 93%; /* #E9ECEF */
+  --border-tertiary: 210 14% 83%; /* #CED4DA */
+  --border-focus: 210 14% 83%;
+  --ink-100: #1a1a1a;
+  --ink-200: #455768;
+  --ink-300: #868e96;
+  --ink-400: #6c757d;
+  --ink-navy: #1c3b5a;
+  --primary-tint-50: #f9f5ff;
+  --primary-tint-75: #f7e8ff;
+  --primary-tint-100: #ede7ff;
+  --primary-200: #d9a8f8;
+  --primary-300: #c97ff5;
+  --primary-700: #7a06b8;
+  --primary-710: #8a06cc;
+  --warning: #d85a30;
+  --success: #22c55e;
+  --link: #005de7;
+  --radius: 0.5rem;
+}
+
+.dark {
+  color-scheme: dark;
+  --primary: 263 90% 65%; /* #9355F6 */
+  --page-surface: 0 0% 7.1%; /* #121212 */
+  --block-surface: 0 0% 10.2%; /* #1A1A1A */
+  --dropdown-bg: 0 0% 17.6%; /* #2D2D2D */
+  --dropdown-hover: 0 0% 22%;
+  --dropdown-text: #f4f4f4;
+  --border-cool: #343a40;
+  --hover-border: #343a40;
+  --chat-input-bg: #242424;
+  --chat-input-border: #333333;
+  --base-100: 60 2% 15%; /* #272726 */
+  --base-400: 60 2% 12%; /* #1F1F1E */
+  --base-600: 60 5% 7%; /* #131311 */
+  --placeholder-muted: #a5a5a4;
+  --beta-badge-bg: transparent;
+  --beta-badge-text: var(--ink-100);
+  --beta-badge-border: hsl(var(--border-tertiary));
+  --border-secondary: 60 2% 28%; /* #494946 */
+  --border-tertiary: 60 2% 25%; /* #40403E */
+  --border-focus: 60 2% 42%;
+  --ink-100: #ffffff;
+  --ink-200: #9c9a92;
+  --ink-300: #adb5bd;
+  --ink-400: #a5a5a4;
+  --ink-navy: #f8f9fa;
+}
+
+@theme inline {
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-tint-50: var(--primary-tint-50);
+  --color-primary-tint-75: var(--primary-tint-75);
+  --color-primary-tint-100: var(--primary-tint-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-700: var(--primary-700);
+  --color-primary-710: var(--primary-710);
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-error: hsl(var(--error));
+  --color-page-surface: hsl(var(--page-surface));
+  --color-block-surface: hsl(var(--block-surface));
+  --color-dropdown-bg: hsl(var(--dropdown-bg));
+  --color-dropdown-hover: hsl(var(--dropdown-hover));
+  --color-dropdown-text: var(--dropdown-text);
+  --color-create-project-tint: hsl(var(--create-project-tint));
+  --color-border-cool: var(--border-cool);
+  --color-hover-bg: var(--hover-bg);
+  --color-hover-border: var(--hover-border);
+  --color-chat-input-bg: var(--chat-input-bg);
+  --color-chat-input-border: var(--chat-input-border);
+  --color-border: hsl(var(--border));
+  --color-inputBg: hsl(var(--bg-input));
+  --color-base-100: hsl(var(--base-100));
+  --color-base-400: hsl(var(--base-400));
+  --color-base-600: hsl(var(--base-600));
+  --color-disabled: hsl(var(--btn-disabled));
+  --color-placeholder-muted: var(--placeholder-muted);
+  --color-beta-badge-bg: var(--beta-badge-bg);
+  --color-beta-badge-text: var(--beta-badge-text);
+  --color-beta-badge-border: var(--beta-badge-border);
+  --color-border-secondary: hsl(var(--border-secondary));
+  --color-border-tertiary: hsl(var(--border-tertiary));
+  --color-border-focus: hsl(var(--border-focus));
+  --color-ink-100: var(--ink-100);
+  --color-ink-200: var(--ink-200);
+  --color-ink-300: var(--ink-300);
+  --color-ink-400: var(--ink-400);
+  --color-ink-navy: var(--ink-navy);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-link: var(--link);
+  --radius-theme: var(--radius);
+}
+
+@theme {
+  --font-body: "Moderat", sans-serif;
+  --font-body-mono: "Moderat Mono", monospace;
+  --font-tertiary: "Azeret Mono", sans-serif;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: hsl(var(--border-secondary));
+  }
+
+  /* Tailwind v4 leaves buttons on the default arrow, so anything clickable says so */
+  button:not(:disabled),
+  summary,
+  select,
+  [role="button"]:not([aria-disabled="true"]),
+  [role="menuitem"],
+  [role="tab"],
+  [role="switch"],
+  [role="combobox"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+/* The animated gradient web's stepper marks the current step with */
+@keyframes gradient-scroll {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@utility bg-rainbow-gradient {
+  background: linear-gradient(
+    99deg,
+    #6368ff 0.62%,
+    #cbecff 15.71%,
+    #7bff42 25.15%,
+    #2db2ff 42.6%,
+    #f00 60.53%,
+    #ded757 80.81%,
+    #ff00e1 98.74%
+  );
+  background-size: 250% 250%;
+  animation: gradient-scroll 8s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* Content that settles into place. --index staggers a list: each item starts a little after the one before. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--index, 0) * 60ms);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A number that has just moved: a tint that fades back to nothing */
+@keyframes flash-up {
+  from {
+    background-color: rgb(16 185 129 / 0.35);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@keyframes flash-down {
+  from {
+    background-color: rgb(239 68 68 / 0.35);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@utility animate-flash-up {
+  animation: flash-up 1.2s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility animate-flash-down {
+  animation: flash-down 1.2s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A new item sliding in from the left, pushing the rest along */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-slide-in {
+  animation: slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A strip of items that never stops moving, left to right. It holds its items twice so the loop has no seam. */
+@keyframes marquee {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@utility animate-marquee {
+  animation: marquee var(--marquee-duration, 90s) linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A button that asks to be pressed: a quick shake, then a pause, over and over */
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: none;
+  }
+  4%,
+  12%,
+  20% {
+    transform: rotate(-3deg) translateX(-2px);
+  }
+  8%,
+  16%,
+  24% {
+    transform: rotate(3deg) translateX(2px);
+  }
+  30% {
+    transform: none;
+  }
+}
+
+@utility animate-wiggle {
+  animation: wiggle 3.5s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* An arrow that leans on the edge it points at */
+@keyframes nudge {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+@utility animate-nudge {
+  animation: nudge 1s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A ring that grows off the edge of a button and fades, to draw the eye to it */
+@keyframes ring-out {
+  0% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  70%,
+  100% {
+    transform: scale(1.18, 1.45);
+    opacity: 0;
+  }
+}
+
+@utility animate-ring {
+  animation: ring-out 2s ease-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}

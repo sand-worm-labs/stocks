@@ -62,6 +62,7 @@
   --border-cool: #e7ebf0;
   --hover-bg: #f1f2f4;
   --hover-border: #e6e0f1;
+  --sidebar-hover: 180 43% 95%; /* #EBF7F7 */
   --border: 210 14% 89%; /* #DEE2E6 */
   --bg-input: 210 17% 98%; /* #F8F9FA */
   --base-100: 0 0% 100%;
@@ -103,6 +104,7 @@
   --dropdown-text: #f4f4f4;
   --border-cool: #343a40;
   --hover-border: #343a40;
+  --sidebar-hover: 60 1% 19%; /* #313130 */
   --chat-input-bg: #242424;
   --chat-input-border: #333333;
   --base-100: 60 2% 15%; /* #272726 */
@@ -144,6 +146,7 @@
   --color-border-cool: var(--border-cool);
   --color-hover-bg: var(--hover-bg);
   --color-hover-border: var(--hover-border);
+  --color-sidebar-hover: hsl(var(--sidebar-hover));
   --color-chat-input-bg: var(--chat-input-bg);
   --color-chat-input-border: var(--chat-input-border);
   --color-border: hsl(var(--border));

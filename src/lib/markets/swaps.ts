@@ -5,12 +5,16 @@ import type { PoolQuote } from "./pools"
 export const V3_SWAP = "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67"
 export const V2_SWAP = "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822"
 
+let sequence = 0
+
 const USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
 const USDC_DECIMALS = 1e6
 const WORD = 64
 const TWO_96 = 2 ** 96
 
 export type Swap = {
+  // Tells one swap from another, however alike they are
+  id: string
   // The token traded, lowercase
   token: string
   side: "buy" | "sell"
@@ -57,7 +61,7 @@ export function decodeSwap(log: SwapLog, pool: PoolQuote, now = Date.now()): Swa
     return undefined
   }
 
-  const swap: Swap = { token: pool.address, side: stock > 0 ? "buy" : "sell", at: now }
+  const swap: Swap = { id: String(++sequence), token: pool.address, side: stock > 0 ? "buy" : "sell", at: now }
   if (pool.quote !== USDC || !ratio || pool.price <= 0) return swap
 
   // The token's price in USDC, from the pool's own numbers. The token's decimals aren't known here, so they are read

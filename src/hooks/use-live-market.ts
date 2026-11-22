@@ -181,7 +181,7 @@ export function useLiveMarket(initialPools: PoolQuote[] = []) {
       if (!swaps.length) return
 
       setSwapCount((count) => count + swaps.length)
-      setTrades((current) => [...swaps.reverse(), ...current].slice(0, TRADES_KEPT))
+      setTrades((current) => [...swaps].reverse().concat(current).slice(0, TRADES_KEPT))
       setPrices((current) => ({
         ...current,
         ...Object.fromEntries(swaps.flatMap(({ token, price, at }) => (price ? [[token, { price, at }]] : []))),

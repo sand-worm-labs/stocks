@@ -2,6 +2,7 @@
 
 import { PiArrowDownRight, PiArrowUpRight } from "react-icons/pi"
 
+import { useFlip } from "@/hooks/use-flip"
 import { useSecondsSince } from "@/hooks/use-seconds-since"
 import { formatCompactUsd, formatUsd } from "@/lib/format"
 import type { BaseToken } from "@/lib/markets/tokens"
@@ -24,6 +25,7 @@ function Ago({ at }: { at: number }) {
 // The swaps as they land on Base, newest first
 export function TradeTape({ tokens }: { tokens: Pick<BaseToken, "address" | "symbol" | "image">[] }) {
   const { trades, swapCount, isConnected } = useLiveMarketContext()
+  const list = useFlip<HTMLUListElement>(trades)
   const byAddress = new Map(tokens.map((token) => [token.address.toLowerCase(), token]))
 
   return (
@@ -48,16 +50,25 @@ export function TradeTape({ tokens }: { tokens: Pick<BaseToken, "address" | "sym
         </span>
       </div>
 
-      <ul className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden px-3 py-3" aria-label="Latest swaps">
-        {trades.length === 0 && <li className="text-ink-400 px-1 text-sm">Listening for the next trade…</li>}
-        {trades.slice(0, SHOWN).map((trade, i) => {
+      <ul
+        ref={list}
+        className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden px-3 py-3"
+        aria-label="Latest swaps"
+      >
+        {trades.length === 0 && (
+          <li data-flip-key="waiting" className="text-ink-400 px-1 text-sm">
+            Listening for the next trade…
+          </li>
+        )}
+        {trades.slice(0, SHOWN).map((trade) => {
           const token = byAddress.get(trade.token)
           const Arrow = trade.side === "buy" ? PiArrowUpRight : PiArrowDownRight
 
           return (
             <li
-              key={`${trade.token}-${trade.at}-${i}`}
-              className="animate-slide-in border-border-secondary dark:border-border-tertiary flex flex-none items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-sm"
+              key={trade.id}
+              data-flip-key={trade.id}
+              className="border-border-secondary dark:border-border-tertiary flex flex-none items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-sm"
             >
               <TokenAvatar image={token?.image} symbol={token?.symbol ?? "?"} className="size-6" />
               <span className="font-medium">{token?.symbol}</span>

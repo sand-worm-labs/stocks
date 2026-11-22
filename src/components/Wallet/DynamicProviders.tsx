@@ -7,6 +7,8 @@ import { useTheme } from "next-themes"
 import type { ReactNode } from "react"
 import { toast } from "sonner"
 
+import { APP_CHAINS } from "@/constants/chains"
+import { ONBOARDING_PATH } from "@/constants/onboarding"
 import { DEFAULT_AFTER_SIGN_IN, SIGN_IN_PATH } from "@/lib/auth/config"
 import { env } from "env.mjs"
 
@@ -14,7 +16,7 @@ import { WalletEnabled } from "./WalletContext"
 
 // The networks the app works on, in the order they are offered: Base Sepolia, where paper trading's USDC is free, then
 // Base. Whatever else the dashboard has switched on, Ethereum included, isn't offered, unless none of these is on at all.
-const APP_CHAIN_IDS = [84532, 8453]
+const APP_CHAIN_IDS: number[] = APP_CHAINS.map(({ id }) => id)
 
 const onlyAppNetworks = <N extends { chainId: number | string }>(networks: N[]) => {
   const kept = networks
@@ -49,9 +51,12 @@ export function DynamicProviders({ children }: { children: ReactNode }) {
       return
     }
 
-    // On the sign-in page, on to where they were going. Anywhere else, the page now knows who is here.
+    // On the sign-in page, on to where they were going, or for someone new, to the first run. Anywhere else, the page now
+    // knows who is here.
     if (window.location.pathname === SIGN_IN_PATH) {
-      router.replace(safeNext(new URLSearchParams(window.location.search).get("next")) ?? DEFAULT_AFTER_SIGN_IN)
+      const { onboarded } = (await response.json()) as { onboarded: boolean }
+      const next = safeNext(new URLSearchParams(window.location.search).get("next"))
+      router.replace(onboarded ? (next ?? DEFAULT_AFTER_SIGN_IN) : ONBOARDING_PATH)
     }
     router.refresh()
   }

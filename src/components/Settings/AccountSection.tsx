@@ -1,11 +1,14 @@
 import { PiPencilSimple } from "react-icons/pi"
 
 import { buttonVariants } from "@/components/Button/Button"
+import { CountryFlag } from "@/components/CountryFlag/CountryFlag"
+import { RegionPicker } from "@/components/Region/RegionPicker"
+import { countryName, isRegionSupported } from "@/lib/region/countries"
 
 import { SettingRow } from "./SettingRow"
 import { SettingsSection } from "./SettingsSection"
 
-export function AccountSection({ name }: { name: string }) {
+export function AccountSection({ name, region }: { name: string; region: string }) {
   return (
     <SettingsSection title="Account" description="Who you are.">
       <SettingRow title="Name" description={name}>
@@ -16,6 +19,20 @@ export function AccountSection({ name }: { name: string }) {
           Edit
           <PiPencilSimple aria-hidden="true" />
         </button>
+      </SettingRow>
+      <SettingRow
+        title="Where you live"
+        description={
+          <span className="flex items-center gap-2">
+            <CountryFlag code={region} className="size-4" />
+            {countryName(region)}
+            {!isRegionSupported(region) && (
+              <span className="text-amber-700 dark:text-amber-400">· not offered here</span>
+            )}
+          </span>
+        }
+      >
+        <RegionPicker region={region} />
       </SettingRow>
     </SettingsSection>
   )

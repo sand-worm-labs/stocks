@@ -19,9 +19,9 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
       <PageHeader title="Settings" />
-      <AccountSection name={session.user.firstName} />
+      <AccountSection name={session.user.firstName} region={session.region} />
       <AppearanceSection />
-      <WalletSection session={session} testUsdc={settings.testUsdc} />
+      <WalletSection session={session} />
       <RiskSection risk={settings.risk} />
       <RulesSection rules={settings.rules} />
       <NotificationsSection notifications={settings.notifications} />

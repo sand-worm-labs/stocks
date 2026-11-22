@@ -3,7 +3,7 @@ import { PiCheckBold } from "react-icons/pi"
 
 import { cn } from "@/lib/utils"
 
-type CheckRowProps = { status: "pass" | "warn"; title: string; description: string; action: ReactNode }
+type CheckRowProps = { status: "pass" | "warn"; title: string; description: string; action?: ReactNode }
 
 // Whether a check passed, as the web app's tick in a violet outline, round because it shows a result and isn't a choice
 function StatusMark({ status }: Pick<CheckRowProps, "status">) {

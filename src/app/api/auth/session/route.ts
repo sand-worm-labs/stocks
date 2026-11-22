@@ -5,6 +5,7 @@ import { SESSION_COOKIE, SESSION_TTL_SECONDS } from "@/lib/auth/config"
 import { DynamicTokenError, verifyDynamicToken } from "@/lib/auth/dynamic"
 import { isSameOrigin, isSecureRequest } from "@/lib/auth/request"
 import { signSession } from "@/lib/auth/token"
+import { readOnboarding } from "@/lib/onboarding/profile"
 
 const body = z.object({ token: z.string().min(1).max(8000) })
 
@@ -24,7 +25,9 @@ export async function POST(request: Request) {
 
   try {
     const userId = await verifyDynamicToken(parsed.data.token, environmentId)
-    const response = NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } })
+    // Whether they have been through the first run, so the browser knows where to send them
+    const { done } = await readOnboarding()
+    const response = NextResponse.json({ ok: true, onboarded: done }, { headers: { "Cache-Control": "no-store" } })
     response.cookies.set(SESSION_COOKIE, await signSession(userId), {
       httpOnly: true,
       sameSite: "lax",

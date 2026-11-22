@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 
+import { ONBOARDING_COOKIES, ONBOARDING_PATH } from "@/constants/onboarding"
 import { DEFAULT_AFTER_SIGN_IN, PROTECTED_PATHS, SESSION_COOKIE, SIGN_IN_PATH } from "@/lib/auth/config"
 import { readSession } from "@/lib/auth/token"
 
@@ -19,6 +20,11 @@ export async function middleware(request: NextRequest) {
     const next = request.nextUrl.searchParams.get("next")
     const target = next?.startsWith("/") && !next.startsWith("//") ? next : DEFAULT_AFTER_SIGN_IN
     return NextResponse.redirect(new URL(target, request.url))
+  }
+
+  // Signed in for the first time: the first run, before anything else
+  if (wallet && isProtected(pathname) && request.cookies.get(ONBOARDING_COOKIES.done)?.value !== "1") {
+    return NextResponse.redirect(new URL(ONBOARDING_PATH, request.url))
   }
 
   if (isProtected(pathname) && !wallet) {

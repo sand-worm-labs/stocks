@@ -17,7 +17,7 @@ const SEED_BLOCKS = (60 * 60 * 1000) / BLOCK_MS
 // The node answers for ten addresses at a time
 const ADDRESSES_PER_REQUEST = 10
 
-const REQUEST = { logs: 1, heads: 2, head: 3, history: 100 } as const
+const REQUEST = { logs: 1, head: 3, history: 100 } as const
 
 const CONTRACT_ADDRESS = /^0x[0-9a-f]{40}$/
 
@@ -39,13 +39,13 @@ export function useLiveMarket(initialPools: PoolQuote[] = []) {
   const [trades, setTrades] = useState<Swap[]>([])
   const [swapCount, setSwapCount] = useState(0)
   const [isConnected, setIsConnected] = useState(false)
-  const [block, setBlock] = useState<number>()
 
   const byPair = useRef<Record<string, PoolQuote>>(Object.fromEntries(initialPools.map((pool) => [pool.pair, pool])))
   const socket = useRef<WebSocket>(undefined)
   const head = useRef(0)
   const isSeeded = useRef(false)
   const pending = useRef<Swap[]>([])
+  const lastPoll = useRef("")
 
   // Ask the node for the swaps of the last hour in our pools, once both the pools and the head of the chain are known
   const seed = () => {
@@ -81,11 +81,16 @@ export function useLiveMarket(initialPools: PoolQuote[] = []) {
         const response = await fetch("/api/markets/pools", { cache: "no-store" })
         if (!response.ok) return
 
-        const live = (await response.json()) as PoolQuote[]
+        const body = await response.text()
+        const live = JSON.parse(body) as PoolQuote[]
         const at = Date.now()
         byPair.current = Object.fromEntries(live.map((pool) => [pool.pair, pool]))
-        setPools(byAddress(live, at))
         setUpdatedAt(at)
+        // An answer that is the same as the last one changes nothing on the page, so it isn't drawn again
+        if (body !== lastPoll.current) {
+          lastPoll.current = body
+          setPools(byAddress(live, at))
+        }
         seedRef.current()
       } catch {
         // The next poll tries again
@@ -116,7 +121,6 @@ export function useLiveMarket(initialPools: PoolQuote[] = []) {
         // The node limits a subscription to ten addresses, so it is asked for every swap on Base and ours are picked
         // out here
         send(REQUEST.logs, "eth_subscribe", ["logs", { topics: [[V3_SWAP, V2_SWAP]] }])
-        send(REQUEST.heads, "eth_subscribe", ["newHeads"])
         send(REQUEST.head, "eth_blockNumber", [])
       }
 
@@ -124,12 +128,11 @@ export function useLiveMarket(initialPools: PoolQuote[] = []) {
         const message = JSON.parse(String(data)) as {
           id?: number
           result?: unknown
-          params?: { result?: SwapLog & { number?: string } }
+          params?: { result?: SwapLog }
         }
 
         if (message.id === REQUEST.head && typeof message.result === "string") {
           head.current = parseInt(message.result, 16)
-          setBlock(head.current)
           seedRef.current()
           return
         }
@@ -148,11 +151,6 @@ export function useLiveMarket(initialPools: PoolQuote[] = []) {
 
         const result = message.params?.result
         if (!result) return
-
-        if (result.number) {
-          setBlock(parseInt(result.number, 16))
-          return
-        }
 
         const pool = byPair.current[result.address.toLowerCase()]
         const swap = pool && decodeSwap(result, pool)
@@ -216,5 +214,5 @@ export function useLiveMarket(initialPools: PoolQuote[] = []) {
     [trades]
   )
 
-  return { quotes, trades, lastTrade, swapCount, isConnected, updatedAt, block }
+  return { quotes, trades, lastTrade, swapCount, isConnected, updatedAt }
 }

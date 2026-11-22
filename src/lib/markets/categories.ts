@@ -23,9 +23,11 @@ export function filterByCategory(tokens: BaseToken[], category: string) {
 
 // The groups that have any token in them, and how many
 export const categoryCounts = (tokens: BaseToken[]) =>
-  TOKEN_CATEGORIES.map((category) => ({
-    ...category,
-    count: tokens.filter((token) => isIn(token, category.id)).length,
+  TOKEN_CATEGORIES.map(({ id, label, ...category }) => ({
+    id,
+    label,
+    isHot: "isHot" in category,
+    count: tokens.filter((token) => isIn(token, id)).length,
   })).filter(({ count }) => count > 0)
 
 export const parseCategory = (value: unknown, known: string[]) =>

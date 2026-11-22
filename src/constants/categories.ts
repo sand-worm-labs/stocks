@@ -1,11 +1,11 @@
 // The groups a market list lets you narrow to, worked out from the share each token stands for. A hot one is a theme
-// people are watching.
+// people are watching, and gets a chip of its own; the rest sit under "More".
 export const TOKEN_CATEGORIES = [
-  { id: "trump", label: "Trump-Affiliated", emoji: "🔥", tickers: ["DJT", "ABTC", "XXI"] },
+  { id: "trump", label: "Trump-Affiliated", isHot: true, tickers: ["DJT", "ABTC", "XXI"] },
   {
     id: "ai-chips",
     label: "AI & Chips",
-    emoji: "🔥",
+    isHot: true,
     tickers: [
       "NVDA",
       "AMD",
@@ -33,7 +33,7 @@ export const TOKEN_CATEGORIES = [
   {
     id: "crypto",
     label: "Crypto Treasuries & Miners",
-    emoji: "🔥",
+    isHot: true,
     tickers: [
       "MSTR",
       "COIN",
@@ -61,32 +61,28 @@ export const TOKEN_CATEGORIES = [
       "BCOIN",
     ],
   },
-  { id: "pre-ipo", label: "Pre-IPO", emoji: "🔥", tickers: ["ANT", "SPCX"] },
+  { id: "pre-ipo", label: "Pre-IPO", isHot: true, tickers: ["ANT", "SPCX"] },
   {
     id: "big-tech",
     label: "Big Tech",
-    emoji: "💻",
     tickers: ["AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "NFLX", "TSLA", "NVDA"],
   },
   {
     id: "space-defense",
     label: "Space & Defense",
-    emoji: "🛰️",
     tickers: ["SPCX", "RKLB", "ASTS", "KTOS", "LMT", "AVAV", "BA"],
   },
-  { id: "quantum", label: "Quantum", emoji: "⚛️", tickers: ["IONQ", "RGTI", "QBTS", "QUBT"] },
-  { id: "ev-auto", label: "EV & Auto", emoji: "🚗", tickers: ["TSLA", "NIO", "LI", "XPEV", "F", "QS"] },
-  { id: "preferred", label: "Preferred Shares", emoji: "🏷️", tickers: ["SATA", "STRC", "STRK", "STRD", "STRF"] },
+  { id: "quantum", label: "Quantum", tickers: ["IONQ", "RGTI", "QBTS", "QUBT"] },
+  { id: "ev-auto", label: "EV & Auto", tickers: ["TSLA", "NIO", "LI", "XPEV", "F", "QS"] },
+  { id: "preferred", label: "Preferred Shares", tickers: ["SATA", "STRC", "STRK", "STRD", "STRF"] },
   {
     id: "finance",
     label: "Finance",
-    emoji: "🏦",
     tickers: ["JPM", "GS", "BAC", "V", "MA", "AXP", "BLK", "PYPL", "XYZ", "CME", "CBOE", "IBKR", "BRK.B", "FITB"],
   },
   {
     id: "consumer",
     label: "Consumer",
-    emoji: "🛒",
     tickers: [
       "KO",
       "MCD",
@@ -109,22 +105,19 @@ export const TOKEN_CATEGORIES = [
   {
     id: "health",
     label: "Health & Pharma",
-    emoji: "💊",
     tickers: ["LLY", "NVO", "MRNA", "PFE", "JNJ", "MRK", "ABBV", "AZN", "ABT", "HIMS", "NVAX"],
   },
   {
     id: "energy",
     label: "Energy & Materials",
-    emoji: "⚡",
     tickers: ["CVX", "XOM", "SHEL", "VALE", "MP", "ERO", "BE", "OKLO"],
   },
   {
     id: "china",
     label: "China",
-    emoji: "🇨🇳",
     tickers: ["BABA", "PDD", "BIDU", "JD", "TCEHY", "NIO", "LI", "XPEV", "BILI", "HSAI", "WRD"],
   },
-] as const satisfies { id: string; label: string; emoji: string; tickers: string[] }[]
+] as const satisfies { id: string; label: string; isHot?: true; tickers: string[] }[]
 
 export type TokenCategoryId = (typeof TOKEN_CATEGORIES)[number]["id"]
 

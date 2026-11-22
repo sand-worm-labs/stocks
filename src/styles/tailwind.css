@@ -320,15 +320,18 @@
 /* A strip of items that never stops moving, left to right. It holds its items twice so the loop has no seam. */
 @keyframes marquee {
   from {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
   to {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @utility animate-marquee {
   animation: marquee var(--marquee-duration, 90s) linear infinite;
+  /* Its own layer, so moving it is the browser's job and the page's scripts can't hold it up */
+  will-change: transform;
+  backface-visibility: hidden;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

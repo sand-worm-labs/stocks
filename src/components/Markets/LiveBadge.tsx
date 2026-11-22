@@ -2,20 +2,17 @@
 
 import { cn } from "@/lib/utils"
 
-import { Flash } from "./Flash"
 import { useLiveMarketContext } from "./LiveMarket"
 
 export function LiveBadge({ compact = false }: { compact?: boolean }) {
-  const { isConnected, block } = useLiveMarketContext()
+  const { isConnected } = useLiveMarketContext()
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border font-medium tracking-wide uppercase transition-colors",
-        compact ? "gap-1.5 px-2 py-px text-[10px]" : "px-3 py-1 text-xs",
-        isConnected
-          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-          : "border-border text-ink-400 dark:border-border-tertiary"
+        "border-border bg-hover-bg dark:border-border-tertiary inline-flex items-center rounded-full border font-medium tracking-wide uppercase dark:bg-white/5",
+        compact ? "gap-1.5 px-2 py-px text-[10px]" : "gap-2 px-3 py-1 text-xs",
+        isConnected ? "text-emerald-600 dark:text-emerald-400" : "text-ink-400"
       )}
     >
       <span aria-hidden="true" className="relative flex size-2">
@@ -30,11 +27,6 @@ export function LiveBadge({ compact = false }: { compact?: boolean }) {
         />
       </span>
       {isConnected ? "Live" : "Connecting"}
-      {block !== undefined && (
-        <Flash value={block}>
-          <span className="normal-case tabular-nums">Block {block.toLocaleString("en-US")}</span>
-        </Flash>
-      )}
     </span>
   )
 }

@@ -18,18 +18,16 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <AppShell
         session={session}
         ticker={
-          !!tokens.length && (
-            <PriceTicker
-              tokens={tokens.slice(0, TICKER_TOKENS).map(({ id, address, symbol, image, price, change24h }) => ({
-                id,
-                address,
-                symbol,
-                image,
-                price,
-                change24h,
-              }))}
-            />
-          )
+          <PriceTicker
+            tokens={tokens.slice(0, TICKER_TOKENS).map(({ id, address, symbol, image, price, change24h }) => ({
+              id,
+              address,
+              symbol,
+              image,
+              price,
+              change24h,
+            }))}
+          />
         }
       >
         {children}

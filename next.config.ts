@@ -5,6 +5,8 @@ import { env } from "./env.mjs"
 
 const config: NextConfig = {
   reactStrictMode: true,
+  // Opening the dev server through a tunnel is a request from another origin, and its scripts are refused without this
+  allowedDevOrigins: ["*.ngrok-free.dev", "*.ngrok-free.app"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "financialmodelingprep.com", pathname: "/image-stock/**" },

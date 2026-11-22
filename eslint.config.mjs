@@ -1,5 +1,3 @@
-import * as fs from "fs"
-
 // https://github.com/francoismassart/eslint-plugin-tailwindcss/pull/381
 // import eslintPluginTailwindcss from "eslint-plugin-tailwindcss"
 import eslintPluginImport from "eslint-plugin-import"
@@ -68,10 +66,10 @@ const config = typescriptEslint.config(
         {
           groups: ["external", "builtin", "internal", "sibling", "parent", "index"],
           pathGroups: [
-            ...getDirectoriesToSort().map((singleDir) => ({
-              pattern: `${singleDir}/**`,
+            {
+              pattern: "@/**",
               group: "internal",
-            })),
+            },
             {
               pattern: "env",
               group: "internal",
@@ -94,15 +92,14 @@ const config = typescriptEslint.config(
         },
       ],
     },
+  },
+  {
+    // Mock data is read by the source files only, so removing it later means changing those files and nothing else.
+    ignores: ["src/lib/**/source.ts", "src/_mockdata/**"],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [{ group: ["@/_mockdata/*"], message: "Read mock data through a lib/<area>/source.ts file." }] }],
+    },
   }
 )
-
-function getDirectoriesToSort() {
-  const ignoredSortingDirectories = [".git", ".next", ".vscode", "node_modules"]
-  return fs
-    .readdirSync(process.cwd())
-    .filter((file) => fs.statSync(process.cwd() + "/" + file).isDirectory())
-    .filter((f) => !ignoredSortingDirectories.includes(f))
-}
 
 export default config

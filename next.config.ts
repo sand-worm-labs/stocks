@@ -5,6 +5,13 @@ import { env } from "./env.mjs"
 
 const config: NextConfig = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "financialmodelingprep.com", pathname: "/image-stock/**" },
+      { protocol: "https", hostname: "coin-images.coingecko.com" },
+      { protocol: "https", hostname: "assets.coingecko.com" },
+    ],
+  },
   logging: {
     fetches: {
       fullUrl: true,

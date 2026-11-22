@@ -1,4 +1,4 @@
-# Stocks
+# Sandworm Stocks
 
 An AI agent that turns an investor's plain-English brief into a researched, sourced, constraint-checked portfolio of **tokenized stocks**, and trades it onchain only after the investor approves.
 
@@ -110,10 +110,26 @@ A violated constraint is a failure, not a trade-off to weigh against returns.
 
 ## Current state
 
-This repo is a [Next.js Enterprise Boilerplate](https://github.com/Blazity/next-enterprise) scaffold:
+The UI is being built first, on mock data. Screens built: sign-in, Home, Portfolios, Markets, stock detail, Activity and Settings.
+
+The layout follows `sandworm-web/apps/terminal`:
+
+| Folder | Holds |
+| --- | --- |
+| `src/app` | Routes only. `(app)` is the signed-in shell. |
+| `src/components/<Area>` | UI, one PascalCase folder per area. `components/ui` holds the shadcn-style primitives (`Card`, `Badge`, `Table`). |
+| `src/lib/<area>` | An area's types, logic and tests. `source.ts` is how an area reads its data. |
+| `src/constants` | Labels, status and tone maps, filters, navigation. |
+| `src/config` | Routes (a page not built yet has `isBuilt: false` and renders as plain text) and site info. |
+| `src/hooks` | Hooks. |
+| `src/_mockdata` | Mock data. |
+
+**Removing the mock data.** Components never import it. Only the `lib/<area>/source.ts` files do, and ESLint fails any other import of `@/_mockdata`. To go live, change what those `source.ts` files return, then delete `src/_mockdata`.
+
+It is built on:
 
 - Next.js 15 (App Router), React 19, strict TypeScript
-- Tailwind CSS v4, Radix UI, CVA
+- Tailwind CSS v4 with Sandworm's tokens and fonts, copied from `sandworm-web`
 - Vitest, React Testing Library, Playwright, Storybook
 - ESLint, Prettier, conventional commits, T3 Env for typed env vars
 - A `/api/health` route and Vercel config

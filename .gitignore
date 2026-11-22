@@ -23,3 +23,7 @@ sandworm-web
 coverage
 playwright-report
 test-results
+
+# claude code runtime and personal files
+.claude/scheduled_tasks.lock
+.claude/settings.local.json

@@ -124,6 +124,14 @@
   --ink-400: #a5a5a4;
   --ink-450: #6d6c7d;
   --ink-navy: #f8f9fa;
+  /* What web keeps light in dark and darkens in each component, set once here so a component that forgets still reads right */
+  --bg-input: 60 4% 16.5%; /* base-700 #2A2A28 */
+  --hover-bg: #313130;
+  --primary-tint-50: #1a0d26;
+  --primary-tint-75: #2a1a3a;
+  --primary-tint-100: #1f0a2e;
+  --link: #85b7eb;
+  --search-bg: #383838;
 }
 
 @theme inline {

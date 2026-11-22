@@ -4,13 +4,13 @@ import { AppLink } from "@/components/AppLink/AppLink"
 import { NewPortfolioButton } from "@/components/Portfolios/NewPortfolioButton"
 import { SandwormLogo } from "@/components/SandwormLogo/SandwormLogo"
 import { Tooltip } from "@/components/Tooltip/Tooltip"
-import { shortenAddress } from "@/lib/format"
+import { WalletMenu } from "@/components/Wallet/WalletMenu"
 import type { Session } from "@/lib/session/types"
 import { headerIconButtonClassName } from "@/styles/interactive"
 
 import { SectionTabs } from "./SectionTabs"
 
-export function AppHeader({ session: { wallet, unreadAlerts } }: { session: Session }) {
+export function AppHeader({ session: { unreadAlerts } }: { session: Session }) {
   return (
     <header className="border-border-secondary bg-block-surface dark:border-border-tertiary flex h-14 items-center gap-5 border-b px-4 md:px-6">
       <AppLink route="home" className="flex items-center gap-2">
@@ -24,9 +24,7 @@ export function AppHeader({ session: { wallet, unreadAlerts } }: { session: Sess
       <SectionTabs unreadAlerts={unreadAlerts} />
 
       <div className="ml-auto flex items-center gap-1.5">
-        <span className="bg-inputBg border-border text-ink-100 dark:border-border-tertiary hidden rounded-md border px-3 py-1 text-sm lg:inline-block dark:bg-[#2E2E2C]">
-          {shortenAddress(wallet)}
-        </span>
+        <WalletMenu />
         <Tooltip title="Notifications">
           <AppLink route="activity" className={headerIconButtonClassName}>
             <PiBell size={22} aria-label={`Alerts, ${unreadAlerts} new`} />

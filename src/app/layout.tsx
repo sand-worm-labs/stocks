@@ -2,6 +2,7 @@ import "@/styles/tailwind.css"
 
 import type { Metadata } from "next"
 import { Providers } from "@/components/Providers/Providers"
+import { DynamicProviders } from "@/components/Wallet/DynamicProviders"
 import { baseFont, preloadedFontPaths } from "@/config/fonts"
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ))}
       </head>
       <body className={`${baseFont.className} bg-page-surface text-ink-100`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <DynamicProviders>{children}</DynamicProviders>
+        </Providers>
       </body>
     </html>
   )

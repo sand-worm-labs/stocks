@@ -1,19 +1,24 @@
 import type { ReactNode } from "react"
 import { PiCheckBold } from "react-icons/pi"
 
+import { cn } from "@/lib/utils"
+
 type CheckRowProps = { status: "pass" | "warn"; title: string; description: string; action: ReactNode }
 
-function CheckMark({ status }: Pick<CheckRowProps, "status">) {
-  return status === "pass" ? (
-    <span aria-hidden="true" className="bg-primary flex size-7 flex-none items-center justify-center rounded-full">
-      <PiCheckBold size={13} className="text-white" />
-    </span>
-  ) : (
+// Whether a check passed, as the web app's tick in a violet outline, round because it shows a result and isn't a choice
+function StatusMark({ status }: Pick<CheckRowProps, "status">) {
+  const passed = status === "pass"
+
+  return (
     <span
-      aria-hidden="true"
-      className="flex size-7 flex-none items-center justify-center rounded-full border-2 border-orange-600 bg-orange-50 text-sm font-semibold text-orange-700 dark:border-orange-500 dark:bg-orange-950 dark:text-orange-300"
+      role="img"
+      aria-label={passed ? "Passed" : "Not yet"}
+      className={cn(
+        "flex size-7 flex-none items-center justify-center rounded-full border-[1.5px]",
+        passed ? "border-[#7F56D9] text-[#7F56D9]" : "dark:border-border-tertiary border-[#D0D5DD]"
+      )}
     >
-      !
+      {passed && <PiCheckBold size={14} aria-hidden="true" />}
     </span>
   )
 }
@@ -21,7 +26,7 @@ function CheckMark({ status }: Pick<CheckRowProps, "status">) {
 export function CheckRow({ status, title, description, action }: CheckRowProps) {
   return (
     <div className="flex items-center gap-3.5 p-4">
-      <CheckMark status={status} />
+      <StatusMark status={status} />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="font-medium">{title}</span>
         <span className="text-ink-400 text-sm">{description}</span>

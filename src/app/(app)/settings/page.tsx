@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import { PageHeader } from "@/components/PageHeader/PageHeader"
 import { AccountSection } from "@/components/Settings/AccountSection"
+import { AppearanceSection } from "@/components/Settings/AppearanceSection"
 import { ConnectorSection } from "@/components/Settings/ConnectorSection"
 import { NotificationsSection } from "@/components/Settings/NotificationsSection"
 import { RiskSection } from "@/components/Settings/RiskSection"
@@ -19,6 +20,7 @@ export default async function SettingsPage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
       <PageHeader title="Settings" />
       <AccountSection name={session.user.firstName} />
+      <AppearanceSection />
       <WalletSection session={session} testUsdc={settings.testUsdc} />
       <RiskSection risk={settings.risk} />
       <RulesSection rules={settings.rules} />

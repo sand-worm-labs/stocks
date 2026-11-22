@@ -1,7 +1,8 @@
 import { buttonVariants } from "@/components/Button/Button"
 import { Switch } from "@/components/ui/switch"
+import { ConnectWalletButton } from "@/components/Wallet/ConnectWalletButton"
+import { WalletAddress } from "@/components/Wallet/WalletAddress"
 import { FAUCET_URL } from "@/constants/settings"
-import { shortenAddress } from "@/lib/format"
 import type { Session } from "@/lib/session/types"
 
 import { SettingRow } from "./SettingRow"
@@ -9,16 +10,22 @@ import { SettingsSection } from "./SettingsSection"
 
 type WalletSectionProps = { session: Session; testUsdc: number }
 
-export function WalletSection({ session: { wallet, network }, testUsdc }: WalletSectionProps) {
+export function WalletSection({ session: { network }, testUsdc }: WalletSectionProps) {
   return (
     <SettingsSection title="Wallet and trading" description="Paper trading uses live prices with no money.">
-      <SettingRow title="Wallet" description={`${shortenAddress(wallet)} on ${network.chain}`}>
-        <button
-          type="button"
+      <SettingRow
+        title="Wallet"
+        description={
+          <>
+            <WalletAddress /> on {network.chain}
+          </>
+        }
+      >
+        <ConnectWalletButton
           className={buttonVariants({ intent: "outline", size: "sm", className: "min-h-9 min-w-0 px-3" })}
         >
-          Switch
-        </button>
+          Link wallet
+        </ConnectWalletButton>
       </SettingRow>
       <SettingRow title="Paper trading" description="Turn off to buy with your wallet's USDC">
         <Switch aria-label="Paper trading" defaultChecked={network.mode === "paper"} />

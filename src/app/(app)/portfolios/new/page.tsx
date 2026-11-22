@@ -1,26 +1,37 @@
 import type { Metadata } from "next"
+import { PiInfo } from "react-icons/pi"
+
 import { AppLink } from "@/components/AppLink/AppLink"
 import { buttonVariants } from "@/components/Button/Button"
 import { CheckRow } from "@/components/Check/CheckRow"
+import { Tooltip } from "@/components/Tooltip/Tooltip"
 import { Card } from "@/components/ui/card"
+import { WalletCheckRow } from "@/components/Wallet/WalletCheckRow"
 import { FAUCET_URL } from "@/constants/settings"
-import { shortenAddress } from "@/lib/format"
 import { getSession } from "@/lib/session/source"
 import { getSettings } from "@/lib/settings/source"
 
 export const metadata: Metadata = { title: "Can you trade?" }
 
 export default async function CheckPage() {
-  const [{ wallet, network, region }, { testUsdc }] = await Promise.all([getSession(), getSettings()])
+  const [{ network, region }, { testUsdc }] = await Promise.all([getSession(), getSettings()])
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-6 py-6 md:py-14">
+      <div className="flex flex-col items-center gap-1.5 text-center">
         <span className="text-ink-400 text-sm">Before your first portfolio</span>
-        <h1 className="text-2xl font-medium md:text-[32px] md:leading-10">Can you trade tokenized stocks?</h1>
-        <p className="text-ink-400 text-sm">
-          Three quick checks, so you don&apos;t write a brief you can&apos;t act on.
-        </p>
+        <h1 className="flex items-center gap-2 text-2xl font-medium md:text-[32px] md:leading-10">
+          Can you trade tokenized stocks?
+          <Tooltip title="Three quick checks, so you don't write a brief you can't act on." side="top" wide>
+            <button
+              type="button"
+              aria-label="Why these checks"
+              className="text-ink-300 hover:text-ink-100 transition-colors"
+            >
+              <PiInfo size={18} aria-hidden="true" />
+            </button>
+          </Tooltip>
+        </h1>
       </div>
 
       <Card>
@@ -37,19 +48,7 @@ export default async function CheckPage() {
             </button>
           }
         />
-        <CheckRow
-          status="pass"
-          title="Wallet connected"
-          description={`${shortenAddress(wallet)} on ${network.chain} (test network).`}
-          action={
-            <button
-              type="button"
-              className={buttonVariants({ intent: "outline", size: "sm", className: "min-h-9 min-w-0 px-3" })}
-            >
-              Switch
-            </button>
-          }
-        />
+        <WalletCheckRow chain={network.chain} />
         <CheckRow
           status="warn"
           title={`USDC to spend: ${testUsdc}`}
@@ -67,7 +66,7 @@ export default async function CheckPage() {
         />
       </Card>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-center gap-2">
         <AppLink route="brief" className={buttonVariants({ intent: "dark", size: "compact" })}>
           Continue with paper trading
         </AppLink>
@@ -75,7 +74,7 @@ export default async function CheckPage() {
           I&apos;ve added USDC
         </AppLink>
       </div>
-      <p className="text-ink-400 text-sm">
+      <p className="text-ink-400 text-center text-sm">
         Paper trading uses live prices with no money. You can switch to your wallet at the buy step.
       </p>
     </div>

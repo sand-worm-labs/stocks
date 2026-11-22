@@ -1,10 +1,10 @@
 import { AppLink } from "@/components/AppLink/AppLink"
-import { BaseMark } from "@/components/BaseMark/BaseMark"
 import { buttonVariants } from "@/components/Button/Button"
 import { SandwormLogo } from "@/components/SandwormLogo/SandwormLogo"
 import { env } from "env.mjs"
 
 import { EmailSignInForm } from "./EmailSignInForm"
+import { WalletOptions } from "./WalletOptions"
 
 export function SignIn() {
   return (
@@ -22,10 +22,7 @@ export function SignIn() {
             <SandwormLogo size={20} />
             Continue with Sandworm
           </AppLink>
-          <button type="button" className={buttonVariants({ intent: "outline", size: "md", className: "gap-2" })}>
-            <BaseMark />
-            Connect a Base wallet
-          </button>
+          <WalletOptions />
         </div>
 
         <span className="text-ink-100 my-2.5 text-sm font-medium">or</span>

@@ -1,0 +1,39 @@
+import { NextResponse } from "next/server"
+import { z } from "zod"
+
+import { SESSION_COOKIE, SESSION_TTL_SECONDS } from "@/lib/auth/config"
+import { DynamicTokenError, verifyDynamicToken } from "@/lib/auth/dynamic"
+import { isSameOrigin, isSecureRequest } from "@/lib/auth/request"
+import { signSession } from "@/lib/auth/token"
+
+const body = z.object({ token: z.string().min(1).max(8000) })
+
+const fail = (error: string, status: number) =>
+  NextResponse.json({ error }, { status, headers: { "Cache-Control": "no-store" } })
+
+// Turns a sign-in Dynamic has done in the browser into a session on our side. The browser hands over the access token
+// Dynamic gave it; it is checked against Dynamic's keys here and never kept, and what is kept is our own cookie.
+export async function POST(request: Request) {
+  if (!isSameOrigin(request)) return fail("This request didn't come from the app", 403)
+
+  const environmentId = process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID
+  if (!environmentId) return fail("Sign-in isn't set up", 503)
+
+  const parsed = body.safeParse(await request.json().catch(() => undefined))
+  if (!parsed.success) return fail("The sign-in is missing something", 400)
+
+  try {
+    const userId = await verifyDynamicToken(parsed.data.token, environmentId)
+    const response = NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } })
+    response.cookies.set(SESSION_COOKIE, await signSession(userId), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: isSecureRequest(request),
+      path: "/",
+      maxAge: SESSION_TTL_SECONDS,
+    })
+    return response
+  } catch (error) {
+    return fail(error instanceof DynamicTokenError ? error.message : "We couldn't sign you in", 401)
+  }
+}

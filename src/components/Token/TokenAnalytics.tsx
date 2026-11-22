@@ -1,0 +1,46 @@
+import { TokenLineChart } from "@/components/TokenLineChart/TokenLineChart"
+import { Card } from "@/components/ui/card"
+import { formatCompactUsd, formatPercent, formatUsd } from "@/lib/format"
+import type { BaseToken } from "@/lib/markets/tokens"
+
+import { FactList } from "./FactList"
+
+// One point in six of the hourly prices CoinGecko gives for a week
+const SERIES_STEP_SECONDS = 6 * 60 * 60
+
+// How the token is trading, worked out from the numbers it already has
+export function TokenAnalytics({ token, liquidity }: { token: BaseToken; liquidity?: number }) {
+  const { symbol, series, marketCap, volume, change7d } = token
+  const low = Math.min(...series)
+  const high = Math.max(...series)
+  const ratio = (top?: number, bottom?: number) => (top !== undefined && bottom ? formatPercent(top / bottom) : "—")
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Card className="flex flex-col gap-4 p-4 md:p-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-lg font-medium">Price, last 7 days</h2>
+          <span className="text-ink-400 text-sm">
+            {formatUsd(low)} to {formatUsd(high)}
+          </span>
+        </div>
+        <TokenLineChart
+          label={`${symbol} price over the last 7 days`}
+          series={series}
+          stepSeconds={SERIES_STEP_SECONDS}
+          tone={(change7d ?? 0) < 0 ? "negative" : "positive"}
+          className="h-72"
+        />
+      </Card>
+      <FactList
+        title="Turnover and depth"
+        rows={[
+          { label: "Volume against market cap", value: ratio(volume, marketCap) },
+          { label: "Liquidity against market cap", value: ratio(liquidity, marketCap) },
+          { label: "Pool liquidity", value: liquidity === undefined ? "—" : formatCompactUsd(liquidity) },
+          { label: "Range this week", value: `${formatPercent(low ? high / low - 1 : 0)} from low to high` },
+        ]}
+      />
+    </div>
+  )
+}

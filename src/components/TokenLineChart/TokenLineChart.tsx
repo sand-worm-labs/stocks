@@ -1,0 +1,57 @@
+"use client"
+
+import { ColorType, createChart, LineSeries, type UTCTimestamp } from "lightweight-charts"
+import { useTheme } from "next-themes"
+import { useEffect, useRef } from "react"
+
+import { cn } from "@/lib/utils"
+
+type TokenLineChartProps = {
+  // Oldest first, evenly spaced, the last of them now
+  series: number[]
+  // The time between one point and the next
+  stepSeconds: number
+  tone: "positive" | "negative"
+  label: string
+  className?: string
+}
+
+const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+
+const LINE = { positive: "#059669", negative: "#dc2626" } as const
+
+// TradingView's own line chart, with a crosshair and a price scale, for a series of prices
+export function TokenLineChart({ series, stepSeconds, tone, label, className }: TokenLineChartProps) {
+  const container = useRef<HTMLDivElement>(null)
+  const { resolvedTheme } = useTheme()
+
+  useEffect(() => {
+    if (!container.current) return
+
+    const chart = createChart(container.current, {
+      autoSize: true,
+      handleScroll: false,
+      handleScale: false,
+      layout: {
+        background: { type: ColorType.Solid, color: "transparent" },
+        textColor: cssVar("--ink-400"),
+        fontFamily: "inherit",
+        attributionLogo: true,
+      },
+      grid: { vertLines: { visible: false }, horzLines: { color: `hsl(${cssVar("--border-secondary")})` } },
+      rightPriceScale: { borderVisible: false },
+      timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },
+    })
+
+    const now = Math.floor(Date.now() / 1000)
+    const line = chart.addSeries(LineSeries, { color: LINE[tone], lineWidth: 2, priceLineVisible: false })
+    line.setData(
+      series.map((value, i) => ({ time: (now - (series.length - 1 - i) * stepSeconds) as UTCTimestamp, value }))
+    )
+    chart.timeScale().fitContent()
+
+    return () => chart.remove()
+  }, [series, stepSeconds, tone, resolvedTheme])
+
+  return <div ref={container} role="img" aria-label={label} className={cn("h-72 w-full", className)} />
+}

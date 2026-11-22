@@ -11,7 +11,7 @@ export function BriefTabs({ current }: { current: RouteId }) {
   return (
     <nav
       aria-label="How to start"
-      className="border-border-secondary dark:border-border-tertiary flex gap-1 self-start rounded-full border p-1"
+      className="border-border-secondary dark:border-border-tertiary flex gap-1 self-center rounded-full border p-1"
     >
       {TABS.map(({ route, label }) => (
         <AppLink

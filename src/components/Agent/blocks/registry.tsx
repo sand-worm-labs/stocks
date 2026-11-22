@@ -1,0 +1,29 @@
+import type { ReactNode } from "react"
+
+import type { AgentBlock } from "@/lib/agent/types"
+
+import { ActionsBlock } from "./ActionsBlock"
+import { ChipsBlock } from "./ChipsBlock"
+import { FactsBlock } from "./FactsBlock"
+import { NoteBlock } from "./NoteBlock"
+import { RulesBlock } from "./RulesBlock"
+import { StepsBlock } from "./StepsBlock"
+import { TextBlock } from "./TextBlock"
+
+type Renderers = { [K in AgentBlock["type"]]: (props: { block: Extract<AgentBlock, { type: K }> }) => ReactNode }
+
+// How each kind of block is drawn. A new kind of block is added here, and nowhere in the panel.
+const RENDERERS: Renderers = {
+  text: ({ block }) => <TextBlock text={block.text} />,
+  steps: StepsBlock,
+  facts: FactsBlock,
+  rules: RulesBlock,
+  note: NoteBlock,
+  chips: ChipsBlock,
+  actions: ActionsBlock,
+}
+
+export function BlockView({ block }: { block: AgentBlock }) {
+  const Render = RENDERERS[block.type] as (props: { block: AgentBlock }) => ReactNode
+  return <Render block={block} />
+}

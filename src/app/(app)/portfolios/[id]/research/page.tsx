@@ -1,16 +1,16 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { AgentWorkspace } from "@/components/Agent/AgentWorkspace"
 import { AppLink } from "@/components/AppLink/AppLink"
 import { buttonVariants } from "@/components/Button/Button"
-import { AgentPanel } from "@/components/Flow/AgentPanel"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { PortfolioBreadcrumb } from "@/components/Flow/PortfolioBreadcrumb"
-import { ResearchSteps } from "@/components/Flow/ResearchSteps"
 import { StepProgress } from "@/components/Flow/StepProgress"
 import { ResearchSection } from "@/components/Report/sections/ResearchSection"
 import { Card } from "@/components/ui/card"
 import { RESEARCH_STEPS } from "@/constants/flow"
+import { getResearchScript } from "@/lib/agent/source"
 import { getPortfolio } from "@/lib/portfolios/source"
 import { getReport } from "@/lib/report/source"
 
@@ -23,19 +23,14 @@ export default async function ResearchPage({ params }: { params: Promise<{ id: s
   const [portfolio, report] = await Promise.all([getPortfolio((await params).id), getReport(1)])
   if (!portfolio) notFound()
 
+  const script = await getResearchScript(portfolio, DONE_STEPS)
+
   return (
     <div className="flex flex-col gap-4">
       <PortfolioBreadcrumb name={portfolio.name} />
       <FlowLayout
         steps={<StepProgress current="research" portfolioId={portfolio.id} />}
-        aside={
-          <AgentPanel brief={portfolio.brief}>
-            <p className="text-sm">
-              Rules locked. Eight steps, each in its own notebook. The report fills in as they finish.
-            </p>
-            <ResearchSteps done={DONE_STEPS} />
-          </AgentPanel>
-        }
+        aside={<AgentWorkspace script={script} />}
       >
         <Card className="flex flex-col gap-3 p-4 md:p-6">
           <div className="flex items-baseline justify-between gap-3">

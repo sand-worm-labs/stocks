@@ -1,7 +1,6 @@
-import { briefMockData } from "@/_mockdata/briefs"
+import { briefDraftMockData } from "@/_mockdata/briefs"
 
-import type { BriefReview } from "./types"
-
-export async function getBriefReview(status: BriefReview["status"]): Promise<BriefReview> {
-  return briefMockData[status]
+// The brief a new portfolio starts from
+export async function getBriefDraft() {
+  return briefDraftMockData
 }

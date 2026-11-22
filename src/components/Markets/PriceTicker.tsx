@@ -57,7 +57,7 @@ export function PriceTicker({ tokens }: { tokens: TickerToken[] }) {
   return (
     <div
       aria-label="Prices"
-      className="border-border-secondary bg-block-surface dark:border-border-tertiary flex items-center border-b"
+      className="border-border-secondary bg-block-surface dark:border-border-tertiary flex h-9 items-center border-b"
     >
       <div className="border-border-secondary dark:border-border-tertiary flex-none border-r px-3">
         <LiveBadge compact />

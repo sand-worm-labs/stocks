@@ -9,7 +9,7 @@ import { StepProgress } from "@/components/Flow/StepProgress"
 import { CategoryCard } from "@/components/StockPicker/CategoryCard"
 import { StockPickRow } from "@/components/StockPicker/StockPickRow"
 import { Card } from "@/components/ui/card"
-import { getBriefReview } from "@/lib/brief/source"
+import { getBriefDraft } from "@/lib/brief/source"
 import { summarizeCategory } from "@/lib/markets/category"
 import { getCategories, getMarketSummary, getStocks } from "@/lib/markets/source"
 
@@ -19,18 +19,20 @@ export const metadata: Metadata = { title: "Stocks or a category" }
 const PICKED_CATEGORY = "robotics"
 
 export default async function StockPickerPage() {
-  const [stocks, categories, summary, review] = await Promise.all([
+  const [stocks, categories, summary, draft] = await Promise.all([
     getStocks(),
     getCategories(),
     getMarketSummary(),
-    getBriefReview("ready"),
+    getBriefDraft(),
   ])
   const picked = categories.find(({ id }) => id === PICKED_CATEGORY)
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto w-full max-w-[820px]">
       <FlowLayout steps={<StepProgress current="brief" />}>
-        <h1 className="text-2xl font-medium md:text-[32px] md:leading-10">What do you want to build around?</h1>
+        <h1 className="mt-4 text-center text-3xl font-medium md:text-[40px] md:leading-[48px]">
+          What do you want to build around?
+        </h1>
         <BriefTabs current="stockPicker" />
 
         <label className="border-border bg-base-100 dark:border-border-tertiary dark:bg-base-400 flex items-center gap-2 rounded-full border px-4 py-2.5">
@@ -94,7 +96,7 @@ export default async function StockPickerPage() {
           <p className="text-ink-400 text-xs">Categories, prices and liquidity: o1 Launchpad.</p>
           <AppLink
             route="rules"
-            slug={review.portfolioId}
+            slug={draft.portfolioId}
             className={buttonVariants({ intent: "dark", size: "compact" })}
           >
             Continue

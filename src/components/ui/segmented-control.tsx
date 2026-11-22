@@ -15,7 +15,7 @@ export function SegmentedControl<T extends string>({ label, options, value, onCh
       role="radiogroup"
       aria-label={label}
       data-slot="segmented-control"
-      className="bg-inputBg inline-flex flex-wrap self-start rounded-[10px] p-[3px] dark:bg-white/5"
+      className="bg-hover-bg border-hover-border dark:bg-sidebar-hover inline-flex flex-wrap gap-0.5 self-start rounded-xl border p-0.5"
     >
       {options.map((option) => {
         const isSelected = option.value === value
@@ -28,10 +28,10 @@ export function SegmentedControl<T extends string>({ label, options, value, onCh
             aria-checked={isSelected}
             onClick={() => onChange(option.value)}
             className={cn(
-              "focus-visible:ring-primary/50 rounded-lg px-3 py-1.5 text-[13px] transition-colors outline-none focus-visible:ring-2",
+              "focus-visible:ring-primary/50 rounded-[10px] border px-3.5 py-1 text-[13px] transition-[background-color,border-color,color,box-shadow] duration-200 ease-out outline-none focus-visible:ring-2",
               isSelected
-                ? "bg-block-surface text-ink-100 font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:bg-white/10"
-                : "text-ink-400 hover:text-ink-100"
+                ? "bg-block-surface border-hover-border text-ink-100 font-medium shadow-sm dark:bg-white/15 dark:shadow-none"
+                : "text-ink-400 hover:text-ink-100 hover:border-hover-border border-transparent hover:bg-white/60 dark:hover:bg-white/10"
             )}
           >
             {option.label}

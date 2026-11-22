@@ -187,6 +187,11 @@
   If we ever want to remove these styles, we need to add an explicit border
   color utility to any element that depends on these defaults.
 */
+/* How tall the header and the price strip are together, for anything that sits under them */
+:root {
+  --shell-top: 5.75rem;
+}
+
 @layer base {
   *,
   ::after,
@@ -408,4 +413,15 @@
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
+}
+
+/* The agent's messages wait out of sight until the motion that brings them in has taken over */
+[data-message]:not([data-revealed]) {
+  visibility: hidden;
+}
+
+/* A page that makes room for the agent's panel on its right: the panel's width and a gap, less whatever empty space the
+   window already leaves at the sides */
+@utility pr-panel {
+  padding-right: max(0px, calc(var(--panel) + 1.5rem - (100vw - 100%) / 2));
 }

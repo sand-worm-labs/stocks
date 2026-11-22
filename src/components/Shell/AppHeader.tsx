@@ -12,7 +12,7 @@ import { SectionTabs } from "./SectionTabs"
 
 export function AppHeader({ session: { wallet, unreadAlerts } }: { session: Session }) {
   return (
-    <header className="border-border-secondary bg-block-surface dark:border-border-tertiary flex min-h-14 items-center gap-5 border-b px-4 md:px-6">
+    <header className="border-border-secondary bg-block-surface dark:border-border-tertiary flex h-14 items-center gap-5 border-b px-4 md:px-6">
       <AppLink route="home" className="flex items-center gap-2">
         <SandwormLogo size={26} />
         <span className="font-tertiary text-base font-bold uppercase">Sandworm</span>

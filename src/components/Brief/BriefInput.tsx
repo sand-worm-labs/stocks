@@ -1,7 +1,6 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
 import { PiPaperPlaneTilt } from "react-icons/pi"
 
 import { AppLink } from "@/components/AppLink/AppLink"
@@ -16,26 +15,26 @@ import { cn } from "@/lib/utils"
 const SEND_CLASSNAME = buttonVariants({ intent: "create", size: "compact", className: "min-h-0 rounded-full p-2.5" })
 
 type BriefInputProps = {
-  // What the brief says to begin with
-  initialText: string
+  value: string
+  onChange: (value: string) => void
+  // Whether the brief can go on to its rules: written, and something that can be done
+  canContinue: boolean
   // The portfolio the brief becomes, whose rules come next
   portfolioId: string
   actionLabel: string
 }
 
 // Where the brief is written. Continuing sits in the box itself, beside the trading mode.
-export function BriefInput({ initialText, portfolioId, actionLabel }: BriefInputProps) {
+export function BriefInput({ value, onChange, canContinue, portfolioId, actionLabel }: BriefInputProps) {
   const router = useRouter()
-  const [brief, setBrief] = useState(initialText)
-  const canContinue = brief.trim().length > 0
   const next = routeHref("rules", undefined, portfolioId) ?? "/portfolios"
 
   return (
     <PromptBox
       id="brief"
       label="Your brief"
-      value={brief}
-      onChange={setBrief}
+      value={value}
+      onChange={onChange}
       onSubmit={() => canContinue && router.push(next)}
       prompts={BRIEF_PROMPTS}
       controls={

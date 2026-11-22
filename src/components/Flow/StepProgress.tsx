@@ -1,4 +1,5 @@
-import { PiCheck } from "react-icons/pi"
+import { Fragment } from "react"
+import { PiCheckBold } from "react-icons/pi"
 
 import { AppLink } from "@/components/AppLink/AppLink"
 import { FLOW_STEPS, type FlowStepId } from "@/constants/flow"
@@ -10,63 +11,61 @@ type StepProgressProps = {
   portfolioId?: string
 }
 
+// Where the person is in the flow: a numbered circle for each step, joined by a line. A step done is a tick, the one
+// they are on is filled, and the ones to come are outlined. Labels are medium weight throughout, centred on the page.
 export function StepProgress({ current, portfolioId }: StepProgressProps) {
   const index = FLOW_STEPS.findIndex(({ id }) => id === current)
-  const next = FLOW_STEPS[index + 1]
 
   return (
-    <nav aria-label="Progress" className="flex flex-col gap-3">
-      <ol className="grid grid-cols-5 gap-2 md:gap-4">
-        {FLOW_STEPS.map(({ id, label, hint, route }, i) => {
-          const isDone = i < index
-          const isCurrent = i === index
-          const body = (
-            <>
+    <nav aria-label="Progress" className="flex flex-wrap items-center justify-center gap-2.5">
+      {FLOW_STEPS.map(({ id, label, route }, i) => {
+        const isDone = i < index
+        const isCurrent = i === index
+        const body = (
+          <>
+            <span
+              aria-hidden="true"
+              className={cn(
+                "flex size-7 flex-none items-center justify-center rounded-full border text-sm font-medium",
+                isDone || isCurrent
+                  ? "bg-base-400 border-base-400 text-primary-foreground dark:border-white dark:bg-white dark:text-black"
+                  : "border-border-secondary bg-block-surface text-ink-300 dark:border-border-tertiary"
+              )}
+            >
+              {isDone ? <PiCheckBold size={14} /> : i + 1}
+            </span>
+            {label}
+          </>
+        )
+        const className = cn(
+          "inline-flex items-center gap-2 text-sm font-medium whitespace-nowrap",
+          isCurrent || isDone ? "text-ink-100" : "text-ink-300"
+        )
+
+        return (
+          <Fragment key={id}>
+            {i > 0 && (
               <span
                 aria-hidden="true"
-                className={cn(
-                  "h-[2.5px] w-full rounded-full",
-                  isCurrent
-                    ? "bg-rainbow-gradient"
-                    : isDone
-                      ? "bg-primary"
-                      : "bg-border-secondary dark:bg-border-tertiary"
-                )}
+                className="bg-border-secondary dark:bg-border-tertiary h-px max-w-12 min-w-3 flex-1"
               />
-              <span
-                className={cn(
-                  "flex items-center gap-1.5 px-0.5 text-xs md:text-sm",
-                  isCurrent ? "text-ink-100 font-medium" : isDone ? "text-ink-200" : "text-ink-300"
-                )}
+            )}
+            {isDone && portfolioId ? (
+              <AppLink
+                route={route}
+                slug={portfolioId}
+                className={cn(className, "transition-opacity hover:opacity-70")}
               >
-                {isDone ? <PiCheck aria-hidden="true" className="text-primary flex-none" /> : <span>{i + 1}.</span>}
-                <span className="truncate">{label}</span>
+                {body}
+              </AppLink>
+            ) : (
+              <span aria-current={isCurrent ? "step" : undefined} className={className}>
+                {body}
               </span>
-              <span className="text-ink-400 hidden truncate px-0.5 text-xs md:block">{isDone ? "Done" : hint}</span>
-            </>
-          )
-
-          return (
-            <li key={id} aria-current={isCurrent ? "step" : undefined} className="min-w-0">
-              {isDone && portfolioId ? (
-                <AppLink
-                  route={route}
-                  slug={portfolioId}
-                  className="group flex flex-col gap-2 transition-opacity hover:opacity-80"
-                >
-                  {body}
-                </AppLink>
-              ) : (
-                <div className="flex flex-col gap-2">{body}</div>
-              )}
-            </li>
-          )
-        })}
-      </ol>
-      <p className="text-ink-400 text-xs">
-        Step {index + 1} of {FLOW_STEPS.length} · {FLOW_STEPS[index]?.label}
-        {next ? ` · Next: ${next.label}` : " · Last step"}
-      </p>
+            )}
+          </Fragment>
+        )
+      })}
     </nav>
   )
 }

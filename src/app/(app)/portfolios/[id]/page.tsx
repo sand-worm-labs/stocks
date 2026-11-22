@@ -13,6 +13,7 @@ import { SellSheet } from "@/components/PortfolioDetail/SellSheet"
 import { ValueCard } from "@/components/PortfolioDetail/ValueCard"
 import { routeHref } from "@/config/routes"
 import { getActivity } from "@/lib/activity/source"
+import { getCantMeetScript } from "@/lib/agent/source"
 import { getMarketSummary, getStocks } from "@/lib/markets/source"
 import { portfolioKpis } from "@/lib/portfolios/kpis"
 import { sellQuote } from "@/lib/portfolios/sell"
@@ -38,12 +39,15 @@ export default async function PortfolioPage({ params, searchParams }: PortfolioP
   const [{ rules }, stocks, summary] = await Promise.all([getRules(portfolio), getStocks(), getMarketSummary()])
 
   if (portfolio.status === "unbuildable") {
+    const script = await getCantMeetScript(portfolio)
+
     return (
       <CantMeetView
         portfolio={portfolio}
         rules={rules}
         universe={stocks.filter(({ theme }) => theme === "robotics")}
         summary={summary}
+        script={script}
       />
     )
   }

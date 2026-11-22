@@ -1,6 +1,4 @@
-import { AppLink } from "@/components/AppLink/AppLink"
-import { buttonVariants } from "@/components/Button/Button"
-import { AgentPanel } from "@/components/Flow/AgentPanel"
+import { AgentWorkspace } from "@/components/Agent/AgentWorkspace"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { PortfolioBreadcrumb } from "@/components/Flow/PortfolioBreadcrumb"
 import { StepProgress } from "@/components/Flow/StepProgress"
@@ -9,6 +7,7 @@ import { RulesList } from "@/components/Rules/RulesList"
 import { SourceLink } from "@/components/SourceLink/SourceLink"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import type { AgentScript } from "@/lib/agent/types"
 import { formatAsOf } from "@/lib/dates"
 import { formatPercent } from "@/lib/format"
 import { isBuyable } from "@/lib/markets/stock"
@@ -16,12 +15,16 @@ import type { MarketSummary, Stock } from "@/lib/markets/types"
 import type { Portfolio } from "@/lib/portfolios/types"
 import type { Rule } from "@/lib/rules/types"
 
-const WAYS_OUT = ["4 stocks at 15%+, rest in cash", "4 stocks at 25% each", "Widen to AI and robotics"]
-
-type CantMeetViewProps = { portfolio: Portfolio; rules: Rule[]; universe: Stock[]; summary: MarketSummary }
+type CantMeetViewProps = {
+  portfolio: Portfolio
+  rules: Rule[]
+  universe: Stock[]
+  summary: MarketSummary
+  script: AgentScript
+}
 
 // A brief that can't be met is refused, with the reason and ways out. It is never turned into a portfolio that only looks like it fits.
-export function CantMeetView({ portfolio, rules, universe, summary }: CantMeetViewProps) {
+export function CantMeetView({ portfolio, rules, universe, summary, script }: CantMeetViewProps) {
   const { positions, minimum } = portfolio.constraint ?? { positions: 0, minimum: 0 }
   const required = positions * minimum
   const buyable = universe.filter(isBuyable)
@@ -31,30 +34,7 @@ export function CantMeetView({ portfolio, rules, universe, summary }: CantMeetVi
       <PortfolioBreadcrumb name={portfolio.name} />
       <FlowLayout
         steps={<StepProgress current="rules" portfolioId={portfolio.id} />}
-        aside={
-          <AgentPanel brief={portfolio.brief}>
-            <p className="text-sm">
-              I can&apos;t build this, for two separate reasons. I won&apos;t make up a portfolio that only looks like
-              it fits.
-            </p>
-            <ReportSection title="Brief check" notebook>
-              <p className="text-ink-400 text-sm">Why this portfolio can&apos;t exist</p>
-            </ReportSection>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium">Pick one and I&apos;ll redo the rules</p>
-              {WAYS_OUT.map((way) => (
-                <AppLink
-                  key={way}
-                  route="rules"
-                  slug={portfolio.id}
-                  className={buttonVariants({ intent: "outline", size: "sm", className: "justify-start" })}
-                >
-                  {way}
-                </AppLink>
-              ))}
-            </div>
-          </AgentPanel>
-        }
+        aside={<AgentWorkspace script={script} />}
       >
         <header className="flex flex-col gap-2">
           <h1 className="text-2xl font-medium md:text-[32px] md:leading-10">This portfolio can&apos;t exist</h1>

@@ -1,16 +1,29 @@
 import type { ReactNode } from "react"
 
+import { cn } from "@/lib/utils"
+
 type FlowLayoutProps = { steps: ReactNode; aside?: ReactNode; children: ReactNode }
 
-// A flow screen: the steps across the top, then the agent beside the page
+// The width of the agent's panel. The page keeps clear of it by that much, less whatever empty space the window already
+// leaves at the sides.
+const PANEL_WIDTH = "26rem"
+
+// Where a flow screen sits the steps and the page, and the agent: a panel against the right edge of the window, from
+// under the header and the price strip to the bottom, staying there as the page scrolls. Without an agent, the page has the
+// whole width.
 export function FlowLayout({ steps, aside, children }: FlowLayoutProps) {
   return (
-    <div className="flex flex-col gap-6">
+    <div
+      style={aside ? ({ "--panel": PANEL_WIDTH } as React.CSSProperties) : undefined}
+      className={cn("flex flex-col gap-6", aside && "lg:pr-panel")}
+    >
       {steps}
-      <div className={aside ? "grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]" : undefined}>
-        {aside}
-        <div className="flex min-w-0 flex-col gap-6">{children}</div>
-      </div>
+      {children}
+      {aside && (
+        <div className="max-lg:h-[36rem] lg:fixed lg:inset-y-0 lg:top-[var(--shell-top)] lg:right-0 lg:z-30 lg:w-[var(--panel)]">
+          {aside}
+        </div>
+      )}
     </div>
   )
 }

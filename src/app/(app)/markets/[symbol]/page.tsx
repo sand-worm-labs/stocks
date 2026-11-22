@@ -18,7 +18,7 @@ import { TokenTabs } from "@/components/Token/TokenTabs"
 import { TokenTrades } from "@/components/Token/TokenTrades"
 import { TransfersTable } from "@/components/Token/TransfersTable"
 import { DEFAULT_TOKEN_TAB, TOKEN_TABS } from "@/constants/token"
-import { getBriefReview } from "@/lib/brief/source"
+import { getBriefDraft } from "@/lib/brief/source"
 import { shortenAddress } from "@/lib/format"
 import { getChartSymbol } from "@/lib/markets/chart-symbol"
 import { getEthPrice, getTokenContract, getTokenSupply } from "@/lib/markets/onchain"
@@ -54,7 +54,7 @@ export default async function TokenPage({ params, searchParams }: TokenPageProps
   const token = findToken(tokens, decodeURIComponent(symbol))
   if (!token) notFound()
 
-  const researchId = (await getBriefReview("ready")).portfolioId
+  const researchId = (await getBriefDraft()).portfolioId
   const pool = (await getAllPoolQuotes(tokens.map(({ address }) => address))).find(
     ({ address }) => address === token.address.toLowerCase()
   )

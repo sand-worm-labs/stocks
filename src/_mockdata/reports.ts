@@ -1,6 +1,6 @@
 import type { Report } from "@/lib/report/types"
 
-import { makeSeries } from "./series"
+import { makeFan, makeGrowth } from "./series"
 
 const O1 = { name: "o1", url: "https://launch.o1.exchange/stocks", title: "o1 Launchpad · stocks on Base" }
 const BASE = { name: "base.org", url: "https://www.base.org/stocks", title: "Base · tokenized stocks" }
@@ -9,6 +9,7 @@ const VERDICT = {
   url: "https://www.verdict.co.uk/nvidia-q4-fy26-results/",
   title: "NVIDIA Q4 FY26 results",
 }
+const AS_OF = "2026-11-20T01:50:00Z"
 
 const original: Report = {
   version: 1,
@@ -24,7 +25,7 @@ const original: Report = {
       term: "Sharpe ratio",
       value: 0.97,
       kind: "ratio",
-      note: "above 1 is good",
+      note: "return per unit of risk",
     },
     {
       id: "beta",
@@ -32,7 +33,7 @@ const original: Report = {
       term: "Beta",
       value: 1.57,
       kind: "multiple",
-      note: "swings 57% more than the market",
+      note: "1.00 = moves like the market",
     },
   ],
   allocation: [
@@ -60,19 +61,13 @@ const original: Report = {
         id: "h3",
         tone: "warning",
         term: "Alpha",
-        text: "It swings 57% more than the market, so most of the extra return is just extra risk. The part that looks like real skill is about +5% a year.",
+        text: "Beta 1.57: most of the extra return is extra market risk. True edge (alpha) is about +5% a year.",
       },
       {
         id: "h4",
         tone: "warning",
         term: "Factor concentration",
         text: "The 4 stocks move together: one big-tech bet explains 78% of the risk.",
-      },
-      {
-        id: "h5",
-        tone: "warning",
-        term: "Survivorship bias",
-        text: "The backtest uses today's winners, so it likely flatters the picks.",
       },
       { id: "h6", tone: "negative", text: "Worst drop −30% is past the −20% you said you'd panic at." },
     ],
@@ -110,15 +105,17 @@ const original: Report = {
     ],
     overfit: [
       { id: "o1", tone: "positive", text: "Tested on 12 months it wasn't built on, and still ahead." },
-      { id: "o2", tone: "warning", text: "Only 3 years of history: a small sample." },
+      { id: "o2", tone: "warning", text: "Only 36 monthly rebalances: a small sample." },
       { id: "o3", tone: "warning", text: "A random big-tech mix of 4 would have beaten this in 38% of tries." },
       { id: "o4", tone: "positive", text: "No settings were tuned to fit the past." },
     ],
   },
+  // Built on 24 months at +33.1% and +22% a year, then 12 months held back at +23% and +8.1%
   performance: {
-    portfolio: makeSeries(41, 0.5, 36),
-    benchmark: makeSeries(43, 0.3, 36),
-    underwater: makeSeries(47, -0.05, 36),
+    start: "2023-11",
+    holdoutMonths: 12,
+    portfolio: makeGrowth(192_612, 0.09, 1.331 ** 2, 1.23),
+    benchmark: makeGrowth(173_121, 0.04, 1.22 ** 2, 1.081),
   },
   periods: [
     { label: "Built on (Nov 23–Nov 25)", term: "In-sample", portfolio: 0.331, benchmark: 0.22 },
@@ -129,6 +126,8 @@ const original: Report = {
     bad: -0.14,
     median: 0.3,
     good: 0.99,
+    note: "Volatility drag: the average month made +2.5% but swings cut the compounded month to +2.2%. Big swings cost real return.",
+    fan: makeFan(0.3, -0.14, 0.99),
   },
   tolerance: {
     panic: -0.2,
@@ -149,6 +148,22 @@ const original: Report = {
     { symbol: "GOOGLc", token: 273.16, share: 273.4 },
     { symbol: "TSLAc", token: 370, share: 368.9 },
   ],
+  venue: {
+    facts: [
+      { label: "Issuer", value: "Coinbase · B20 tokens" },
+      { label: "What you own", value: "Price exposure, no voting rights" },
+      { label: "Token trades", value: "24/7 on Base" },
+      { label: "Shares trade", value: "Mon–Fri, US market hours" },
+      { label: "Contract", value: "0x… per token" },
+    ],
+    sources: [O1, BASE],
+    asOf: AS_OF,
+  },
+  researchNote: {
+    text: "ISRG, SYM, TER, ROK, CGNX, ZBRA, SERV and RR are listed with no token supply.",
+    sources: [VERDICT, O1],
+    asOf: AS_OF,
+  },
   research: [
     {
       symbol: "NVDAc",
@@ -164,7 +179,24 @@ const original: Report = {
       text: "Robotics exposure through self-driving and research is real but indirect.",
     },
   ],
-  sources: [O1, BASE, VERDICT],
+  sources: [
+    { ...O1, note: "Prices, liquidity, supply" },
+    { ...BASE, note: "Token list" },
+    { ...VERDICT, note: "NVIDIA robotics revenue" },
+    {
+      name: "nasdaq.com",
+      url: "https://www.nasdaq.com/press-release/intuitive-announces-preliminary-fourth-quarter-and-full-year-2025-results-2026-01-14",
+      title: "Intuitive FY2025 results",
+      note: "Specialist check",
+    },
+    {
+      name: "sec.gov",
+      url: "https://www.sec.gov/Archives/edgar/data/1024478/000102447825000112/fy2025ex99.htm",
+      title: "Rockwell 8-K, Nov 2025",
+      note: "Specialist check",
+    },
+    { name: "Sandworm", url: "https://app.sandwormlab.xyz/", title: "Your rules, locked 20 Nov", note: "Your 4 rules" },
+  ],
 }
 
 // Version 2: the same stocks and rules with less in each, so the worst drop fits what was asked
@@ -201,9 +233,18 @@ const lessRisk: Report = {
 
 export const reportMockData = { 1: original, 2: lessRisk } as const
 
-export const ordersMockData = [
-  { symbol: "NVDAc", spend: 75, receive: 0.5161, minimum: 0.5135, impact: 0.0002 },
-  { symbol: "AMZNc", spend: 75, receive: 0.2915, minimum: 0.2901, impact: 0.0002 },
-  { symbol: "GOOGLc", spend: 75, receive: 0.2737, minimum: 0.2724, impact: 0.0003 },
-  { symbol: "TSLAc", spend: 75, receive: 0.2021, minimum: 0.2011, impact: 0.0004 },
-]
+// What buying each version of the report would do, at 75 and 100 USDC a stock
+export const ordersMockData = {
+  1: [
+    { symbol: "NVDAc", spend: 100, receive: 0.6881, impact: 0.0003 },
+    { symbol: "AMZNc", spend: 100, receive: 0.3887, impact: 0.0003 },
+    { symbol: "GOOGLc", spend: 100, receive: 0.3649, impact: 0.0004 },
+    { symbol: "TSLAc", spend: 100, receive: 0.2695, impact: 0.0005 },
+  ],
+  2: [
+    { symbol: "NVDAc", spend: 75, receive: 0.5161, impact: 0.0002 },
+    { symbol: "AMZNc", spend: 75, receive: 0.2915, impact: 0.0002 },
+    { symbol: "GOOGLc", spend: 75, receive: 0.2737, impact: 0.0003 },
+    { symbol: "TSLAc", spend: 75, receive: 0.2021, impact: 0.0004 },
+  ],
+} as const

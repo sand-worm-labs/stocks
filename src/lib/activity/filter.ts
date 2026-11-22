@@ -24,3 +24,22 @@ export const groupByDay = (activity: Activity[], now: string) =>
     Map.groupBy(activity, ({ at }) => formatDayLabel(at, now)),
     ([label, events]) => ({ label, events })
   )
+
+// What a day's trades came to, for the line over them: "4 trades · 300.00 USDC"
+export function summarizeDay(events: Activity[]) {
+  const trades = events.flatMap(({ trade }) => (trade ? [trade] : []))
+  if (!trades.length) return undefined
+
+  const spend = trades.reduce((sum, { side, spend }) => sum + (side === "buy" ? spend : -spend), 0)
+  return { count: trades.length, spend }
+}
+
+export function tradeTotals(activity: Activity[]) {
+  const trades = activity.flatMap(({ trade }) => (trade ? [trade] : []))
+  return {
+    count: trades.length,
+    spent: trades.filter(({ side }) => side === "buy").reduce((sum, { spend }) => sum + spend, 0),
+    fees: trades.reduce((sum, { fee }) => sum + fee, 0),
+    refused: activity.filter(({ kind }) => kind === "refused").length,
+  }
+}

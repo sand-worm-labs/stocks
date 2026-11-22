@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import { LiveMarketProvider } from "@/components/Markets/LiveMarket"
 import { PriceTicker } from "@/components/Markets/PriceTicker"
 import { AppShell } from "@/components/Shell/AppShell"
+import { Toaster } from "@/components/ui/sonner"
 import { getAllPoolQuotes } from "@/lib/markets/pools"
 import { getBaseTokens } from "@/lib/markets/tokens"
 import { getSession } from "@/lib/session/source"
@@ -32,6 +33,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       >
         {children}
       </AppShell>
+      <Toaster />
     </LiveMarketProvider>
   )
 }

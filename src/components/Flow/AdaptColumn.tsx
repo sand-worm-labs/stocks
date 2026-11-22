@@ -18,8 +18,8 @@ export function AdaptColumn({ report, portfolioId, actions }: AdaptColumnProps) 
       <AllocationSection report={report} />
       <ToleranceSection report={report} portfolioId={portfolioId} />
       {report.comparison && <ComparisonSection comparison={report.comparison} actions={actions} />}
-      <LiquiditySection liquidity={report.liquidity} />
-      <ResearchSection research={report.research} />
+      <LiquiditySection liquidity={report.liquidity} venue={report.venue} />
+      <ResearchSection research={report.research} note={report.researchNote} />
       <SourcesSection sources={report.sources} />
     </>
   )

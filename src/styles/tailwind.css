@@ -80,6 +80,7 @@
   --ink-200: #455768;
   --ink-300: #868e96;
   --ink-400: #6c757d;
+  --ink-450: #6d6c7d;
   --ink-navy: #1c3b5a;
   --primary-tint-50: #f9f5ff;
   --primary-tint-75: #f7e8ff;
@@ -121,6 +122,7 @@
   --ink-200: #9c9a92;
   --ink-300: #adb5bd;
   --ink-400: #a5a5a4;
+  --ink-450: #6d6c7d;
   --ink-navy: #f8f9fa;
 }
 
@@ -166,6 +168,7 @@
   --color-ink-200: var(--ink-200);
   --color-ink-300: var(--ink-300);
   --color-ink-400: var(--ink-400);
+  --color-ink-450: var(--ink-450);
   --color-ink-navy: var(--ink-navy);
   --color-warning: var(--warning);
   --color-success: var(--success);
@@ -264,6 +267,93 @@
 @utility animate-fade-up {
   animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--index, 0) * 60ms);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A bar that grows out from its left edge, each a little after the one before */
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@utility animate-grow-x {
+  transform-origin: left;
+  animation: grow-x 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--index, 0) * 80ms + 120ms);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A dialog fading in over the page, and its panel rising into place. Both reverse on the way out. */
+@keyframes overlay-show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-show {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-overlay {
+  &[data-state="open"] {
+    animation: overlay-show 0.2s ease-out both;
+  }
+  &[data-state="closed"] {
+    animation: overlay-show 0.15s ease-in reverse both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none !important;
+  }
+}
+
+@utility animate-dialog {
+  &[data-state="open"] {
+    animation: dialog-show 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  &[data-state="closed"] {
+    animation: dialog-show 0.15s ease-in reverse both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none !important;
+  }
+}
+
+/* A panel sliding in from the edge it is docked to */
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-panel {
+  animation: panel-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

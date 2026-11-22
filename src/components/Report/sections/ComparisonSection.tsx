@@ -9,7 +9,7 @@ type ComparisonSectionProps = { comparison: NonNullable<Report["comparison"]>; a
 
 export function ComparisonSection({ comparison, actions }: ComparisonSectionProps) {
   return (
-    <ReportSection title="Does it still beat just holding?" term="vs benchmark">
+    <ReportSection title="Does it still beat just holding?">
       <p className="text-sm">Yes, by less: +21.4% a year vs +17.2% for the S&amp;P 500, with similar drops.</p>
       <Table>
         <TableHeader>

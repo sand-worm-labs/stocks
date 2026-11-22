@@ -2,36 +2,27 @@ import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 
 import { CantMeetView } from "@/components/Flow/CantMeetView"
-import { KpiStrip } from "@/components/Home/KpiStrip"
-import { AgentCard } from "@/components/PortfolioDetail/AgentCard"
 import { ExitsCard } from "@/components/PortfolioDetail/ExitsCard"
-import { HistoryCard } from "@/components/PortfolioDetail/HistoryCard"
 import { HoldingsTable } from "@/components/PortfolioDetail/HoldingsTable"
-import { PortfolioHeader } from "@/components/PortfolioDetail/PortfolioHeader"
-import { RulesCard } from "@/components/PortfolioDetail/RulesCard"
-import { SellSheet } from "@/components/PortfolioDetail/SellSheet"
+import { PortfolioShell } from "@/components/PortfolioDetail/PortfolioShell"
+import { PortfolioStats } from "@/components/PortfolioDetail/PortfolioStats"
+import { RecentActivity } from "@/components/PortfolioDetail/RecentActivity"
 import { ValueCard } from "@/components/PortfolioDetail/ValueCard"
 import { routeHref } from "@/config/routes"
 import { getActivity } from "@/lib/activity/source"
 import { getCantMeetScript } from "@/lib/agent/source"
 import { getMarketSummary, getStocks } from "@/lib/markets/source"
-import { portfolioKpis } from "@/lib/portfolios/kpis"
-import { sellQuote } from "@/lib/portfolios/sell"
 import { getPortfolio } from "@/lib/portfolios/source"
+import { maxWeightOf } from "@/lib/rules/readings"
 import { getRules } from "@/lib/rules/source"
 import { getSession } from "@/lib/session/source"
 
 export const metadata: Metadata = { title: "Portfolio" }
 
-type PortfolioPageProps = {
-  params: Promise<{ id: string }>
-  searchParams: Promise<{ sell?: string }>
-}
-
 // A portfolio opens on the page its status calls for: a draft goes back to its rules, a brief that can't be met
 // is explained, and a live portfolio shows how it is doing.
-export default async function PortfolioPage({ params, searchParams }: PortfolioPageProps) {
-  const [{ id }, { sell }] = await Promise.all([params, searchParams])
+export default async function PortfolioPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const portfolio = await getPortfolio(id)
   if (!portfolio) notFound()
   if (portfolio.status === "draft") redirect(routeHref("rules", undefined, id) ?? "/portfolios")
@@ -52,29 +43,17 @@ export default async function PortfolioPage({ params, searchParams }: PortfolioP
     )
   }
 
-  const [session, activity] = await Promise.all([getSession(), getActivity()])
-  const quote = sell && sell !== "all" ? sellQuote(portfolio, sell) : undefined
+  const [session, activity] = await Promise.all([getSession(), getActivity(id)])
 
   return (
-    <div className="flex flex-col gap-6">
-      <PortfolioHeader portfolio={portfolio} />
-      <KpiStrip kpis={portfolioKpis(portfolio)} />
-      <div className="grid items-start gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
-          <ValueCard portfolio={portfolio} summary={summary} />
-          <HoldingsTable portfolio={portfolio} />
-          <ExitsCard portfolioId={portfolio.id} />
-          <HistoryCard portfolio={portfolio} />
-        </div>
-        <div className="flex flex-col gap-6">
-          <RulesCard portfolio={portfolio} rules={rules} />
-          <AgentCard
-            activity={activity.filter(({ kind }) => kind === "refused" || kind === "checked")}
-            now={session.now}
-          />
-        </div>
+    <PortfolioShell portfolio={portfolio} current="overview">
+      <PortfolioStats portfolio={portfolio} now={session.now} />
+      <ValueCard portfolio={portfolio} summary={summary} now={session.now} />
+      <HoldingsTable portfolio={portfolio} cap={maxWeightOf(rules) ?? 1} />
+      <div className="grid items-start gap-4 md:grid-cols-2">
+        <ExitsCard portfolio={portfolio} />
+        <RecentActivity portfolioId={id} activity={activity} now={session.now} />
       </div>
-      {quote && <SellSheet portfolio={portfolio} quote={quote} />}
-    </div>
+    </PortfolioShell>
   )
 }

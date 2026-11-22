@@ -18,6 +18,7 @@ export const ROUTES = {
   report: { path: "/portfolios", suffix: "report", label: "Report", isBuilt: true },
   adapt: { path: "/portfolios", suffix: "adapt", label: "Adapt", isBuilt: true },
   buy: { path: "/portfolios", suffix: "buy", label: "Buy", isBuilt: true },
+  portfolioActivity: { path: "/portfolios", suffix: "activity", label: "Activity", isBuilt: true },
   markets: { path: "/markets", label: "Markets", isBuilt: true },
   marketSummary: { path: "/markets/summary", label: "Summary", isBuilt: true },
   stock: { path: "/markets", label: "Stock", isBuilt: true },

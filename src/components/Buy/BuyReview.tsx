@@ -1,89 +1,117 @@
-import { AppLink } from "@/components/AppLink/AppLink"
+"use client"
+
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
+
 import { buttonVariants } from "@/components/Button/Button"
+import { VerdictPill } from "@/components/Report/VerdictPill"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
-import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
-import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ChoiceChips } from "@/components/ui/choice-chips"
+import { DialogClose, DialogTitle } from "@/components/ui/dialog"
+import { routeHref } from "@/config/routes"
 import { DEFAULT_SLIPPAGE, NETWORK_FEE, SLIPPAGE_CHOICES, SWAP_FEE_RATE } from "@/constants/trade"
-import { formatAmount, formatPercent } from "@/lib/format"
+import { formatAmount, formatPercent, pluralize } from "@/lib/format"
 import type { Order, Report } from "@/lib/report/types"
 import type { Session } from "@/lib/session/types"
 import { cn } from "@/lib/utils"
 
-type BuyReviewProps = { orders: Order[]; report: Report; portfolioId: string; network: Session["network"] }
+export type BuyReviewProps = { orders: Order[]; report: Report; portfolioId: string; network: Session["network"] }
 
-export function BuyReview({ orders, report, portfolioId, network }: BuyReviewProps) {
+type BuyReviewViewProps = BuyReviewProps & { onBought: () => void }
+
+const CELL = "border-border-secondary dark:border-border-tertiary border-t py-2.5 text-right tabular-nums"
+
+// What buying would do, to read and agree to before it is done
+export function BuyReview({ orders, report, portfolioId, network, onBought }: BuyReviewViewProps) {
+  const router = useRouter()
+  const [slippage, setSlippage] = useState(DEFAULT_SLIPPAGE)
+  const [understood, setUnderstood] = useState(true)
+
   const spend = orders.reduce((sum, order) => sum + order.spend, 0)
   const fees = spend * SWAP_FEE_RATE
   const total = spend + fees + NETWORK_FEE
+  const { panic, fits } = report.tolerance
   const costs = [
     { label: "Spend", value: `${formatAmount(spend)} USDC` },
     { label: `Swap fees (${formatPercent(SWAP_FEE_RATE)})`, value: `${formatAmount(fees)} USDC` },
     { label: "Bid-ask spread, already in the price", value: "about 0.2%" },
-    { label: "Network fee", value: `< ${formatAmount(NETWORK_FEE)} USDC` },
+    { label: "Network fee", value: `< ${formatAmount(NETWORK_FEE)} USDC`, className: "text-error" },
   ]
 
+  // Buying ends on the list of portfolios, where this one now shows as live. The toast says it went through, and
+  // leads to the portfolio itself.
+  const buy = () => {
+    const portfolioHref = routeHref("portfolio", undefined, portfolioId)
+    onBought()
+    toast.success(`Bought ${pluralize(orders.length, "stock")} for ${formatAmount(total)} USDC`, {
+      description: `${network.mode === "paper" ? "Paper" : "Live"} · ${network.chain}. Your portfolio is live.`,
+      action: portfolioHref ? { label: "View portfolio", onClick: () => router.push(portfolioHref) } : undefined,
+    })
+    router.push(routeHref("portfolios") ?? "/portfolios")
+  }
+
   return (
-    <Card className="flex flex-col gap-5 p-4 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-medium">Review and buy · version {report.version}</h2>
-        <Badge tone="info">
+    <>
+      <div className="flex flex-wrap items-center gap-3 pr-8">
+        <DialogTitle>Review</DialogTitle>
+        <span className="text-ink-200 font-tertiary flex items-center gap-1.5 text-xs">
+          <span aria-hidden="true" className="bg-link size-2 rounded-full" />
           {network.mode === "paper" ? "Paper" : "Live"} · {network.chain}
-        </Badge>
+        </span>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Buy</TableHead>
-            <TableHead>Spend</TableHead>
-            <TableHead>You get</TableHead>
-            <TableHead className="hidden sm:table-cell">At least</TableHead>
-            <TableHead className="hidden sm:table-cell">Moves price by</TableHead>
-          </TableRow>
-        </TableHeader>
-        <tbody>
-          {orders.map(({ symbol, spend, receive, minimum, impact }) => (
-            <TableRow key={symbol}>
-              <TableCell>
-                <span className="flex items-center gap-2 font-medium">
-                  <StockAvatar symbol={symbol} className="size-6" />
-                  {symbol}
-                </span>
-              </TableCell>
-              <TableCell className="tabular-nums">{spend} USDC</TableCell>
-              <TableCell className="tabular-nums">{receive}</TableCell>
-              <TableCell className="hidden tabular-nums sm:table-cell">{minimum}</TableCell>
-              <TableCell className="hidden tabular-nums sm:table-cell">{formatPercent(impact)}</TableCell>
-            </TableRow>
-          ))}
-        </tbody>
-      </Table>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm">Price can move by up to · or the trade cancels</span>
-        <div className="flex gap-2">
-          {SLIPPAGE_CHOICES.map((choice) => (
-            <span
-              key={choice}
-              className={cn(
-                "rounded-full border px-3 py-1 text-sm",
-                choice === DEFAULT_SLIPPAGE
-                  ? "bg-base-400 text-primary-foreground border-transparent dark:bg-white dark:text-black"
-                  : "border-border dark:border-border-tertiary"
-              )}
-            >
-              {formatPercent(choice)}
-            </span>
-          ))}
-        </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[460px] border-collapse text-[13px]">
+          <thead>
+            <tr className="text-ink-400 text-xs font-medium">
+              <th scope="col" className="pb-1.5 text-left font-medium">
+                Buy
+              </th>
+              {["Spend", "You get", "At least", "Price impact"].map((heading) => (
+                <th key={heading} scope="col" className="pb-1.5 text-right font-medium">
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map(({ symbol, spend, receive, impact }) => (
+              <tr key={symbol}>
+                <td className="border-border-secondary dark:border-border-tertiary border-t py-2.5">
+                  <span className="flex items-center gap-2 text-xs">
+                    <StockAvatar symbol={symbol} className="size-[22px]" />
+                    {symbol}
+                  </span>
+                </td>
+                <td className={CELL}>{spend} USDC</td>
+                <td className={CELL}>{receive}</td>
+                <td className={cn(CELL, "text-ink-200")}>{(receive * (1 - slippage)).toFixed(4)}</td>
+                <td className={cn(CELL, "text-emerald-700 dark:text-emerald-400")}>{(impact * 100).toFixed(2)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <dl className="flex flex-col gap-2 text-sm">
-        {costs.map(({ label, value }) => (
-          <div key={label} className="flex justify-between gap-3">
-            <dt className="text-ink-400">{label}</dt>
-            <dd className="tabular-nums">{value}</dd>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-ink-200 text-[13px]">
+          Max slippage <span className="text-ink-400">· cancels if the price moves more</span>
+        </span>
+        <ChoiceChips
+          label="Max slippage"
+          choices={SLIPPAGE_CHOICES.map((value) => ({ value, label: formatPercent(value) }))}
+          value={slippage}
+          onChange={setSlippage}
+        />
+      </div>
+
+      <dl className="flex flex-col gap-1.5 text-[13px]">
+        {costs.map(({ label, value, className }) => (
+          <div key={label} className="text-ink-200 flex justify-between gap-3">
+            <dt>{label}</dt>
+            <dd className={cn("tabular-nums", className)}>{value}</dd>
           </div>
         ))}
         <div className="border-border-secondary dark:border-border-tertiary flex justify-between gap-3 border-t pt-2 font-medium">
@@ -92,27 +120,42 @@ export function BuyReview({ orders, report, portfolioId, network }: BuyReviewPro
         </div>
       </dl>
 
-      <div className="bg-inputBg flex flex-col gap-1 rounded-xl p-4 text-sm dark:bg-white/5">
-        <span className="font-medium">Honesty check · {report.verdict.label}</span>
-        <span className="text-ink-400">
-          Beats holding the S&amp;P 500 in the backtest, fits your −20%, but most of the return is market risk, not
-          skill.
-        </span>
+      <div className="bg-hover-bg border-hover-border flex flex-col gap-2 rounded-xl border p-3.5 dark:bg-white/5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[13px] font-medium">Honesty check</span>
+          <VerdictPill verdict={report.verdict} plain />
+        </div>
+        <p className="text-[13px] leading-5">
+          Beats holding the S&amp;P 500 in the backtest,{" "}
+          {fits ? `fits your ${formatPercent(panic)}, but` : `is past your ${formatPercent(panic)}, and`} most of the
+          return is market risk, not skill.
+        </p>
       </div>
 
-      <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" defaultChecked className="accent-primary mt-0.5 size-4" />I understand these tokens track
-        the shares&apos; price and carry no voting rights.
+      <label className="flex cursor-pointer items-start gap-2.5 text-[13px] leading-5">
+        <Checkbox
+          checked={understood}
+          onChange={() => setUnderstood((value) => !value)}
+          aria-label="I understand these tokens track the shares' price and carry no voting rights"
+          className="mt-0.5"
+        />
+        I understand these tokens track the shares&apos; price and carry no voting rights.
       </label>
 
-      <div className="flex flex-wrap gap-2">
-        <AppLink route="adapt" slug={portfolioId} className={buttonVariants({ intent: "outline", size: "compact" })}>
-          Back
-        </AppLink>
-        <AppLink route="portfolio" slug={portfolioId} className={buttonVariants({ intent: "dark", size: "compact" })}>
+      <div className="flex flex-wrap justify-end gap-2">
+        <DialogClose className={buttonVariants({ intent: "outline", size: "compact" })}>Back</DialogClose>
+        <button
+          type="button"
+          disabled={!understood}
+          onClick={buy}
+          className={cn(
+            buttonVariants({ intent: "dark", size: "compact" }),
+            "disabled:cursor-not-allowed disabled:opacity-50"
+          )}
+        >
           Buy for {formatAmount(total)} USDC
-        </AppLink>
+        </button>
       </div>
-    </Card>
+    </>
   )
 }

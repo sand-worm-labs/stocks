@@ -7,9 +7,15 @@ import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { PortfolioBreadcrumb } from "@/components/Flow/PortfolioBreadcrumb"
 import { ReportPlaceholder } from "@/components/Flow/ReportPlaceholder"
 import { StepProgress } from "@/components/Flow/StepProgress"
+import { LiveRules } from "@/components/PortfolioDetail/LiveRules"
+import { PortfolioShell } from "@/components/PortfolioDetail/PortfolioShell"
+import { getActivity } from "@/lib/activity/source"
 import { getRulesScript } from "@/lib/agent/source"
+import { getStocks } from "@/lib/markets/source"
 import { getPortfolio } from "@/lib/portfolios/source"
+import { readRules } from "@/lib/rules/readings"
 import { getRules } from "@/lib/rules/source"
+import { getSession } from "@/lib/session/source"
 
 export const metadata: Metadata = { title: "Rules" }
 
@@ -18,6 +24,23 @@ export default async function RulesPage({ params }: { params: Promise<{ id: stri
   if (!portfolio) notFound()
 
   const rules = await getRules(portfolio)
+
+  if (portfolio.status === "live") {
+    const [stocks, activity, session] = await Promise.all([getStocks(), getActivity(portfolio.id), getSession()])
+
+    return (
+      <PortfolioShell portfolio={portfolio} current="rules">
+        <LiveRules
+          portfolio={portfolio}
+          readings={readRules(portfolio, rules.rules, stocks)}
+          strategy={rules.strategy}
+          checks={activity.filter(({ kind }) => kind === "checked" || kind === "locked").slice(0, 4)}
+          now={session.now}
+        />
+      </PortfolioShell>
+    )
+  }
+
   const script = await getRulesScript(portfolio, rules)
 
   return (

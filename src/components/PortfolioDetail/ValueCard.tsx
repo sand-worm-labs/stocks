@@ -1,27 +1,36 @@
-import { SourceLink } from "@/components/SourceLink/SourceLink"
-import { Sparkline } from "@/components/Sparkline/Sparkline"
+import { ChartLegend } from "@/components/Charts/ChartLegend"
+import { SourceList } from "@/components/SourceLink/SourceList"
 import { Card } from "@/components/ui/card"
-import { formatAsOf } from "@/lib/dates"
+import { CHART_COLORS } from "@/constants/chart"
 import { formatPercent } from "@/lib/format"
 import type { MarketSummary } from "@/lib/markets/types"
+import { holdPeriod, valueOverWeek } from "@/lib/portfolios/performance"
 import type { Portfolio } from "@/lib/portfolios/types"
 
-export function ValueCard({ portfolio, summary }: { portfolio: Portfolio; summary: MarketSummary }) {
-  const { weekChange = 0, worstDip = 0, series } = portfolio
+import { ValueChart } from "./ValueChart"
+
+type ValueCardProps = { portfolio: Portfolio; summary: MarketSummary; now: string }
+
+export function ValueCard({ portfolio, summary, now }: ValueCardProps) {
+  const { weekChange = 0, worstDip = 0 } = portfolio
+  const points = valueOverWeek(portfolio, now)
 
   return (
-    <Card className="flex flex-col gap-4 p-4 md:p-6">
-      <div>
-        <span className="text-ink-400 text-sm">Value</span>
-        <h3 className="text-lg font-medium">
-          {weekChange >= 0 ? "Up" : "Down"} {formatPercent(Math.abs(weekChange))} in a week, worst dip{" "}
-          {formatPercent(worstDip, { signed: true })}.
+    <Card className="flex flex-col gap-3.5 rounded-[14px] p-4 md:px-6 md:py-[22px]">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="text-[17px] font-medium">
+          {weekChange >= 0 ? "Up" : "Down"} {formatPercent(Math.abs(weekChange))} {holdPeriod(portfolio, now).text},
+          worst dip {formatPercent(worstDip, { signed: true })}.
         </h3>
+        <ChartLegend
+          items={[
+            { label: "Portfolio", color: CHART_COLORS.primary },
+            { label: "S&P 500", color: CHART_COLORS.muted, dashed: true },
+          ]}
+        />
       </div>
-      <Sparkline series={series} className="text-primary h-32 w-full" />
-      <p className="text-ink-400 text-xs">
-        Data <SourceLink {...summary.source} /> · as of {formatAsOf(summary.asOf)}
-      </p>
+      <ValueChart points={points} />
+      <SourceList sources={[summary.source]} asOf={summary.asOf} />
     </Card>
   )
 }

@@ -2,36 +2,37 @@ import type { ReactNode } from "react"
 
 import { Card } from "@/components/ui/card"
 import { SANDWORM_APP_URL } from "@/constants/flow"
+import { cn } from "@/lib/utils"
 
 type ReportSectionProps = {
   title: string
-  // The plain word for the technical name: "Max drawdown" for "How bad can it get?"
-  term?: string
   // Whether the section comes from a Sandworm notebook, and so can be opened there
   notebook?: boolean
+  className?: string
   children: ReactNode
 }
 
-export function ReportSection({ title, term, notebook = true, children }: ReportSectionProps) {
+export function ReportSection({ title, notebook = true, className, children }: ReportSectionProps) {
   return (
-    <Card className="flex flex-col gap-4 p-4 md:p-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-lg font-medium">
-          {title}
-          {term && <span className="text-ink-400 ml-2 text-xs font-normal">{term}</span>}
-        </h3>
+    <Card className={cn("flex min-w-0 flex-col gap-3.5 rounded-[14px] p-4 md:px-6 md:py-[22px]", className)}>
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="text-xl leading-7 font-medium tracking-tight">{title}</h3>
         {notebook && (
           <a
             href={SANDWORM_APP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-ink-400 hover:text-ink-100 text-xs underline"
+            className="text-accent dark:text-primary text-xs font-normal whitespace-nowrap hover:underline"
           >
-            Open in Sandworm ↗
+            View source ↗
           </a>
         )}
       </div>
       {children}
     </Card>
   )
+}
+
+export function SectionIntro({ children }: { children: ReactNode }) {
+  return <p className="text-ink-200 text-[15px] leading-[23px]">{children}</p>
 }

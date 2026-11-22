@@ -1,5 +1,6 @@
 import type { IconType } from "react-icons"
 import {
+  PiArrowLineDown,
   PiArrowsLeftRight,
   PiBell,
   PiFileText,
@@ -34,6 +35,8 @@ export const ACTIVITY_KIND = {
   report: { icon: PiFileText, tone: "neutral", category: "agent" },
   adapted: { icon: PiSlidersHorizontal, tone: "neutral", category: "agent" },
   bought: { icon: PiHandCoins, tone: "info", category: "trades" },
+  sold: { icon: PiHandCoins, tone: "neutral", category: "trades" },
+  deposit: { icon: PiArrowLineDown, tone: "positive", category: "trades" },
   refused: { icon: PiProhibit, tone: "negative", category: "refusals" },
   alert: { icon: PiBell, tone: "warning", category: "alerts" },
   gap: { icon: PiArrowsLeftRight, tone: "info", category: "alerts" },
@@ -42,3 +45,4 @@ export const ACTIVITY_KIND = {
 export type ActivityKind = keyof typeof ACTIVITY_KIND
 
 export const BASE_SEPOLIA_EXPLORER_URL = "https://sepolia.basescan.org/"
+export const explorerTxUrl = (hash: string) => `${BASE_SEPOLIA_EXPLORER_URL}tx/${hash}`

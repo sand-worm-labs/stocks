@@ -35,12 +35,12 @@ function SelectContent({ className, children, ...props }: ComponentProps<typeof 
         position="popper"
         sideOffset={4}
         className={cn(
-          "bg-dropdown-bg text-dropdown-text border-border-secondary dark:border-border-tertiary z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-xl border shadow-md",
+          "bg-dropdown-bg text-dropdown-text border-border-secondary dark:border-border-tertiary font-body z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-xl border shadow-md",
           className
         )}
         {...props}
       >
-        <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
+        <SelectPrimitive.Viewport className="flex flex-col gap-0.5 p-1.5">{children}</SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )
@@ -51,7 +51,7 @@ function SelectItem({ className, children, ...props }: ComponentProps<typeof Sel
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "focus:bg-dropdown-hover relative flex cursor-default items-center rounded-lg py-2 pr-8 pl-3 text-sm outline-none select-none data-[disabled]:opacity-50",
+        "focus:bg-hover-bg focus:border-hover-border dark:focus:bg-sidebar-hover relative flex cursor-pointer items-center rounded-[10px] border border-transparent py-2 pr-8 pl-3 text-sm transition-[background-color,border-color] duration-200 ease-out outline-none select-none data-[disabled]:opacity-50",
         className
       )}
       {...props}

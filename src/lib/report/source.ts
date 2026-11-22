@@ -6,6 +6,6 @@ export async function getReport(version: Report["version"]): Promise<Report> {
   return reportMockData[version]
 }
 
-export async function getOrders(): Promise<Order[]> {
-  return ordersMockData
+export async function getOrders(version: Report["version"]): Promise<Order[]> {
+  return [...ordersMockData[version]]
 }

@@ -3,11 +3,13 @@
 import Image from "next/image"
 import { useState } from "react"
 
+import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
 import { stockLogoUrl } from "@/lib/markets/stock"
 import { cn } from "@/lib/utils"
 
 export function StockAvatar({ symbol, className }: { symbol: string; className?: string }) {
   const [hasLogo, setHasLogo] = useState(true)
+  if (symbol === "$" || symbol === "USDC") return <UsdcMark className={cn("size-8", className)} />
 
   return (
     <span

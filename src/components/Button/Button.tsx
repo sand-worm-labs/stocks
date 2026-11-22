@@ -45,6 +45,8 @@ export const buttonVariants = cva(
           "dark:bg-white",
           "dark:text-black",
         ],
+        // For what can't be taken back, like selling everything
+        danger: ["bg-red-600", "text-white", "border-transparent", "hover:opacity-85"],
         secondary: [
           "bg-transparent",
           "border-primary",

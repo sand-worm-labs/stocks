@@ -13,7 +13,8 @@ export type AgentBlock =
   | { type: "steps"; title?: string; steps: AgentStep[] }
   | { type: "facts"; title: string; rows: StrategyRow[] }
   | { type: "rules"; title: string; note?: string; rules: Rule[] }
-  | { type: "note"; label: string; text: string }
+  // A note with a tone is set apart from the conversation, like a refusal
+  | { type: "note"; label: string; text: string; tone?: Tone }
   | { type: "chips"; label?: string; chips: string[] }
   | { type: "actions"; actions: AgentAction[] }
 

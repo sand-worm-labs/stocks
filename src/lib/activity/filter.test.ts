@@ -5,10 +5,10 @@ import type { Activity } from "./types"
 
 const NOW = "2026-11-20T14:20:00"
 const activity: Activity[] = [
-  { id: "a", kind: "checked", title: "Checked", detail: "", at: "2026-11-20T09:00:00" },
-  { id: "b", kind: "alert", title: "Alert", detail: "", at: "2026-11-20T08:12:00" },
-  { id: "c", kind: "refused", title: "Refused", detail: "", at: "2026-11-19T18:40:00" },
-  { id: "d", kind: "bought", title: "Bought", detail: "", at: "2026-11-18T15:31:00" },
+  { id: "a", portfolioId: "p", kind: "checked", title: "Checked", detail: "", at: "2026-11-20T09:00:00" },
+  { id: "b", portfolioId: "p", kind: "alert", title: "Alert", detail: "", at: "2026-11-20T08:12:00" },
+  { id: "c", portfolioId: "p", kind: "refused", title: "Refused", detail: "", at: "2026-11-19T18:40:00" },
+  { id: "d", portfolioId: "p", kind: "bought", title: "Bought", detail: "", at: "2026-11-18T15:31:00" },
 ]
 const ids = (list: Activity[]) => list.map(({ id }) => id)
 

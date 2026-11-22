@@ -21,6 +21,7 @@ export const portfoliosMockData: Portfolio[] = [
     worstDip: -0.003,
     rules: { passing: 4, total: 4, checkedAt: "2026-11-20T09:00:00" },
     series: makeSeries(7, 0.12),
+    benchmarkSeries: makeSeries(9, 0.05),
   },
   {
     id: "ai-chips-25",

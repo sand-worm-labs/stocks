@@ -22,6 +22,11 @@ export type ResearchEntry = {
   source?: Source
 }
 
+// Where a number came from, and what it was used for
+export type ReportSource = Source & { note: string }
+
+export type FanPoint = { month: number; low: number; median: number; high: number }
+
 export type Report = {
   version: 1 | 2
   verdict: { label: string; tone: Tone }
@@ -35,15 +40,20 @@ export type Report = {
   changed?: string
   comparison?: { label: string; term?: string; before: string; after: string }[]
   checks: { honesty: Check[]; bias: Check[]; overfit: Check[] }
-  // Growth of 1 unit, oldest first: the portfolio against the S&P 500, and how far below its peak the portfolio was
-  performance: { portfolio: number[]; benchmark: number[]; underwater: number[] }
+  // Month-end value of 100 invested at `start` (YYYY-MM), oldest first, the portfolio against the S&P 500. The last
+  // `holdoutMonths` are the stretch the strategy was never built on.
+  performance: { start: string; holdoutMonths: number; portfolio: number[]; benchmark: number[] }
   periods: { label: string; term: string; portfolio: number; benchmark: number }[]
-  drawdown: { text: string; bad: number; median: number; good: number }
+  // `fan` is the range of a year's outcomes month by month: the middle, and the bad and good year at 1 in 20
+  drawdown: { text: string; bad: number; median: number; good: number; note: string; fan: FanPoint[] }
   tolerance: { panic: number; worst: number; fits: boolean; text: string }
   concentration: { symbol: string; weight: number; risk: number }[]
   liquidity: { symbol: string; token: number; share: number }[]
+  // What the tokens are, and where the liquidity numbers came from
+  venue: { facts: { label: string; value: string }[]; sources: Source[]; asOf: string }
   research: ResearchEntry[]
-  sources: Source[]
+  researchNote: { text: string; sources: Source[]; asOf: string }
+  sources: ReportSource[]
 }
 
-export type Order = { symbol: string; spend: number; receive: number; minimum: number; impact: number }
+export type Order = { symbol: string; spend: number; receive: number; impact: number }

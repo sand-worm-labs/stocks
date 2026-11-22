@@ -1,44 +1,72 @@
+import { SourceList } from "@/components/SourceLink/SourceList"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
-import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatPercent, formatUsd } from "@/lib/format"
 import type { Report } from "@/lib/report/types"
 
-import { ReportSection } from "../ReportSection"
+import { ReportSection, SectionIntro } from "../ReportSection"
 
-export function LiquiditySection({ liquidity }: { liquidity: Report["liquidity"] }) {
+type LiquiditySectionProps = { liquidity: Report["liquidity"]; venue: Report["venue"] }
+
+const CELL = "border-border-secondary dark:border-border-tertiary border-t py-[9px]"
+
+export function LiquiditySection({ liquidity, venue }: LiquiditySectionProps) {
   return (
-    <ReportSection title="Can you actually trade it?" term="Liquidity">
-      <p className="text-sm">
+    <ReportSection title="Tradability">
+      <SectionIntro>
         Yes. All four have more than $100K of liquidity on Base, and tokens track their shares within 0.3%.
-      </p>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Token</TableHead>
-            <TableHead>Token price</TableHead>
-            <TableHead>Share price</TableHead>
-            <TableHead>Gap</TableHead>
-          </TableRow>
-        </TableHeader>
-        <tbody>
-          {liquidity.map(({ symbol, token, share }) => (
-            <TableRow key={symbol}>
-              <TableCell>
-                <span className="flex items-center gap-2 font-medium">
-                  <StockAvatar symbol={symbol} className="size-6" />
-                  {symbol}
-                </span>
-              </TableCell>
-              <TableCell className="tabular-nums">{formatUsd(token)}</TableCell>
-              <TableCell className="tabular-nums">{formatUsd(share)}</TableCell>
-              <TableCell className="tabular-nums">{formatPercent(token / share - 1, { signed: true })}</TableCell>
-            </TableRow>
-          ))}
-        </tbody>
-      </Table>
-      <p className="text-ink-400 text-xs">
+      </SectionIntro>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-[13px]">
+          <thead>
+            <tr className="text-ink-400 text-xs font-medium">
+              <th scope="col" className="pb-1.5 text-left font-medium">
+                Token
+              </th>
+              <th scope="col" className="pb-1.5 text-right font-medium">
+                Token price
+              </th>
+              <th scope="col" className="pb-1.5 text-right font-medium">
+                Share price
+              </th>
+              <th scope="col" className="pb-1.5 text-right font-medium">
+                Gap
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {liquidity.map(({ symbol, token, share }) => (
+              <tr key={symbol}>
+                <td className={CELL}>
+                  <span className="flex items-center gap-2 text-xs">
+                    <StockAvatar symbol={symbol} className="size-5" />
+                    {symbol}
+                  </span>
+                </td>
+                <td className={`${CELL} text-right tabular-nums`}>{formatUsd(token)}</td>
+                <td className={`${CELL} text-ink-200 text-right tabular-nums`}>{formatUsd(share)}</td>
+                <td className={`${CELL} text-right tabular-nums`}>
+                  {formatPercent(token / share - 1, { signed: true })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <dl>
+        {venue.facts.map(({ label, value }) => (
+          <div
+            key={label}
+            className="border-border-secondary dark:border-border-tertiary flex justify-between gap-3 border-t py-2 text-[13px] leading-5"
+          >
+            <dt className="text-ink-200">{label}</dt>
+            <dd className="text-right">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="text-ink-400 text-xs leading-[18px]">
         On weekends the token can drift from the share price. The agent won&apos;t buy if the gap is over 1%.
       </p>
+      <SourceList sources={venue.sources} asOf={venue.asOf} />
     </ReportSection>
   )
 }

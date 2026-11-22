@@ -23,4 +23,19 @@ export const agentMockData = {
     intro: "I can't build this, for two separate reasons. I won't make up a portfolio that only looks like it fits.",
     waysOut: ["4 stocks at 15%+, rest in cash", "4 stocks at 25% each", "Widen to AI and robotics"],
   },
+  live: {
+    status: "Watching",
+    intro: "Bought 4 stocks for 300.91 USDC on 18 Nov. I check your rules every day and ask before I buy.",
+    refusal: {
+      ask: "Put 40% in Tesla.",
+      label: "Refused · rule 2 · max 20% per stock",
+      reason: "I won't put 40% in Tesla. A chat message can't change a locked rule. You can change the rule itself.",
+    },
+    followUp: {
+      ask: "OK. Add more NVIDIA with the cash then.",
+      answer:
+        "Also no: NVDAc is already close to its cap. The cash stays unless you raise the cap or add a fifth stock.",
+    },
+    quickAsks: ["Sell Tesla", "Set a stop-loss", "Add a fifth stock"],
+  },
 } as const

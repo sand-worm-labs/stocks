@@ -17,6 +17,8 @@ export type Portfolio = {
   worstDip?: number
   rules?: { passing: number; total: number; checkedAt: string }
   series: number[]
+  // The S&P 500 over the same days, for the chart to hold the portfolio up against
+  benchmarkSeries?: number[]
   note?: string
   // What an unbuildable brief asked for: this many stocks, each at least this share
   constraint?: { positions: number; minimum: number }

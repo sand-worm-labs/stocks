@@ -1,32 +1,53 @@
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { formatPercent } from "@/lib/format"
 import type { Report } from "@/lib/report/types"
+import { cn } from "@/lib/utils"
 
-import { ReportSection } from "../ReportSection"
+import { ReportSection, SectionIntro } from "../ReportSection"
+
+// A stock carrying this much of the risk is drawn as the problem
+const HEAVY = 0.25
+// The risk bars are drawn out of this, so the largest doesn't fill the row
+const BAR_SCALE = 0.4
+
+const ROW =
+  "grid grid-cols-[84px_44px_minmax(0,1fr)_40px] items-center gap-2.5 sm:grid-cols-[100px_52px_minmax(0,1fr)_44px]"
 
 export function ConcentrationSection({ concentration }: { concentration: Report["concentration"] }) {
   return (
-    <ReportSection title="Is it one hidden bet?" term="Concentration">
-      <p className="text-sm">
+    <ReportSection title="Concentration">
+      <SectionIntro>
         Mostly, yes. You hold 4 names, but they move together. NVIDIA and Tesla carry two-thirds of the risk with 40% of
         the money.
-      </p>
-      <ul className="flex flex-col gap-2">
-        {concentration.map(({ symbol, weight, risk }) => (
-          <li key={symbol} className="flex items-center gap-3 text-sm">
-            <StockAvatar symbol={symbol} className="size-6" />
-            <span className="w-16 font-medium">{symbol}</span>
-            <span className="text-ink-400 w-12 tabular-nums">{formatPercent(weight)}</span>
-            <span className="bg-inputBg h-2 flex-1 overflow-hidden rounded-full dark:bg-white/10">
-              <span className="bg-primary block h-full rounded-full" style={{ width: `${risk * 100}%` }} />
+      </SectionIntro>
+      <div>
+        <div className={cn(ROW, "text-ink-400 pb-1.5 text-xs")}>
+          <span>Stock</span>
+          <span className="text-right">Money</span>
+          <span>Share of the risk</span>
+          <span />
+        </div>
+        {concentration.map(({ symbol, weight, risk }, i) => (
+          <div
+            key={symbol}
+            className={cn(ROW, "border-border-secondary dark:border-border-tertiary border-t py-2 text-[13px]")}
+          >
+            <span className="flex items-center gap-2 text-xs">
+              <StockAvatar symbol={symbol === "USDC" ? "$" : symbol} className="size-5" />
+              {symbol}
             </span>
-            <span className="w-10 text-right tabular-nums">{formatPercent(risk)}</span>
-          </li>
+            <span className="text-ink-200 text-right tabular-nums">{formatPercent(weight)}</span>
+            <span className="bg-hover-bg h-2.5 overflow-hidden rounded-[5px] dark:bg-white/10">
+              <span
+                style={{ width: `${(risk / BAR_SCALE) * 100}%`, "--index": i } as React.CSSProperties}
+                className={cn("animate-grow-x block h-full rounded-[5px]", risk >= HEAVY ? "bg-red-700" : "bg-link")}
+              />
+            </span>
+            <span className="text-right font-medium tabular-nums">{formatPercent(risk)}</span>
+          </div>
         ))}
-      </ul>
-      <p className="text-ink-400 text-xs">
-        Share of the risk. One shared factor (big tech) explains 78% of how these stocks move.
-      </p>
+      </div>
+      <p className="text-ink-400 text-xs">One shared factor (big tech) explains 78% of how these stocks move.</p>
     </ReportSection>
   )
 }

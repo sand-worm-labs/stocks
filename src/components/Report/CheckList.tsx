@@ -1,22 +1,24 @@
-import { PiCheckCircle, PiWarningCircle, PiXCircle } from "react-icons/pi"
+import { PiCheck, PiExclamationMark, PiX } from "react-icons/pi"
 
-import { Badge } from "@/components/ui/badge"
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import type { Check } from "@/lib/report/types"
+import { cn } from "@/lib/utils"
 
-const ICON = { positive: PiCheckCircle, warning: PiWarningCircle, negative: PiXCircle } as const
+const ICON = { positive: PiCheck, negative: PiX } as const
 
 export function CheckList({ checks }: { checks: Check[] }) {
   return (
-    <ul className="flex flex-col gap-3">
-      {checks.map(({ id, tone, text, term }) => {
-        const Icon = ICON[tone as keyof typeof ICON] ?? PiCheckCircle
+    <ul className="flex flex-col">
+      {checks.map(({ id, tone, text }, i) => {
+        const Icon = ICON[tone as keyof typeof ICON] ?? PiExclamationMark
         return (
-          <li key={id} className="flex items-start gap-2 text-sm">
-            <Icon aria-hidden="true" size={18} className={`${TONE_TEXT_CLASSNAME[tone]} mt-0.5 flex-none`} />
-            <span>
-              {text} {term && <Badge className="ml-1">{term}</Badge>}
-            </span>
+          <li
+            key={id}
+            style={{ "--index": i } as React.CSSProperties}
+            className="animate-fade-up flex items-start gap-2.5 py-2 text-sm leading-[21px]"
+          >
+            <Icon aria-hidden="true" size={14} className={cn("mt-[3px] flex-none", TONE_TEXT_CLASSNAME[tone])} />
+            <span>{text}</span>
           </li>
         )
       })}

@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader/PageHeader"
 import { ACTIVITY_FILTER_LABEL, ACTIVITY_FILTERS } from "@/constants/activity"
 import { activityCounts, filterActivity, parseActivityFilter } from "@/lib/activity/filter"
 import { getActivity } from "@/lib/activity/source"
+import { getPortfolios } from "@/lib/portfolios/source"
 import { getSession } from "@/lib/session/source"
 
 export const metadata: Metadata = { title: "Activity" }
@@ -14,7 +15,8 @@ type ActivityPageProps = { searchParams: Promise<{ filter?: string }> }
 
 export default async function ActivityPage({ searchParams }: ActivityPageProps) {
   const filter = parseActivityFilter((await searchParams).filter)
-  const [session, activity] = await Promise.all([getSession(), getActivity()])
+  const [session, activity, portfolios] = await Promise.all([getSession(), getActivity(), getPortfolios()])
+  const portfolioNames = Object.fromEntries(portfolios.map(({ id, name }) => [id, name]))
   const counts = activityCounts(activity)
 
   return (
@@ -31,7 +33,7 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
             value === "alerts" ? `${ACTIVITY_FILTER_LABEL[value]} · ${counts[value]}` : ACTIVITY_FILTER_LABEL[value],
         }))}
       />
-      <ActivityList activity={filterActivity(activity, filter)} now={session.now} />
+      <ActivityList activity={filterActivity(activity, filter)} now={session.now} portfolioNames={portfolioNames} />
     </div>
   )
 }

@@ -1,18 +1,38 @@
-import { ReportSection } from "../ReportSection"
+import { AppLink } from "@/components/AppLink/AppLink"
 
-export function SummarySection({ summary }: { summary: string[] }) {
+type SummarySectionProps = {
+  summary: string[]
+  portfolioId: string
+  // Whether to point at the version with less risk
+  suggestAdapt: boolean
+}
+
+export function SummarySection({ summary, portfolioId, suggestAdapt }: SummarySectionProps) {
   return (
-    <ReportSection title="The 30-second version" notebook={false}>
-      <ol className="flex flex-col gap-3">
+    <section className="bg-hover-bg flex flex-col gap-2 rounded-[14px] px-4 py-[18px] md:px-[22px] dark:bg-white/5">
+      <h3 className="text-[13px] font-medium">The 30-second version</h3>
+      <ol className="flex flex-col gap-2">
         {summary.map((line, i) => (
-          <li key={line} className="flex gap-3 text-sm">
-            <span className="bg-inputBg text-ink-400 flex size-6 flex-none items-center justify-center rounded-full text-xs dark:bg-white/10">
-              {i + 1}
+          <li
+            key={line}
+            style={{ "--index": i } as React.CSSProperties}
+            className="animate-fade-up flex gap-2.5 text-[15px] leading-[23px]"
+          >
+            <span className="text-ink-400 tabular-nums">{i + 1}</span>
+            <span>
+              {line}
+              {suggestAdapt && i === summary.length - 1 && (
+                <>
+                  {" "}
+                  <AppLink route="adapt" slug={portfolioId} className="text-link font-medium hover:underline">
+                    Try “less risk” →
+                  </AppLink>
+                </>
+              )}
             </span>
-            {line}
           </li>
         ))}
       </ol>
-    </ReportSection>
+    </section>
   )
 }

@@ -35,6 +35,6 @@ export const PORTFOLIO_PENDING_TEXT = {
 export const TRADING_MODE_LABEL = { paper: "Paper", live: "Live" } as const
 
 export const TRADING_MODE_OPTIONS = [
-  { value: "paper", label: "Paper trading · live prices" },
-  { value: "live", label: "My wallet · real USDC" },
-] as const satisfies { value: keyof typeof TRADING_MODE_LABEL; label: string }[]
+  { value: "paper", title: "Paper trading", detail: "live prices" },
+  { value: "live", title: "My wallet", detail: "real USDC" },
+] as const satisfies { value: keyof typeof TRADING_MODE_LABEL; title: string; detail: string }[]

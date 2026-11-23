@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { PiCheckBold, PiPlus } from "react-icons/pi"
+import { PiPlus } from "react-icons/pi"
 
+import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SearchField } from "@/components/ui/search-field"
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
@@ -32,8 +33,8 @@ export function BenchmarkPicker({ lines, picked, max, onToggle }: BenchmarkPicke
 
   return (
     <Popover onOpenChange={(open) => open || setQuery("")}>
-      <PopoverTrigger className="border-border-secondary text-ink-200 hover:text-ink-100 hover:bg-hover-bg dark:border-border-tertiary focus-visible:ring-mark/50 inline-flex items-center gap-1.5 rounded-full border border-dashed px-3 py-1.5 text-sm transition-colors outline-none focus-visible:ring-2">
-        <PiPlus aria-hidden="true" size={14} />
+      <PopoverTrigger className="border-border-secondary text-ink-200 hover:text-ink-100 hover:bg-hover-bg dark:border-border-tertiary focus-visible:ring-mark/50 inline-flex items-center gap-1 rounded-[5px] border border-dashed px-2 py-1 text-xs leading-none font-medium transition-colors outline-none focus-visible:ring-2">
+        <PiPlus aria-hidden="true" size={12} />
         Compare
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[min(380px,calc(100vw-2rem))] p-0">
@@ -58,24 +59,16 @@ export function BenchmarkPicker({ lines, picked, max, onToggle }: BenchmarkPicke
                   const slot = picked.find(({ id }) => id === line.id)
 
                   return (
-                    <button
+                    <label
                       key={line.id}
-                      type="button"
-                      aria-pressed={Boolean(slot)}
                       title={line.fund}
-                      onClick={() => onToggle(line.id)}
-                      className="hover:bg-hover-bg dark:hover:bg-dropdown-hover focus-visible:bg-hover-bg flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors outline-none"
+                      className="hover:bg-hover-bg dark:hover:bg-dropdown-hover flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors"
                     >
-                      <span
-                        aria-hidden="true"
-                        style={slot ? { backgroundColor: slot.color, borderColor: slot.color } : undefined}
-                        className={cn(
-                          "flex size-4 flex-none items-center justify-center rounded-[4px] border text-white",
-                          !slot && "dark:border-border-tertiary border-[#D0D5DD]"
-                        )}
-                      >
-                        {slot && <PiCheckBold size={10} />}
-                      </span>
+                      <Checkbox
+                        checked={Boolean(slot)}
+                        onChange={() => onToggle(line.id)}
+                        aria-label={`Compare with ${line.name}`}
+                      />
                       <span className="flex-1 truncate">{line.name}</span>
                       <span className="text-ink-400 font-tertiary text-xs">{line.id}</span>
                       <span
@@ -83,7 +76,7 @@ export function BenchmarkPicker({ lines, picked, max, onToggle }: BenchmarkPicke
                       >
                         {formatPercent(line.change, { signed: true })}
                       </span>
-                    </button>
+                    </label>
                   )
                 })}
               </div>

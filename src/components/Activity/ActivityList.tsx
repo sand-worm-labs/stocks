@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card"
+import { EmptyResults } from "@/components/ui/empty-results"
+import { ACTIVITY_EMPTY, type ActivityFilter } from "@/constants/activity"
 import { groupByDay, summarizeDay } from "@/lib/activity/filter"
 import type { Activity } from "@/lib/activity/types"
 import { formatAmount, pluralize } from "@/lib/format"
@@ -10,10 +12,18 @@ type ActivityListProps = {
   now: string
   // Names of portfolios by id. Given, each event says which portfolio it is from.
   portfolioNames?: Record<string, string>
+  // The filter the list is under, for what to say when it has nothing
+  filter?: ActivityFilter
 }
 
-export function ActivityList({ activity, now, portfolioNames }: ActivityListProps) {
-  if (!activity.length) return <p className="text-ink-400 py-8 text-center text-sm">Nothing here yet.</p>
+export function ActivityList({ activity, now, portfolioNames, filter = "all" }: ActivityListProps) {
+  if (!activity.length) {
+    return (
+      <Card>
+        <EmptyResults {...ACTIVITY_EMPTY[filter]} className="py-16" />
+      </Card>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6">

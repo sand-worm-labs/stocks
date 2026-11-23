@@ -62,7 +62,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         addresses={addresses}
         mode={session.network.mode}
       />
-      <div className="grid items-start gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <ExitsCard portfolio={portfolio} />
         <RecentActivity portfolioId={id} activity={activity} now={session.now} />
       </div>

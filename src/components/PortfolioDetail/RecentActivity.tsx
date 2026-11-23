@@ -1,8 +1,9 @@
-import { PiArrowRight } from "react-icons/pi"
+import { PiArrowRight, PiPulse } from "react-icons/pi"
 
 import { AppLink } from "@/components/AppLink/AppLink"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { Card } from "@/components/ui/card"
+import { EmptyResults } from "@/components/ui/empty-results"
 import { IconTile } from "@/components/ui/icon-tile"
 import { ACTIVITY_KIND } from "@/constants/activity"
 import type { Activity } from "@/lib/activity/types"
@@ -28,6 +29,14 @@ export function RecentActivity({ portfolioId, activity, now }: RecentActivityPro
           All activity <PiArrowRight aria-hidden="true" size={12} />
         </AppLink>
       </div>
+      {!activity.length && (
+        <EmptyResults
+          icon={PiPulse}
+          title="Nothing yet"
+          hint="What the agent does for this portfolio will show up here."
+          className="flex-1 py-8"
+        />
+      )}
       <ul className="-mx-2 flex flex-col">
         {activity.slice(0, SHOWN).map(({ id, kind, title, detail, at, trade }) => {
           const { icon, tone } = ACTIVITY_KIND[kind]

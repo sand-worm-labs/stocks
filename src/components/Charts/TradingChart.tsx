@@ -16,11 +16,11 @@ import {
 } from "lightweight-charts"
 import { useTheme } from "next-themes"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { PiX } from "react-icons/pi"
 
 import { BenchmarkPicker } from "@/components/Charts/BenchmarkPicker"
 import { ChartLoader } from "@/components/Charts/ChartLoader"
 import { ChartTooltip, type TooltipRow } from "@/components/Charts/ChartTooltip"
+import { Pill } from "@/components/ui/pill"
 import { useInView } from "@/hooks/use-in-view"
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 import type { BenchmarkLine } from "@/lib/benchmarks/compare"
@@ -291,35 +291,25 @@ export function TradingChart({ points, lines, label, name = "Portfolio" }: Tradi
   return (
     <div className="flex flex-col gap-3">
       <div role="group" aria-label="Compare the portfolio with" className="flex flex-wrap items-center gap-2">
-        <span className="bg-primary/10 text-ink-100 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm">
-          <span aria-hidden="true" className="bg-primary size-2 rounded-full" />
+        <Pill dot="var(--color-primary)" detail={formatPercent(own, { signed: true })}>
           {name}
-          <span className="tabular-nums">{formatPercent(own, { signed: true })}</span>
-        </span>
-        <span className="text-ink-400 text-sm">vs</span>
+        </Pill>
+        <span className="text-ink-400 text-xs">vs</span>
         {picked.map(({ id, color }) => {
           const line = lines.find((other) => other.id === id)
           if (!line) return null
 
           return (
-            <span
+            <Pill
               key={id}
+              dot={color}
               title={line.fund}
-              style={{ borderColor: color, backgroundColor: `${color}1f` }}
-              className="animate-fade-up text-ink-100 inline-flex items-center gap-2 rounded-full border py-1.5 pr-1.5 pl-3 text-sm"
+              detail={formatPercent(line.change, { signed: true })}
+              onRemove={() => toggle(id)}
+              className="animate-fade-up"
             >
-              <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: color }} />
               {line.name}
-              <span className="tabular-nums">{formatPercent(line.change, { signed: true })}</span>
-              <button
-                type="button"
-                aria-label={`Take ${line.name} off the chart`}
-                onClick={() => toggle(id)}
-                className="text-ink-400 hover:text-ink-100 hover:bg-hover-bg flex size-5 items-center justify-center rounded-full transition-colors outline-none"
-              >
-                <PiX aria-hidden="true" size={12} />
-              </button>
-            </span>
+            </Pill>
           )
         })}
         <BenchmarkPicker lines={lines} picked={picked} max={MAX_COMPARED} onToggle={toggle} />

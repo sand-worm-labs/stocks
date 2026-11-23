@@ -23,7 +23,11 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader icon="activity" title="Activity" description={<>Trades, refusals, alerts and everything the agent did</>} />
+      <PageHeader
+        icon="activity"
+        title="Activity"
+        description={<>Trades, refusals, alerts and everything the agent did</>}
+      />
       <FilterPills
         label="Filter activity"
         route="activity"
@@ -38,7 +42,7 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
       {filter === "alerts" ? (
         <AlertsView activity={events} now={session.now} portfolioNames={portfolioNames} />
       ) : (
-        <ActivityList activity={events} now={session.now} portfolioNames={portfolioNames} />
+        <ActivityList activity={events} now={session.now} portfolioNames={portfolioNames} filter={filter} />
       )}
     </div>
   )

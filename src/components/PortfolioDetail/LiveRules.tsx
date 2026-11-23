@@ -1,6 +1,9 @@
+import { PiShieldCheck } from "react-icons/pi"
+
 import { AppLink } from "@/components/AppLink/AppLink"
 import { StrategyWorkbench } from "@/components/Strategy/StrategyWorkbench"
 import { Card } from "@/components/ui/card"
+import { EmptyResults } from "@/components/ui/empty-results"
 import type { Activity } from "@/lib/activity/types"
 import { formatActivityTime } from "@/lib/dates"
 import type { Stock } from "@/lib/markets/types"
@@ -61,6 +64,14 @@ export function LiveRules({ portfolio, stocks, doc, strategy, checks, now }: Liv
               All checks
             </AppLink>
           </div>
+          {!checks.length && (
+            <EmptyResults
+              icon={PiShieldCheck}
+              title="No checks yet"
+              hint="The agent's checks against your rules will show up here."
+              className="flex-1 py-8"
+            />
+          )}
           <ul>
             {checks.map(({ id: checkId, title, detail, at }) => (
               <li

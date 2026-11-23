@@ -67,7 +67,7 @@ export default async function PortfolioActivityPage({ params, searchParams }: Po
               : ACTIVITY_FILTER_LABEL[value],
         }))}
       />
-      <ActivityList activity={filterActivity(activity, filter)} now={session.now} />
+      <ActivityList activity={filterActivity(activity, filter)} now={session.now} filter={filter} />
     </PortfolioShell>
   )
 }

@@ -5,7 +5,6 @@ import { FAUCET_URL } from "@/constants/settings"
 import { formatAmount } from "@/lib/format"
 
 import { useWalletUsdc } from "./useWalletUsdc"
-import { useWalletEnabled } from "./WalletContext"
 
 type Row = { status: "pass" | "warn"; title: string; description: string; faucet?: boolean }
 
@@ -20,11 +19,14 @@ const FAUCET = (
   </a>
 )
 
-function Connected() {
-  const { connected, chain, onUnsupportedNetwork, reading } = useWalletUsdc()
+// The check of whether there is any USDC to buy with: what the connected wallet holds, read from the chain it is on
+export function UsdcCheckRow() {
+  const { connected, chain, onUnsupportedNetwork, reading, isWaiting } = useWalletUsdc()
   let row: Row
 
-  if (!connected) {
+  if (isWaiting) {
+    row = { status: "warn", title: "USDC to spend: …", description: "Checking your wallet." }
+  } else if (!connected) {
     row = { status: "warn", title: "USDC to spend: —", description: "Connect a wallet to see what you have to spend." }
   } else if (onUnsupportedNetwork || !chain) {
     row = { status: "warn", title: "USDC to spend: —", description: "Switch your wallet to Base or Base Sepolia." }
@@ -55,19 +57,5 @@ function Connected() {
 
   return (
     <CheckRow status={row.status} title={row.title} description={row.description} action={row.faucet ? FAUCET : null} />
-  )
-}
-
-// The check of whether there is any USDC to buy with: what the connected wallet holds, read from the chain it is on
-export function UsdcCheckRow() {
-  return useWalletEnabled() ? (
-    <Connected />
-  ) : (
-    <CheckRow
-      status="warn"
-      title="USDC to spend: —"
-      description="Connect a wallet to see what you have to spend."
-      action={null}
-    />
   )
 }

@@ -10,7 +10,7 @@ import { headerIconButtonClassName } from "@/styles/interactive"
 import { SectionTabs } from "./SectionTabs"
 import { ThemeToggle } from "./ThemeToggle"
 
-export function AppHeader({ session: { unreadAlerts } }: { session: Session }) {
+export function AppHeader({ session: { unreadAlerts, userId } }: { session: Session }) {
   return (
     <header className="border-border-secondary bg-block-surface dark:border-border-tertiary flex h-16 items-center gap-5 border-b px-4 select-none md:px-6">
       <AppLink route="home" className="flex items-center gap-2">
@@ -38,7 +38,7 @@ export function AppHeader({ session: { unreadAlerts } }: { session: Session }) {
             <PiGearSix size={22} aria-label="Settings" />
           </AppLink>
         </Tooltip>
-        <WalletMenu />
+        <WalletMenu preload={userId ? "idle" : undefined} />
       </div>
     </header>
   )

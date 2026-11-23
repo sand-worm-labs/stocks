@@ -1,10 +1,8 @@
 "use client"
 
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core"
-
 import { StatusMark } from "@/components/Check/CheckRow"
 import { Card } from "@/components/ui/card"
-import { useWalletEnabled } from "@/components/Wallet/WalletContext"
+import { useWallet } from "@/components/Wallet/WalletContext"
 import { buildGettingStarted } from "@/lib/home/gettingStarted"
 import { cn } from "@/lib/utils"
 
@@ -48,14 +46,10 @@ function Steps({ walletConnected, ...progress }: Progress & { walletConnected: b
   )
 }
 
-function WithWallet(progress: Progress) {
-  const { primaryWallet } = useDynamicContext()
-
-  return <Steps walletConnected={Boolean(primaryWallet)} {...progress} />
-}
-
 // The first steps of an account and the one to do next, until they are all done; the wallet's is ticked from what is
 // connected. It says what to do, and the buttons for it are in the header, where they are only once.
 export function GettingStarted(progress: Progress) {
-  return useWalletEnabled() ? <WithWallet {...progress} /> : <Steps walletConnected={false} {...progress} />
+  const { address } = useWallet()
+
+  return <Steps walletConnected={Boolean(address)} {...progress} />
 }

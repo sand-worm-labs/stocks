@@ -1,88 +1,106 @@
 "use client"
 
-import { EthereumWalletConnectors } from "@dynamic-labs/ethereum"
-import { DynamicContextProvider, getMinAuthToken } from "@dynamic-labs/sdk-react-core"
-import { useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
-import type { ReactNode } from "react"
-import { toast } from "sonner"
+import { type ComponentType, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { APP_CHAINS } from "@/constants/chains"
-import { ONBOARDING_PATH } from "@/constants/onboarding"
-import { DEFAULT_AFTER_SIGN_IN, SIGN_IN_PATH } from "@/lib/auth/config"
 import { env } from "env.mjs"
 
-import { WalletEnabled } from "./WalletContext"
+import { type PreloadWhen, type Published, type Wallet, WalletProvider } from "./WalletContext"
 
-// The networks the app works on, in the order they are offered: Base Sepolia, where paper trading's USDC is free, then
-// Base. Whatever else the dashboard has switched on, Ethereum included, isn't offered, unless none of these is on at all.
-const APP_CHAIN_IDS: number[] = APP_CHAINS.map(({ id }) => id)
+type Intent = "signIn" | "linkWallet" | "profile"
+type SdkProps = { publish: (value: Published | undefined) => void }
 
-const onlyAppNetworks = <N extends { chainId: number | string }>(networks: N[]) => {
-  const kept = networks
-    .filter(({ chainId }) => APP_CHAIN_IDS.includes(Number(chainId)))
-    .sort((a, b) => APP_CHAIN_IDS.indexOf(Number(a.chainId)) - APP_CHAIN_IDS.indexOf(Number(b.chainId)))
-  return kept.length ? kept : networks
-}
+const IDLE_TIMEOUT_MS = 3000
+// For a browser without requestIdleCallback
+const IDLE_FALLBACK_MS = 1500
 
-// A path on this site, or nowhere: a sign-in link can't be made to send people to another site
-const safeNext = (next: string | null) => (next?.startsWith("/") && !next.startsWith("//") ? next : undefined)
+const perform = (wallet: Published, intent: Intent) =>
+  ({ signIn: wallet.openSignIn, linkWallet: wallet.linkWallet, profile: wallet.openProfile })[intent]()
 
-// Dynamic, which does the signing in and the wallets: email, social, or a wallet from the browser or the phone. When a
-// person signs in there, it hands our server the access token it gave them, and our server turns it into a session.
+// Wallets are Dynamic's, and its SDK is large, so it isn't part of the page. It is fetched (see `useWallet`) when a page
+// is about wallets, when someone signed in is likely to want theirs shown, or when someone reaches for the button that
+// opens it. What it says is read through plain values, so the rest of the app never imports it, and a click that comes
+// before it has arrived is kept and carried out when it does.
 export function DynamicProviders({ children }: { children: ReactNode }) {
-  const router = useRouter()
-  const { resolvedTheme } = useTheme()
   const environmentId = env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID
+  const [Sdk, setSdk] = useState<ComponentType<SdkProps>>()
+  const [live, setLive] = useState<Published>()
+  const [isRequested, setIsRequested] = useState(false)
+  const requested = useRef(false)
+  const pending = useRef<Intent>(undefined)
+  const liveRef = useRef(live)
+  liveRef.current = live
 
-  if (!environmentId) return <WalletEnabled value={false}>{children}</WalletEnabled>
+  const load = useCallback(() => {
+    if (!environmentId || requested.current) return
 
-  const startSession = async () => {
-    const token = getMinAuthToken()
-    if (!token) return
+    requested.current = true
+    setIsRequested(true)
+    import("./DynamicSdk")
+      .then(({ DynamicSdk }) => setSdk(() => DynamicSdk))
+      .catch(() => {
+        // Asked for again the next time it is wanted
+        requested.current = false
+        setIsRequested(false)
+      })
+  }, [environmentId])
 
-    const response = await fetch("/api/auth/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    })
-    if (!response.ok) {
-      toast.error("We couldn't sign you in", { description: "Try again in a moment." })
-      return
-    }
+  const preload = useCallback(
+    (when: PreloadWhen) => {
+      if (when === "now") {
+        load()
+        return () => undefined
+      }
+      if (typeof requestIdleCallback === "function") {
+        const id = requestIdleCallback(load, { timeout: IDLE_TIMEOUT_MS })
+        return () => cancelIdleCallback(id)
+      }
 
-    // On the sign-in page, on to where they were going, or for someone new, to the first run. Anywhere else, the page now
-    // knows who is here.
-    if (window.location.pathname === SIGN_IN_PATH) {
-      const { onboarded } = (await response.json()) as { onboarded: boolean }
-      const next = safeNext(new URLSearchParams(window.location.search).get("next"))
-      router.replace(onboarded ? (next ?? DEFAULT_AFTER_SIGN_IN) : ONBOARDING_PATH)
-    }
-    router.refresh()
-  }
+      const id = setTimeout(load, IDLE_FALLBACK_MS)
+      return () => clearTimeout(id)
+    },
+    [load]
+  )
 
-  const endSession = async () => {
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined)
-    router.refresh()
-  }
+  // A click on something that needs the SDK before it is there: fetch it, and do the click when it arrives
+  const act = useCallback(
+    (intent: Intent) => {
+      if (liveRef.current) return perform(liveRef.current, intent)
+
+      pending.current = intent
+      load()
+    },
+    [load]
+  )
+
+  useEffect(() => {
+    if (!live || !pending.current) return
+
+    const intent = pending.current
+    pending.current = undefined
+    perform(live, intent)
+  }, [live])
+
+  const value = useMemo<Wallet>(
+    () => ({
+      status: !environmentId ? "off" : live ? "ready" : isRequested ? "loading" : "idle",
+      isSignedIn: live?.isSignedIn ?? false,
+      address: live?.address,
+      network: live?.network,
+      preload,
+      openSignIn: () => act("signIn"),
+      linkWallet: () => act("linkWallet"),
+      openProfile: () => act("profile"),
+      signOut: async () => {
+        await liveRef.current?.signOut()
+      },
+    }),
+    [environmentId, live, isRequested, preload, act]
+  )
 
   return (
-    <WalletEnabled value>
-      <DynamicContextProvider
-        theme={resolvedTheme === "dark" || resolvedTheme === "light" ? resolvedTheme : "auto"}
-        settings={{
-          environmentId,
-          appName: "Sandworm Stocks",
-          appLogoUrl: "/logo.svg",
-          walletConnectors: [EthereumWalletConnectors],
-          // A wallet on another network is asked to switch to one of ours when it signs in
-          networkValidationMode: "always",
-          overrides: { evmNetworks: onlyAppNetworks },
-          events: { onAuthSuccess: startSession, onLogout: endSession },
-        }}
-      >
-        {children}
-      </DynamicContextProvider>
-    </WalletEnabled>
+    <WalletProvider value={value}>
+      {children}
+      {Sdk && <Sdk publish={setLive} />}
+    </WalletProvider>
   )
 }

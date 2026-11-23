@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache"
 import { z } from "zod"
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
@@ -200,6 +201,13 @@ async function loadBaseTokens(): Promise<BaseToken[]> {
     }))
 }
 
+// The list is also kept in Next's data cache, which every server instance shares, so one that has only just started reads
+// what another fetched instead of walking the free feed again: a start with nothing in memory or on disk is a read, not
+// a dozen slow calls. A list that has gone stale is served and renewed behind it, and one that can't be renewed stays.
+// The in-memory copy below still decides when to ask, so a feed that is refusing is tried about once a minute per instance,
+// not once per visit.
+const loadSharedTokens = unstable_cache(loadBaseTokens, ["base-tokens"], { revalidate: CACHE_MS / 1000 })
+
 const FAILED_RETRY_MS = 60 * 1000
 
 let cached: { at: number; tokens: BaseToken[] } | undefined
@@ -207,7 +215,7 @@ let loading: Promise<BaseToken[]> | undefined
 let retryAt = 0
 
 function refresh() {
-  loading ??= loadBaseTokens()
+  loading ??= loadSharedTokens()
     .then(async (tokens) => {
       cached = { at: Date.now(), tokens }
       await writeCache("tokens-v2", tokens).catch(() => {})

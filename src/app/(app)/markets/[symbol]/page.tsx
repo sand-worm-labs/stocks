@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { Suspense } from "react"
 import { z } from "zod"
 
 import { BackLink } from "@/components/BackLink/BackLink"
+import { TabSkeleton } from "@/components/Skeleton/TabSkeleton"
 import { ExposureCard } from "@/components/Stock/ExposureCard"
 import { KnowledgeCard } from "@/components/Stock/KnowledgeCard"
 import { RiskCard } from "@/components/Stock/RiskCard"
@@ -54,10 +56,11 @@ export default async function TokenPage({ params, searchParams }: TokenPageProps
   const token = findToken(tokens, decodeURIComponent(symbol))
   if (!token) notFound()
 
-  const researchId = (await getBriefDraft()).portfolioId
-  const pool = (await getAllPoolQuotes(tokens.map(({ address }) => address))).find(
-    ({ address }) => address === token.address.toLowerCase()
-  )
+  const [{ portfolioId: researchId }, pools] = await Promise.all([
+    getBriefDraft(),
+    getAllPoolQuotes(tokens.map(({ address }) => address)),
+  ])
+  const pool = pools.find(({ address }) => address === token.address.toLowerCase())
 
   return (
     <div className="flex flex-col gap-6">
@@ -65,28 +68,31 @@ export default async function TokenPage({ params, searchParams }: TokenPageProps
       <TokenHeader token={token} researchId={researchId} />
       <TokenTabs tokenId={token.id} current={tab as (typeof TOKEN_TABS)[number]["id"]} />
 
-      {tab === "overview" && (await overviewTab({ token }))}
+      {/* A tab that reads the chain streams in after the header and tabs, so a click on one is answered at once */}
+      <Suspense key={tab} fallback={<TabSkeleton />}>
+        {tab === "overview" && <OverviewTab token={token} />}
 
-      {tab === "stats" && (await statsTab({ token, total: tokens.length }))}
+        {tab === "stats" && <StatsTab token={token} total={tokens.length} />}
 
-      {tab === "trades" && <TokenTrades address={token.address} symbol={token.symbol} />}
+        {tab === "trades" && <TokenTrades address={token.address} symbol={token.symbol} />}
 
-      {tab === "community" && <TokenChat address={token.address} symbol={token.symbol} />}
+        {tab === "community" && <TokenChat address={token.address} symbol={token.symbol} />}
 
-      {(tab === "holders" || tab === "transfers") && (await transfersTab({ token, view: tab, pair: pool?.pair }))}
+        {(tab === "holders" || tab === "transfers") && <TransfersTab token={token} view={tab} pair={pool?.pair} />}
 
-      {tab === "info" && <InfoTab token={token} pair={pool?.pair} />}
+        {tab === "info" && <InfoTab token={token} pair={pool?.pair} />}
 
-      {tab === "contract" && (await contractTab({ token }))}
+        {tab === "contract" && <ContractTab token={token} />}
 
-      {tab === "analytics" && <TokenAnalytics token={token} liquidity={pool?.liquidity} />}
+        {tab === "analytics" && <TokenAnalytics token={token} liquidity={pool?.liquidity} />}
+      </Suspense>
     </div>
   )
 }
 
 type TabProps = { token: NonNullable<ReturnType<typeof findToken>> }
 
-async function overviewTab({ token }: TabProps) {
+async function OverviewTab({ token }: TabProps) {
   const ticker = shareTicker(token)
   const [portfolios, researched, chartSymbol] = await Promise.all([
     getPortfolios(),
@@ -114,7 +120,7 @@ async function overviewTab({ token }: TabProps) {
 }
 
 // The numbers behind the token, and what its contract and market say about it
-async function statsTab({ token, total }: TabProps & { total: number }) {
+async function StatsTab({ token, total }: TabProps & { total: number }) {
   const [supply, ethUsd] = await Promise.all([getTokenSupply(token.address), getEthPrice()])
 
   return (
@@ -125,7 +131,7 @@ async function statsTab({ token, total }: TabProps & { total: number }) {
   )
 }
 
-async function transfersTab({ token, view, pair }: TabProps & { view: "holders" | "transfers"; pair?: string }) {
+async function TransfersTab({ token, view, pair }: TabProps & { view: "holders" | "transfers"; pair?: string }) {
   const supply = await getTokenSupply(token.address)
   const transfers = await getTransfers(token.address, supply?.decimals ?? 18)
 
@@ -212,7 +218,7 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
   )
 }
 
-async function contractTab({ token }: TabProps) {
+async function ContractTab({ token }: TabProps) {
   const contract = await getTokenContract(token.address)
 
   return (

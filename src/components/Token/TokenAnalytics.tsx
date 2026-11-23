@@ -1,6 +1,7 @@
+import { Money } from "@/components/Money/Money"
 import { TokenLineChart } from "@/components/TokenLineChart/TokenLineChart"
 import { Card } from "@/components/ui/card"
-import { formatCompactUsd, formatPercent, formatUsd } from "@/lib/format"
+import { formatCompactUsd, formatPercent } from "@/lib/format"
 import type { BaseToken } from "@/lib/markets/tokens"
 
 import { FactList } from "./FactList"
@@ -21,7 +22,7 @@ export function TokenAnalytics({ token, liquidity }: { token: BaseToken; liquidi
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-lg font-medium">Price, last 7 days</h2>
           <span className="text-ink-400 text-sm">
-            {formatUsd(low)} to {formatUsd(high)}
+            <Money value={low} /> to <Money value={high} />
           </span>
         </div>
         <TokenLineChart

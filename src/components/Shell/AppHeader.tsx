@@ -1,7 +1,6 @@
 import { PiBell, PiGearSix } from "react-icons/pi"
 
 import { AppLink } from "@/components/AppLink/AppLink"
-import { NewPortfolioButton } from "@/components/Portfolios/NewPortfolioButton"
 import { SandwormLogo } from "@/components/SandwormLogo/SandwormLogo"
 import { Tooltip } from "@/components/Tooltip/Tooltip"
 import { WalletMenu } from "@/components/Wallet/WalletMenu"
@@ -9,10 +8,11 @@ import type { Session } from "@/lib/session/types"
 import { headerIconButtonClassName } from "@/styles/interactive"
 
 import { SectionTabs } from "./SectionTabs"
+import { ThemeToggle } from "./ThemeToggle"
 
 export function AppHeader({ session: { unreadAlerts } }: { session: Session }) {
   return (
-    <header className="border-border-secondary bg-block-surface dark:border-border-tertiary flex h-14 items-center gap-5 border-b px-4 md:px-6">
+    <header className="border-border-secondary bg-block-surface dark:border-border-tertiary flex h-16 items-center gap-5 border-b px-4 select-none md:px-6">
       <AppLink route="home" className="flex items-center gap-2">
         <SandwormLogo size={26} />
         <span className="font-tertiary text-base font-bold uppercase">Sandworm</span>
@@ -23,8 +23,8 @@ export function AppHeader({ session: { unreadAlerts } }: { session: Session }) {
 
       <SectionTabs unreadAlerts={unreadAlerts} />
 
-      <div className="ml-auto flex items-center gap-1.5">
-        <WalletMenu />
+      <div className="ml-auto flex items-center gap-2">
+        <ThemeToggle />
         <Tooltip title="Notifications">
           <AppLink route="activity" className={headerIconButtonClassName}>
             <PiBell size={22} aria-label={`Alerts, ${unreadAlerts} new`} />
@@ -38,7 +38,7 @@ export function AppHeader({ session: { unreadAlerts } }: { session: Session }) {
             <PiGearSix size={22} aria-label="Settings" />
           </AppLink>
         </Tooltip>
-        <NewPortfolioButton className="hidden md:inline-flex" />
+        <WalletMenu />
       </div>
     </header>
   )

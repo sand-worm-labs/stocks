@@ -10,7 +10,7 @@ export function SectionTabs({ unreadAlerts }: { unreadAlerts: number }) {
   const current = useCurrentTab(SECTIONS.map(({ route }) => route))
 
   return (
-    <nav aria-label="Sections" className="hidden items-stretch md:flex">
+    <nav aria-label="Sections" className="hidden items-center gap-1 md:flex">
       {SECTIONS.map(({ route, hasAlertCount }) => {
         const isCurrent = route === current
 
@@ -20,8 +20,8 @@ export function SectionTabs({ unreadAlerts }: { unreadAlerts: number }) {
             route={route}
             isCurrent={isCurrent}
             className={cn(
-              "relative inline-flex min-h-14 items-center gap-1.5 px-3 text-sm transition-colors",
-              isCurrent ? "text-ink-100 font-medium" : "text-ink-400 hover:text-ink-100"
+              "inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-normal transition-colors",
+              isCurrent ? "bg-hover-bg text-ink-100" : "text-ink-200 hover:bg-hover-bg/60 hover:text-ink-100"
             )}
           >
             {ROUTES[route].label}
@@ -30,7 +30,6 @@ export function SectionTabs({ unreadAlerts }: { unreadAlerts: number }) {
                 {unreadAlerts}
               </span>
             )}
-            {isCurrent && <span className="bg-ink-100 absolute inset-x-3 -bottom-px h-0.5" />}
           </AppLink>
         )
       })}

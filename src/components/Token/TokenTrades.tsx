@@ -4,9 +4,10 @@ import { PiArrowDownRight, PiArrowUpRight } from "react-icons/pi"
 
 import { Flash } from "@/components/Markets/Flash"
 import { useLiveMarketContext } from "@/components/Markets/LiveMarket"
+import { Money } from "@/components/Money/Money"
 import { Card } from "@/components/ui/card"
 import { useSecondsSince } from "@/hooks/use-seconds-since"
-import { formatCompactUsd, formatUsd } from "@/lib/format"
+
 import type { Swap } from "@/lib/markets/swaps"
 import { cn } from "@/lib/utils"
 
@@ -101,7 +102,7 @@ export function TokenTrades({ address, symbol }: { address: string; symbol: stri
               </span>
               <Flash value={worth(sideTrades)}>
                 <span className={cn("text-2xl font-medium tabular-nums md:text-3xl", text)}>
-                  {formatCompactUsd(worth(sideTrades))}
+                  <Money value={worth(sideTrades)} compact />
                 </span>
               </Flash>
             </div>
@@ -113,11 +114,15 @@ export function TokenTrades({ address, symbol }: { address: string; symbol: stri
                   className="animate-slide-in border-border-secondary dark:border-border-tertiary flex flex-wrap items-baseline justify-between gap-x-3 border-t py-2.5 text-sm first:border-t-0"
                 >
                   <span className="font-medium tabular-nums">
-                    {trade.usd === undefined ? "—" : formatUsd(trade.usd)}
+                    {trade.usd === undefined ? "—" : <Money value={trade.usd} />}
                   </span>
                   <Ago at={trade.at} />
                   <span className="text-ink-400 w-full text-xs tabular-nums">
-                    {trade.price === undefined ? "" : `at ${formatUsd(trade.price)}`}
+                    {trade.price === undefined ? null : (
+                      <>
+                        at <Money value={trade.price} />
+                      </>
+                    )}
                   </span>
                 </li>
               ))}

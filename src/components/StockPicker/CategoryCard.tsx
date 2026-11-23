@@ -1,7 +1,7 @@
+import { Money } from "@/components/Money/Money"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { formatCompactUsd } from "@/lib/format"
 import type { Stock, StockCategory } from "@/lib/markets/types"
 import { cn } from "@/lib/utils"
 
@@ -34,7 +34,7 @@ export function CategoryCard({ category, buyable, liquidity, checked, onToggle }
         <span className="text-ink-400 text-xs">
           {buyable.length} buyable
           {!!category.unavailable?.length && ` · ${category.unavailable.length} not yet`} ·{" "}
-          {formatCompactUsd(liquidity)} liq.
+          <Money value={liquidity} compact /> liq.
         </span>
       </label>
     </Card>

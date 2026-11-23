@@ -1,34 +1,57 @@
+import { PiArrowRight } from "react-icons/pi"
+
 import { AppLink } from "@/components/AppLink/AppLink"
-import { buttonVariants } from "@/components/Button/Button"
+import { PortfolioIcon } from "@/components/Portfolios/PortfolioIcon"
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader"
 import { Card, CardRow } from "@/components/ui/card"
-import { IconTile } from "@/components/ui/icon-tile"
-import { ATTENTION_ICON } from "@/constants/home"
 import { pluralize } from "@/lib/format"
 import type { AttentionItem } from "@/lib/home/types"
 
+// With a long list, this many are shown and the rest are a click away
+const SHOWN = 5
+
+// The models started and not finished, to carry on with: each a plain row that opens where it was left, and not text
+// to select
 export function AttentionList({ items }: { items: AttentionItem[] }) {
   if (!items.length) return null
+  const more = items.length - SHOWN
 
   return (
-    <section className="flex flex-col gap-3">
-      <SectionHeader title="Needs you" meta={pluralize(items.length, "item")} />
+    <section className="flex flex-col gap-3 select-none">
+      <SectionHeader title="Continue" meta={pluralize(items.length, "draft")} />
       <Card>
-        {items.map(({ id, tone, title, detail, action }) => (
-          <CardRow key={id} className="flex flex-wrap items-center gap-3 p-4 sm:flex-nowrap">
-            <IconTile icon={ATTENTION_ICON[tone]} tone={tone} />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="font-medium">{title}</span>
-              <span className="text-ink-400 text-sm">{detail}</span>
-            </div>
+        {items.slice(0, SHOWN).map(({ id, title, detail, action }) => (
+          <CardRow key={id}>
             <AppLink
               route={action.route}
-              className={buttonVariants({ intent: "outline", size: "md", className: "min-h-10 w-full sm:w-auto" })}
+              slug={action.slug}
+              className="hover:bg-hover-bg/60 group flex items-center gap-3 p-4 transition-colors"
             >
-              {action.label}
+              <PortfolioIcon name={title} className="size-9" size={18} />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="font-medium">{title}</span>
+                <span className="text-ink-400 truncate text-sm">{detail}</span>
+              </div>
+              <span className="flex flex-none items-center gap-1 text-sm font-medium">
+                {action.label}
+                <PiArrowRight
+                  aria-hidden="true"
+                  className="transition-transform duration-200 group-hover:translate-x-0.5"
+                />
+              </span>
             </AppLink>
           </CardRow>
         ))}
+        {more > 0 && (
+          <CardRow>
+            <AppLink
+              route="portfolios"
+              className="text-ink-400 hover:text-ink-100 hover:bg-hover-bg/60 block p-4 text-sm font-medium transition-colors"
+            >
+              {pluralize(more, "more draft")} →
+            </AppLink>
+          </CardRow>
+        )}
       </Card>
     </section>
   )

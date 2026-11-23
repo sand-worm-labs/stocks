@@ -1,7 +1,7 @@
+import { Money } from "@/components/Money/Money"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { CardRow } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { formatCompactUsd, formatUsd } from "@/lib/format"
 import type { Stock } from "@/lib/markets/types"
 
 type StockPickRowProps = {
@@ -27,8 +27,10 @@ export function StockPickRow({
           <span className="text-ink-400 text-xs">{symbol}</span>
         </span>
         <span className="flex flex-col items-end text-sm">
-          <span className="tabular-nums">{formatUsd(price)}</span>
-          <span className="text-ink-400 text-xs">{formatCompactUsd(liquidity)} liq.</span>
+          <Money value={price} />
+          <span className="text-ink-400 text-xs">
+            <Money value={liquidity} compact /> liq.
+          </span>
         </span>
         {includedWith && <span className="text-ink-400 hidden text-xs sm:inline">Included with {includedWith}</span>}
         <Checkbox checked={checked} disabled={!!includedWith} onChange={onToggle} aria-label={`Pick ${name}`} />

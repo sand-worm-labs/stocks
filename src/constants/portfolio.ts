@@ -32,6 +32,15 @@ export const PORTFOLIO_PENDING_TEXT = {
   unbuildable: "Can't be built",
 } as const satisfies Partial<Record<PortfolioStatus, string>>
 
+// How far a draft has got, and what it is waiting for
+export const DRAFT_STAGE = {
+  rules: { label: "Rules to confirm", detail: "Read the rules, then confirm them" },
+  researching: { label: "Researching", detail: "The agent is working on it" },
+  ready: { label: "Almost ready", detail: "Research is done. Review it, then buy." },
+} as const
+
+export type DraftStage = keyof typeof DRAFT_STAGE
+
 export const TRADING_MODE_LABEL = { paper: "Paper", live: "Live" } as const
 
 export const TRADING_MODE_OPTIONS = [

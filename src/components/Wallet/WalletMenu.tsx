@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 
 import { useWalletEnabled } from "./WalletContext"
 
-const CONNECT = buttonVariants({ intent: "dark", size: "compact", className: "hidden lg:inline-flex" })
+const CONNECT = cn(buttonVariants({ intent: "dark", size: "compact" }), "hidden lg:inline-flex")
 
 // What the header shows for a wallet is ours, in the shape of the rest of it; what it opens is Dynamic's: the window to
 // sign in with the list of wallets, and for someone signed in, the panel of what they hold and have done.

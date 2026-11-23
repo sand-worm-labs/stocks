@@ -27,7 +27,7 @@ export function Checkbox({ checked, onChange, disabled, className, ...rest }: Ch
         className={cn(
           "bg-block-surface flex size-4 items-center justify-center rounded-[4px] border transition-colors duration-150",
           "peer-focus-visible:outline-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2",
-          checked ? "border-[#7F56D9]" : "dark:border-border-tertiary border-[#D0D5DD]",
+          checked ? "border-mark" : "dark:border-border-tertiary border-[#D0D5DD]",
           disabled && "opacity-60"
         )}
       >
@@ -35,7 +35,7 @@ export function Checkbox({ checked, onChange, disabled, className, ...rest }: Ch
           <svg viewBox="0 0 12 12" fill="none" className="size-3.5">
             <path
               d="M2.5 6.2L4.8 8.5L9.5 3.5"
-              stroke="#7F56D9"
+              stroke="var(--mark)"
               strokeWidth="1.7"
               strokeLinecap="round"
               strokeLinejoin="round"

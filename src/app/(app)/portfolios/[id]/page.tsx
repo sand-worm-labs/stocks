@@ -1,17 +1,19 @@
 import type { Metadata } from "next"
-import { notFound, redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 
 import { CantMeetView } from "@/components/Flow/CantMeetView"
 import { ExitsCard } from "@/components/PortfolioDetail/ExitsCard"
 import { HoldingsTable } from "@/components/PortfolioDetail/HoldingsTable"
+import { PortfolioHeroLive } from "@/components/PortfolioDetail/PortfolioHeroLive"
 import { PortfolioShell } from "@/components/PortfolioDetail/PortfolioShell"
-import { PortfolioStats } from "@/components/PortfolioDetail/PortfolioStats"
 import { RecentActivity } from "@/components/PortfolioDetail/RecentActivity"
 import { ValueCard } from "@/components/PortfolioDetail/ValueCard"
-import { routeHref } from "@/config/routes"
+import { DraftWorkspace } from "@/components/Workspace/DraftWorkspace"
 import { getActivity } from "@/lib/activity/source"
 import { getCantMeetScript } from "@/lib/agent/source"
+import { getBenchmarks } from "@/lib/benchmarks/source"
 import { getMarketSummary, getStocks } from "@/lib/markets/source"
+import { getHeldAddresses } from "@/lib/portfolios/addresses"
 import { getPortfolio } from "@/lib/portfolios/source"
 import { maxWeightOf } from "@/lib/rules/readings"
 import { getRules } from "@/lib/rules/source"
@@ -19,13 +21,13 @@ import { getSession } from "@/lib/session/source"
 
 export const metadata: Metadata = { title: "Portfolio" }
 
-// A portfolio opens on the page its status calls for: a draft goes back to its rules, a brief that can't be met
-// is explained, and a live portfolio shows how it is doing.
+// A portfolio opens on the page its status calls for: a draft is one page that builds itself, a brief that can't be
+// met is explained, and a live portfolio shows how it is doing.
 export default async function PortfolioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const portfolio = await getPortfolio(id)
   if (!portfolio) notFound()
-  if (portfolio.status === "draft") redirect(routeHref("rules", undefined, id) ?? "/portfolios")
+  if (portfolio.status === "draft") return <DraftWorkspace portfolio={portfolio} />
 
   const [{ rules }, stocks, summary] = await Promise.all([getRules(portfolio), getStocks(), getMarketSummary()])
 
@@ -43,13 +45,23 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
     )
   }
 
-  const [session, activity] = await Promise.all([getSession(), getActivity(id)])
+  const [session, activity, benchmarks, addresses] = await Promise.all([
+    getSession(),
+    getActivity(id),
+    getBenchmarks(),
+    getHeldAddresses([portfolio]),
+  ])
 
   return (
     <PortfolioShell portfolio={portfolio} current="overview">
-      <PortfolioStats portfolio={portfolio} now={session.now} />
-      <ValueCard portfolio={portfolio} summary={summary} now={session.now} />
-      <HoldingsTable portfolio={portfolio} cap={maxWeightOf(rules) ?? 1} />
+      <PortfolioHeroLive portfolio={portfolio} addresses={addresses} />
+      <ValueCard portfolio={portfolio} benchmarks={benchmarks} now={session.now} />
+      <HoldingsTable
+        portfolio={portfolio}
+        cap={maxWeightOf(rules) ?? 1}
+        addresses={addresses}
+        mode={session.network.mode}
+      />
       <div className="grid items-start gap-4 md:grid-cols-2">
         <ExitsCard portfolio={portfolio} />
         <RecentActivity portfolioId={id} activity={activity} now={session.now} />

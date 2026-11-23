@@ -4,8 +4,9 @@ import type { ReactNode } from "react"
 
 import { Flash } from "@/components/Markets/Flash"
 import { useLiveMarketContext } from "@/components/Markets/LiveMarket"
+import { Money } from "@/components/Money/Money"
 import { Card } from "@/components/ui/card"
-import { formatCompactUsd, formatPercent, formatUsd, shortenAddress } from "@/lib/format"
+import { formatPercent, shortenAddress } from "@/lib/format"
 import type { TokenSupply } from "@/lib/markets/onchain"
 import { shareTicker } from "@/lib/markets/share"
 import type { BaseToken } from "@/lib/markets/tokens"
@@ -56,7 +57,7 @@ export function TokenOverview({ token, supply, ethUsd }: TokenOverviewProps) {
       <Section title="Market">
         <Row label="Price">
           <Flash value={price}>
-            <span className="tabular-nums">{formatUsd(price)}</span>
+            <Money value={price} />
           </Flash>
           {ethUsd && (
             <span className="text-ink-400 font-normal tabular-nums"> @ {(price / ethUsd).toFixed(6)} ETH</span>
@@ -71,14 +72,16 @@ export function TokenOverview({ token, supply, ethUsd }: TokenOverviewProps) {
         {supply && (
           <Row label="Onchain market cap">
             <Flash value={supply.totalSupply * price}>
-              <span className="tabular-nums">{formatUsd(supply.totalSupply * price)}</span>
+              <Money value={supply.totalSupply * price} />
             </Flash>
           </Row>
         )}
         {marketCap !== undefined && (
           <Row label="Circulating supply market cap">
-            <span className="tabular-nums">{formatUsd(marketCap)}</span>{" "}
-            <span className="text-ink-400 font-normal">({formatCompactUsd(marketCap)})</span>
+            <Money value={marketCap} />{" "}
+            <span className="text-ink-400 font-normal">
+              (<Money value={marketCap} compact />)
+            </span>
           </Row>
         )}
       </Section>

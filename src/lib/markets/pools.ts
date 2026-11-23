@@ -73,7 +73,9 @@ const ALL_POOLS_MS = 10_000
 let allPools: { at: number; quotes: PoolQuote[] } | undefined
 let loadingPools: Promise<PoolQuote[]> | undefined
 
-// Every token's pool, kept for a few seconds so many readers share one round of calls to the feed
+// Every token's pool, kept for a few seconds so many readers share one round of calls to the feed. Quotes that have gone
+// stale are served at once and renewed in the background: the page's first paint never waits on the feed, and the
+// browser polls for fresher ones anyway. Only the very first read, with nothing to show yet, waits.
 export async function getAllPoolQuotes(addresses: string[]): Promise<PoolQuote[]> {
   if (allPools && Date.now() - allPools.at < ALL_POOLS_MS) return allPools.quotes
 
@@ -87,5 +89,5 @@ export async function getAllPoolQuotes(addresses: string[]): Promise<PoolQuote[]
       loadingPools = undefined
     })
 
-  return loadingPools
+  return allPools ? allPools.quotes : loadingPools
 }

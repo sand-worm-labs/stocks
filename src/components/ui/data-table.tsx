@@ -27,7 +27,7 @@ declare module "@tanstack/react-table" {
   }
 }
 
-const PAGE_SIZES = [25, 50, 100]
+const DEFAULT_PAGE_SIZES = [25, 50, 100]
 
 const SORT_ICON = { asc: PiCaretUpFill, desc: PiCaretDownFill, none: PiCaretUpDownFill } as const
 const ARIA_SORT = { asc: "ascending", desc: "descending", none: "none" } as const
@@ -41,6 +41,8 @@ type DataTableProps<TData> = {
   initialSorting?: SortingState
   // Rows to a page; without it every row is shown
   pageSize?: number
+  // The page sizes to choose from, when it isn't the usual ones
+  pageSizes?: number[]
   // Where a click anywhere on a row goes. The links and buttons inside a row keep their own.
   getRowHref?: (row: TData) => string | null
   // Called with the rows on show, whenever they change
@@ -54,6 +56,7 @@ export function DataTable<TData>({
   getRowId,
   initialSorting = [],
   pageSize,
+  pageSizes = DEFAULT_PAGE_SIZES,
   getRowHref,
   onVisibleRowsChange,
   emptyMessage,
@@ -140,7 +143,7 @@ export function DataTable<TData>({
         </tbody>
       </Table>
       {!rows.length && <p className="text-ink-400 py-20 text-center text-sm">{emptyMessage}</p>}
-      {pageSize && total > Math.min(...PAGE_SIZES) && (
+      {pageSize && total > Math.min(...pageSizes) && (
         <div className="text-ink-400 border-border-secondary dark:border-border-tertiary flex items-center justify-between gap-3 border-t px-4 py-3 text-sm">
           <span className="flex items-center gap-3">
             <span className="hidden items-center gap-2 sm:flex">
@@ -150,7 +153,7 @@ export function DataTable<TData>({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {PAGE_SIZES.map((option) => (
+                  {pageSizes.map((option) => (
                     <SelectItem key={option} value={String(option)}>
                       {option}
                     </SelectItem>

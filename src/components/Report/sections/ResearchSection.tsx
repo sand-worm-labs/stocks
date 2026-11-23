@@ -1,4 +1,3 @@
-import { SourceList } from "@/components/SourceLink/SourceList"
 import { SourcePill } from "@/components/SourceLink/SourcePill"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { Badge } from "@/components/ui/badge"
@@ -34,12 +33,7 @@ export function ResearchSection({ research, note }: ResearchSectionProps) {
           </li>
         ))}
       </ul>
-      {note && (
-        <>
-          <p className="text-ink-200 text-[13px] leading-5">{note.text}</p>
-          <SourceList sources={note.sources} asOf={note.asOf} />
-        </>
-      )}
+      {note && <p className="text-ink-200 text-[13px] leading-5">{note.text}</p>}
     </ReportSection>
   )
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { formatActivityTime, formatAsOf, formatDayLabel, formatLongDate, formatTime, greetingFor } from "./dates"
+import { formatActivityTime, formatAsOf, formatDayLabel, formatLongDate, formatTime } from "./dates"
 
 const NOW = "2026-11-20T14:20:00"
 
@@ -24,11 +24,5 @@ describe("dates", () => {
 
   it("stamps data with its date and time", () => {
     expect(formatAsOf("2026-11-20T02:50:00")).toBe("20 Nov 2026, 02:50")
-  })
-
-  it("greets by the hour", () => {
-    expect(greetingFor("2026-11-20T08:00:00")).toBe("Good morning")
-    expect(greetingFor(NOW)).toBe("Good afternoon")
-    expect(greetingFor("2026-11-20T20:00:00")).toBe("Good evening")
   })
 })

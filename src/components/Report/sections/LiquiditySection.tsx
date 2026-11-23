@@ -1,6 +1,6 @@
-import { SourceList } from "@/components/SourceLink/SourceList"
+import { Money } from "@/components/Money/Money"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
-import { formatPercent, formatUsd } from "@/lib/format"
+import { formatPercent } from "@/lib/format"
 import type { Report } from "@/lib/report/types"
 
 import { ReportSection, SectionIntro } from "../ReportSection"
@@ -42,8 +42,12 @@ export function LiquiditySection({ liquidity, venue }: LiquiditySectionProps) {
                     {symbol}
                   </span>
                 </td>
-                <td className={`${CELL} text-right tabular-nums`}>{formatUsd(token)}</td>
-                <td className={`${CELL} text-ink-200 text-right tabular-nums`}>{formatUsd(share)}</td>
+                <td className={`${CELL} text-right tabular-nums`}>
+                  <Money value={token} />
+                </td>
+                <td className={`${CELL} text-ink-200 text-right tabular-nums`}>
+                  <Money value={share} />
+                </td>
                 <td className={`${CELL} text-right tabular-nums`}>
                   {formatPercent(token / share - 1, { signed: true })}
                 </td>
@@ -66,7 +70,6 @@ export function LiquiditySection({ liquidity, venue }: LiquiditySectionProps) {
       <p className="text-ink-400 text-xs leading-[18px]">
         On weekends the token can drift from the share price. The agent won&apos;t buy if the gap is over 1%.
       </p>
-      <SourceList sources={venue.sources} asOf={venue.asOf} />
     </ReportSection>
   )
 }

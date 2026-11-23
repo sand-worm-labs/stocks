@@ -10,7 +10,7 @@ type AppShellProps = { session: Session; children: ReactNode; ticker?: ReactNode
 export function AppShell({ session, children, ticker }: AppShellProps) {
   return (
     <div className="font-body flex min-h-dvh flex-col">
-      <div className="sticky top-0 z-40">
+      <div className="sticky top-0 z-40 select-none">
         <AppHeader session={session} />
         {ticker}
       </div>

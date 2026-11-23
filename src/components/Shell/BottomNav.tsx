@@ -12,7 +12,7 @@ export function BottomNav({ unreadAlerts }: { unreadAlerts: number }) {
   return (
     <nav
       aria-label="Sections"
-      className="border-border-secondary bg-block-surface dark:border-border-tertiary fixed inset-x-0 bottom-0 z-30 border-t pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="border-border-secondary bg-block-surface dark:border-border-tertiary fixed inset-x-0 bottom-0 z-30 border-t pb-[env(safe-area-inset-bottom)] select-none md:hidden"
     >
       <ul className="flex h-16">
         {MOBILE_TABS.map(({ route, icon: Icon, hasAlertCount }) => {

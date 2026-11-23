@@ -6,13 +6,14 @@ import { PiPlus } from "react-icons/pi"
 
 import { AppLink } from "@/components/AppLink/AppLink"
 import { buttonVariants } from "@/components/Button/Button"
+import { Money } from "@/components/Money/Money"
 import { Sparkline } from "@/components/Sparkline/Sparkline"
 import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/ui/data-table"
 import { routeHref } from "@/config/routes"
 import { MARKET_PAGE_SIZE } from "@/constants/markets"
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
-import { formatCompactUsd, formatUsd } from "@/lib/format"
+
 import type { BaseToken } from "@/lib/markets/tokens"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
@@ -33,7 +34,7 @@ const toFraction = (percent?: number) => (percent === undefined ? undefined : pe
 
 const column = createColumnHelper<LiveToken>()
 
-const compactUsd = (value?: number) => (value === undefined ? "—" : formatCompactUsd(value))
+const compactUsd = (value?: number) => (value === undefined ? "—" : <Money value={value} compact />)
 
 function TokenName({ token: { image, symbol, company, address } }: { token: LiveToken }) {
   const { lastTrade } = useLiveMarketContext()
@@ -92,7 +93,7 @@ export function TokenTable({ tokens }: TokenTableProps) {
         sortDescFirst: true,
         cell: ({ getValue }) => (
           <Flash value={getValue()}>
-            <span className="tabular-nums">{formatUsd(getValue())}</span>
+            <Money value={getValue()} />
           </Flash>
         ),
       }),

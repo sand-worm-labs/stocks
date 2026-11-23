@@ -2,11 +2,12 @@
 
 import { SearchField } from "@/components/ui/search-field"
 import { useSearchParam } from "@/hooks/use-search-param"
+import { cn } from "@/lib/utils"
 
-type SearchInputProps = { param: string; label: string; placeholder: string }
+type SearchInputProps = { param: string; label: string; placeholder: string; className?: string }
 
 // A search field whose text lives in the page's address
-export function SearchInput({ param, label, placeholder }: SearchInputProps) {
+export function SearchInput({ param, label, placeholder, className }: SearchInputProps) {
   const [value, setValue] = useSearchParam(param)
 
   return (
@@ -15,7 +16,7 @@ export function SearchInput({ param, label, placeholder }: SearchInputProps) {
       onChange={setValue}
       label={label}
       placeholder={placeholder}
-      className="flex-1 md:max-w-sm"
+      className={cn("flex-1 md:max-w-sm", className)}
     />
   )
 }

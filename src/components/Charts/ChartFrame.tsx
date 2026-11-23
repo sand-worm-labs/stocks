@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useRef, useState } from "react"
 
+import { ChartLoader } from "@/components/Charts/ChartLoader"
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 
 type ChartFrameProps = {
@@ -33,8 +34,8 @@ export function ChartFrame({ height, label, children }: ChartFrameProps) {
   }, [])
 
   return (
-    <div ref={ref} role="img" aria-label={label} style={{ height }} className="w-full">
-      {visible && children(!reduced)}
+    <div ref={ref} role="img" aria-label={label} style={{ height }} className="relative w-full">
+      {visible ? children(!reduced) : <ChartLoader />}
     </div>
   )
 }

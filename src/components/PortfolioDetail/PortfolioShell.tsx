@@ -3,7 +3,6 @@ import type { ReactNode } from "react"
 import { AgentWorkspace } from "@/components/Agent/AgentWorkspace"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { PortfolioBreadcrumb } from "@/components/Flow/PortfolioBreadcrumb"
-import { TRADING_MODE_LABEL } from "@/constants/portfolio"
 import { getLiveScript } from "@/lib/agent/source"
 import type { Portfolio } from "@/lib/portfolios/types"
 import { maxWeightOf } from "@/lib/rules/readings"
@@ -13,6 +12,7 @@ import { getSession } from "@/lib/session/source"
 import { AddFundsDialog } from "./AddFundsDialog"
 import { PortfolioHeader } from "./PortfolioHeader"
 import type { PortfolioTab } from "./PortfolioTabs"
+import { SellDialog } from "./SellDialog"
 
 // Everything around a live portfolio's pages: where it sits, who it is, the tabs between its pages and the agent
 export async function PortfolioShell({
@@ -34,8 +34,14 @@ export async function PortfolioShell({
         <PortfolioHeader
           portfolio={portfolio}
           current={current}
-          mode={`${TRADING_MODE_LABEL[mode]} · ${chain}`}
-          actions={<AddFundsDialog portfolio={portfolio} cap={maxWeightOf(rules) ?? 1} />}
+          mode={mode}
+          chain={chain}
+          actions={
+            <>
+              <AddFundsDialog portfolios={[portfolio]} cap={maxWeightOf(rules) ?? 1} />
+              <SellDialog portfolio={portfolio} pickable mode={mode} />
+            </>
+          }
         />
         {children}
       </FlowLayout>

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 type CheckRowProps = { status: "pass" | "warn"; title: string; description: string; action?: ReactNode }
 
 // Whether a check passed, as the web app's tick in a violet outline, round because it shows a result and isn't a choice
-function StatusMark({ status }: Pick<CheckRowProps, "status">) {
+export function StatusMark({ status, className }: Pick<CheckRowProps, "status"> & { className?: string }) {
   const passed = status === "pass"
 
   return (
@@ -15,7 +15,8 @@ function StatusMark({ status }: Pick<CheckRowProps, "status">) {
       aria-label={passed ? "Passed" : "Not yet"}
       className={cn(
         "flex size-7 flex-none items-center justify-center rounded-full border-[1.5px]",
-        passed ? "border-[#7F56D9] text-[#7F56D9]" : "dark:border-border-tertiary border-[#D0D5DD]"
+        passed ? "border-mark text-mark" : "dark:border-border-tertiary border-[#D0D5DD]",
+        className
       )}
     >
       {passed && <PiCheckBold size={14} aria-hidden="true" />}

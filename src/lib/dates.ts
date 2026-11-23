@@ -15,10 +15,4 @@ export function formatActivityTime(iso: string, now: string) {
   return day === "Today" ? `Today ${formatTime(iso)}` : day
 }
 
-export function greetingFor(iso: string) {
-  const hour = new Date(iso).getHours()
-  if (hour < 12) return "Good morning"
-  return hour < 18 ? "Good afternoon" : "Good evening"
-}
-
 export const formatAsOf = (iso: string) => format(new Date(iso), "d MMM yyyy, HH:mm")

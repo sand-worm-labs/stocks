@@ -1,21 +1,17 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
-import { AgentWorkspace } from "@/components/Agent/AgentWorkspace"
-import { FlowHeader } from "@/components/Flow/FlowHeader"
-import { FlowLayout } from "@/components/Flow/FlowLayout"
-import { PortfolioBreadcrumb } from "@/components/Flow/PortfolioBreadcrumb"
-import { ReportPlaceholder } from "@/components/Flow/ReportPlaceholder"
-import { StepProgress } from "@/components/Flow/StepProgress"
 import { LiveRules } from "@/components/PortfolioDetail/LiveRules"
 import { PortfolioShell } from "@/components/PortfolioDetail/PortfolioShell"
+import { routeHref } from "@/config/routes"
 import { getActivity } from "@/lib/activity/source"
-import { getRulesScript } from "@/lib/agent/source"
 import { getStocks } from "@/lib/markets/source"
 import { getPortfolio } from "@/lib/portfolios/source"
-import { readRules } from "@/lib/rules/readings"
 import { getRules } from "@/lib/rules/source"
+import { specOf } from "@/lib/rules/spec"
 import { getSession } from "@/lib/session/source"
+import type { ModelDoc } from "@/lib/strategy/document"
+import { getStrategy } from "@/lib/strategy/source"
 
 export const metadata: Metadata = { title: "Rules" }
 
@@ -26,13 +22,21 @@ export default async function RulesPage({ params }: { params: Promise<{ id: stri
   const rules = await getRules(portfolio)
 
   if (portfolio.status === "live") {
-    const [stocks, activity, session] = await Promise.all([getStocks(), getActivity(portfolio.id), getSession()])
+    const [stocks, activity, session, strategy] = await Promise.all([
+      getStocks(),
+      getActivity(portfolio.id),
+      getSession(),
+      getStrategy(),
+    ])
+
+    const doc: ModelDoc = { strategy, rules: rules.rules.flatMap((rule) => specOf(rule) ?? []) }
 
     return (
       <PortfolioShell portfolio={portfolio} current="rules">
         <LiveRules
           portfolio={portfolio}
-          readings={readRules(portfolio, rules.rules, stocks)}
+          stocks={stocks.map(({ symbol, liquidity }) => ({ symbol, liquidity }))}
+          doc={doc}
           strategy={rules.strategy}
           checks={activity.filter(({ kind }) => kind === "checked" || kind === "locked").slice(0, 4)}
           now={session.now}
@@ -41,22 +45,6 @@ export default async function RulesPage({ params }: { params: Promise<{ id: stri
     )
   }
 
-  const script = await getRulesScript(portfolio, rules)
-
-  return (
-    <div className="flex flex-col gap-4">
-      <PortfolioBreadcrumb name={portfolio.name} />
-      <FlowLayout
-        steps={<StepProgress current="rules" portfolioId={portfolio.id} />}
-        aside={<AgentWorkspace script={script} />}
-      >
-        <FlowHeader
-          title={portfolio.name}
-          subtitle={rules.rules.map(({ label }) => label).join(" · ")}
-          status={script.status}
-        />
-        <ReportPlaceholder />
-      </FlowLayout>
-    </div>
-  )
+  // A draft's rules are the first part of the one page it grows on
+  redirect(routeHref("portfolio", undefined, portfolio.id) ?? "/portfolios")
 }

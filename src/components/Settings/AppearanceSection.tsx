@@ -11,7 +11,6 @@ import { SettingsSection } from "./SettingsSection"
 const THEMES = [
   { value: "light", label: "Light" },
   { value: "dark", label: "Dark" },
-  { value: "system", label: "System" },
 ]
 
 export function AppearanceSection() {
@@ -22,7 +21,7 @@ export function AppearanceSection() {
 
   return (
     <SettingsSection title="Appearance" description="How the app looks to you.">
-      <SettingRow title="Theme" description="System follows your device">
+      <SettingRow title="Theme" description="It starts light, and stays as you leave it">
         <SegmentedControl label="Theme" options={THEMES} value={mounted ? theme : undefined} onChange={setTheme} />
       </SettingRow>
     </SettingsSection>

@@ -5,14 +5,23 @@ import { useState } from "react"
 import { toast } from "sonner"
 
 import { buttonVariants } from "@/components/Button/Button"
+import { AmountField } from "@/components/Money/AmountField"
 import { VerdictPill } from "@/components/Report/VerdictPill"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ChoiceChips } from "@/components/ui/choice-chips"
 import { DialogClose, DialogTitle } from "@/components/ui/dialog"
 import { routeHref } from "@/config/routes"
-import { DEFAULT_SLIPPAGE, NETWORK_FEE, SLIPPAGE_CHOICES, SWAP_FEE_RATE } from "@/constants/trade"
+import {
+  DEFAULT_SLIPPAGE,
+  MIN_BUY_AMOUNT,
+  NETWORK_FEE,
+  QUICK_FRACTIONS,
+  SLIPPAGE_CHOICES,
+  SWAP_FEE_RATE,
+} from "@/constants/trade"
 import { formatAmount, formatPercent, pluralize } from "@/lib/format"
+import { readAmount } from "@/lib/portfolios/amount"
 import type { Order, Report } from "@/lib/report/types"
 import type { Session } from "@/lib/session/types"
 import { cn } from "@/lib/utils"
@@ -24,12 +33,23 @@ type BuyReviewViewProps = BuyReviewProps & { onBought: () => void }
 const CELL = "border-border-secondary dark:border-border-tertiary border-t py-2.5 text-right tabular-nums"
 
 // What buying would do, to read and agree to before it is done
-export function BuyReview({ orders, report, portfolioId, network, onBought }: BuyReviewViewProps) {
+export function BuyReview({ orders: planned, report, portfolioId, network, onBought }: BuyReviewViewProps) {
   const router = useRouter()
   const [slippage, setSlippage] = useState(DEFAULT_SLIPPAGE)
   const [understood, setUnderstood] = useState(true)
 
-  const spend = orders.reduce((sum, order) => sum + order.spend, 0)
+  // The plan's spend is the most; a smaller amount buys the same stocks in the same shares, only less of each
+  const plan = planned.reduce((sum, order) => sum + order.spend, 0)
+  const [text, setText] = useState(plan.toFixed(2))
+  const reading = readAmount(text, {
+    min: MIN_BUY_AMOUNT,
+    max: plan,
+    under: (least) => `The least you can buy is ${least.toFixed(2)} USDC`,
+    over: (most) => `The plan spends ${most.toFixed(2)} USDC. Edit the rules to spend more`,
+  })
+  const scale = reading.amount === undefined ? 0 : reading.amount / plan
+  const orders = planned.map((order) => ({ ...order, spend: order.spend * scale, receive: order.receive * scale }))
+  const spend = reading.amount ?? 0
   const fees = spend * SWAP_FEE_RATE
   const total = spend + fees + NETWORK_FEE
   const { panic, fits } = report.tolerance
@@ -62,6 +82,19 @@ export function BuyReview({ orders, report, portfolioId, network, onBought }: Bu
         </span>
       </div>
 
+      <AmountField
+        id="buy-amount"
+        label="Amount to invest"
+        text={text}
+        onText={setText}
+        reading={reading}
+        min={MIN_BUY_AMOUNT}
+        max={plan}
+        quick={QUICK_FRACTIONS.map((f) => ({ label: formatPercent(f), amount: plan * f }))}
+        slider
+        note={`Split across ${pluralize(planned.length, "stock")}`}
+      />
+
       <div className="overflow-x-auto">
         <table className="w-full min-w-[460px] border-collapse text-[13px]">
           <thead>
@@ -85,8 +118,8 @@ export function BuyReview({ orders, report, portfolioId, network, onBought }: Bu
                     {symbol}
                   </span>
                 </td>
-                <td className={CELL}>{spend} USDC</td>
-                <td className={CELL}>{receive}</td>
+                <td className={CELL}>{formatAmount(spend)} USDC</td>
+                <td className={CELL}>{receive.toFixed(4)}</td>
                 <td className={cn(CELL, "text-ink-200")}>{(receive * (1 - slippage)).toFixed(4)}</td>
                 <td className={cn(CELL, "text-emerald-700 dark:text-emerald-400")}>{(impact * 100).toFixed(2)}%</td>
               </tr>
@@ -146,7 +179,7 @@ export function BuyReview({ orders, report, portfolioId, network, onBought }: Bu
         <DialogClose className={buttonVariants({ intent: "outline", size: "compact" })}>Back</DialogClose>
         <button
           type="button"
-          disabled={!understood}
+          disabled={!understood || reading.amount === undefined}
           onClick={buy}
           className={cn(
             buttonVariants({ intent: "dark", size: "compact" }),

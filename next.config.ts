@@ -4,6 +4,8 @@ import { type NextConfig } from "next"
 import { env } from "./env.mjs"
 
 const config: NextConfig = {
+  // A second dev server can keep its own cache folder, so one that has gone wrong never spoils the other
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   reactStrictMode: true,
   // Opening the dev server through a tunnel is a request from another origin, and its scripts are refused without this
   allowedDevOrigins: ["*.ngrok-free.dev", "*.ngrok-free.app"],

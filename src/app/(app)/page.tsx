@@ -2,44 +2,84 @@ import type { Metadata } from "next"
 
 import { ActivityFeed } from "@/components/Home/ActivityFeed"
 import { AttentionList } from "@/components/Home/AttentionList"
-import { HeldStocks } from "@/components/Home/HeldStocks"
-import { IdeasToTry } from "@/components/Home/IdeasToTry"
-import { KpiStrip } from "@/components/Home/KpiStrip"
-import { PortfolioPreviews } from "@/components/Home/PortfolioPreviews"
+import { GettingStarted } from "@/components/Home/GettingStarted"
+import { HomeLayout } from "@/components/Home/HomeLayout"
+import { HomeSummaryLive } from "@/components/Home/HomeSummaryLive"
+import { PortfolioPreviewsLive } from "@/components/Home/PortfolioPreviewsLive"
+import { StarterPortfolios } from "@/components/Home/StarterPortfolios"
+import { StartInvesting } from "@/components/Home/StartInvesting"
+import { StockList } from "@/components/Home/StockList"
 import { PageHeader } from "@/components/PageHeader/PageHeader"
-import { NewPortfolioButton } from "@/components/Portfolios/NewPortfolioButton"
-import { TRADING_MODE_LABEL } from "@/constants/portfolio"
-import { formatLongDate, greetingFor } from "@/lib/dates"
+import { AddFundsDialog } from "@/components/PortfolioDetail/AddFundsDialog"
+import { displayFont } from "@/config/fonts"
 import { getHome } from "@/lib/home/source"
+import { pickStarters } from "@/lib/onboarding/starters"
 import { getSession } from "@/lib/session/source"
+import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Home" }
 
 export default async function HomePage() {
   const [session, home] = await Promise.all([getSession(), getHome()])
-  const { user, network, now } = session
+  const { user, now, interests, network } = session
+  const isNew = home.portfolios.length === 0
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title={`${greetingFor(now)}, ${user.firstName}`}
-        description={
+        titleClassName={cn(
+          displayFont.className,
+          "text-[44px] leading-[48px] font-normal tracking-tight md:text-[60px] md:leading-[64px]"
+        )}
+        title={
           <>
-            {formatLongDate(now)} · {TRADING_MODE_LABEL[network.mode].toLowerCase()} trading on {network.chain}
+            GM, <span className="pr-1 italic">{user.firstName}</span>
           </>
         }
-        actions={<NewPortfolioButton />}
       />
-      <KpiStrip kpis={home.kpis} />
-      <AttentionList items={home.attention} />
-      <PortfolioPreviews portfolios={home.portfolios} />
-      <div className="grid items-start gap-8 lg:grid-cols-2">
-        <ActivityFeed activity={home.activity} now={now} />
-        <div className="flex flex-col gap-8">
-          <HeldStocks stocks={home.heldStocks} />
-          <IdeasToTry ideas={home.ideas} />
-        </div>
-      </div>
+      <HomeLayout
+        rail={
+          isNew ? (
+            <>
+              <GettingStarted hasPortfolio={false} hasBought={false} />
+              <StockList
+                title="Popular stocks"
+                stocks={home.popularStocks}
+                link={{ route: "markets", label: "Markets →" }}
+              />
+            </>
+          ) : (
+            <>
+              <GettingStarted hasPortfolio hasBought={home.hasBought} />
+              <StockList
+                title="Stocks you hold"
+                stocks={home.heldStocks}
+                link={{ route: "holdings", label: "See all →" }}
+              />
+              <ActivityFeed activity={home.activity} now={now} />
+            </>
+          )
+        }
+      >
+        {isNew ? (
+          <>
+            <StartInvesting />
+            <StarterPortfolios starters={pickStarters(home.starters, interests)} />
+          </>
+        ) : (
+          <>
+            <HomeSummaryLive
+              portfolios={home.portfolios}
+              addresses={home.addresses}
+              benchmarks={home.benchmarks}
+              now={now}
+              addFunds={home.addFunds && <AddFundsDialog {...home.addFunds} />}
+            />
+            <PortfolioPreviewsLive portfolios={home.portfolios} addresses={home.addresses} mode={network.mode} />
+            <AttentionList items={home.attention} />
+          </>
+        )}
+      </HomeLayout>
     </div>
   )
 }

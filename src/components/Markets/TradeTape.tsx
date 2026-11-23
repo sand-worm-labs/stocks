@@ -1,10 +1,11 @@
 "use client"
 
 import { PiArrowDownRight, PiArrowUpRight } from "react-icons/pi"
+import { Money } from "@/components/Money/Money"
 
 import { useFlip } from "@/hooks/use-flip"
 import { useSecondsSince } from "@/hooks/use-seconds-since"
-import { formatCompactUsd, formatUsd } from "@/lib/format"
+
 import type { BaseToken } from "@/lib/markets/tokens"
 import { cn } from "@/lib/utils"
 
@@ -80,10 +81,17 @@ export function TradeTape({ tokens }: { tokens: Pick<BaseToken, "address" | "sym
               >
                 <Arrow size={12} aria-hidden="true" />
                 {trade.side === "buy" ? "Bought" : "Sold"}
-                {trade.usd !== undefined && ` ${formatCompactUsd(trade.usd)}`}
+                {trade.usd !== undefined && (
+                  <>
+                    {" "}
+                    <Money value={trade.usd} compact />
+                  </>
+                )}
               </span>
               {trade.price !== undefined && (
-                <span className="text-ink-400 text-xs tabular-nums">at {formatUsd(trade.price)}</span>
+                <span className="text-ink-400 text-xs tabular-nums">
+                  at <Money value={trade.price} />
+                </span>
               )}
               <Ago at={trade.at} />
             </li>

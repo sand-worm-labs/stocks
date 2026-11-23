@@ -2,7 +2,9 @@
 
 import { ColorType, createChart, LineSeries, type UTCTimestamp } from "lightweight-charts"
 import { useTheme } from "next-themes"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
+
+import { ChartLoader } from "@/components/Charts/ChartLoader"
 
 import { cn } from "@/lib/utils"
 
@@ -24,6 +26,7 @@ const LINE = { positive: "#059669", negative: "#dc2626" } as const
 export function TokenLineChart({ series, stepSeconds, tone, label, className }: TokenLineChartProps) {
   const container = useRef<HTMLDivElement>(null)
   const { resolvedTheme } = useTheme()
+  const [drawn, setDrawn] = useState(false)
 
   useEffect(() => {
     if (!container.current) return
@@ -49,9 +52,15 @@ export function TokenLineChart({ series, stepSeconds, tone, label, className }: 
       series.map((value, i) => ({ time: (now - (series.length - 1 - i) * stepSeconds) as UTCTimestamp, value }))
     )
     chart.timeScale().fitContent()
+    setDrawn(true)
 
     return () => chart.remove()
   }, [series, stepSeconds, tone, resolvedTheme])
 
-  return <div ref={container} role="img" aria-label={label} className={cn("h-72 w-full", className)} />
+  return (
+    <div className={cn("relative h-72 w-full", className)}>
+      <div ref={container} role="img" aria-label={label} className="size-full" />
+      <ChartLoader visible={!drawn} />
+    </div>
+  )
 }

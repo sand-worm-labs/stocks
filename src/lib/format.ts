@@ -6,6 +6,7 @@ const compactUsd = new Intl.NumberFormat("en-US", {
   notation: "compact",
   maximumFractionDigits: 2,
 })
+const compactAmount = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 })
 const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 })
 const signedPercent = new Intl.NumberFormat("en-US", {
   style: "percent",
@@ -24,6 +25,7 @@ export const formatSignedAmount = (value: number) => signedAmount.format(value)
 export const formatDecimal = (value: number) => decimal.format(value)
 export const formatAmount = (value: number) => amount.format(value)
 export const formatUsd = (value: number) => usd.format(value)
+export const formatCompactAmount = (value: number) => compactAmount.format(value)
 export const formatCompactUsd = (value: number) => compactUsd.format(value)
 export const formatPercent = (value: number, { signed = false } = {}) =>
   (signed ? signedPercent : percent).format(value)

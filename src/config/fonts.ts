@@ -13,3 +13,12 @@ export const preloadedFontPaths = [
   "/fonts/moderat/Moderat-Regular.woff2",
   "/fonts/moderat/Moderat-Medium.woff2",
 ] as const
+
+// Instrument Serif (OFL), latin, regular and italic: for the few big headings that should feel set, not typed.
+export const displayFont = localFont({
+  src: [
+    { path: "../../public/fonts/instrument-serif/InstrumentSerif-Latin-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/instrument-serif/InstrumentSerif-Latin-Italic.woff2", weight: "400", style: "italic" },
+  ],
+  display: "swap",
+})

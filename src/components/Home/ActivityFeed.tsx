@@ -1,28 +1,36 @@
-import { SectionHeader } from "@/components/SectionHeader/SectionHeader"
-import { Card, CardRow } from "@/components/ui/card"
+import { AppLink } from "@/components/AppLink/AppLink"
+import { Card } from "@/components/ui/card"
 import { IconTile } from "@/components/ui/icon-tile"
 import { ACTIVITY_KIND } from "@/constants/activity"
 import type { Activity } from "@/lib/activity/types"
 import { formatActivityTime } from "@/lib/dates"
 
+// The latest of what the agent did, as a card for the side of the home: what it did, in a line or two, and when
 export function ActivityFeed({ activity, now }: { activity: Activity[]; now: string }) {
+  if (!activity.length) return null
+
   return (
-    <section className="flex flex-col gap-3">
-      <SectionHeader title="What the agent did" link={{ route: "activity", label: "All activity →" }} />
-      <Card>
+    <Card>
+      <div className="flex items-baseline justify-between p-5 pb-3">
+        <h2 className="text-lg font-medium">What the agent did</h2>
+        <AppLink route="activity" className="text-ink-400 hover:text-ink-100 text-sm font-medium transition-colors">
+          All activity →
+        </AppLink>
+      </div>
+      <ul className="px-2 pb-2">
         {activity.map(({ id, kind, title, detail, at }) => (
-          <CardRow key={id} className="flex items-start gap-3 p-4">
-            <IconTile icon={ACTIVITY_KIND[kind].icon} tone={ACTIVITY_KIND[kind].tone} />
+          <li key={id} className="flex items-start gap-3 rounded-xl px-3 py-2.5">
+            <IconTile icon={ACTIVITY_KIND[kind].icon} tone={ACTIVITY_KIND[kind].tone} className="size-9" />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="font-medium">{title}</span>
               <span className="text-ink-400 text-sm">{detail}</span>
+              <time dateTime={at} className="text-ink-400 mt-0.5 text-xs">
+                {formatActivityTime(at, now)}
+              </time>
             </div>
-            <time dateTime={at} className="text-ink-400 flex-none text-xs">
-              {formatActivityTime(at, now)}
-            </time>
-          </CardRow>
+          </li>
         ))}
-      </Card>
-    </section>
+      </ul>
+    </Card>
   )
 }

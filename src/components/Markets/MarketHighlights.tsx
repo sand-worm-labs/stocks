@@ -2,8 +2,9 @@ import type { IconType } from "react-icons"
 import { PiFire, PiTrendDown, PiTrendUp } from "react-icons/pi"
 
 import { AppLink } from "@/components/AppLink/AppLink"
+import { Money } from "@/components/Money/Money"
 import { Card } from "@/components/ui/card"
-import { formatCompactUsd, formatUsd } from "@/lib/format"
+
 import { type BaseToken, marketHighlights } from "@/lib/markets/tokens"
 import { cn } from "@/lib/utils"
 import { listItemHoverClassName } from "@/styles/interactive"
@@ -43,7 +44,9 @@ function Highlight({
             >
               <TokenAvatar image={token.image} symbol={token.symbol} className="size-7" />
               <span className="min-w-0 flex-1 truncate font-medium">{token.symbol}</span>
-              <span className="text-ink-400 tabular-nums">{formatUsd(token.price)}</span>
+              <span className="text-ink-400 tabular-nums">
+                <Money value={token.price} />
+              </span>
               <span className="min-w-16 text-right">{stat(token)}</span>
             </AppLink>
           </li>
@@ -77,7 +80,7 @@ export function MarketHighlights({ tokens }: { tokens: BaseToken[] }) {
         icon={PiFire}
         tint="border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400"
         tokens={mostTraded}
-        stat={({ volume }) => <span className="tabular-nums">{formatCompactUsd(volume ?? 0)}</span>}
+        stat={({ volume }) => <Money value={volume ?? 0} compact />}
       />
     </div>
   )

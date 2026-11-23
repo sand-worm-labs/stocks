@@ -3,7 +3,7 @@
 import { memo } from "react"
 
 import { AppLink } from "@/components/AppLink/AppLink"
-import { formatUsd } from "@/lib/format"
+import { Money } from "@/components/Money/Money"
 import type { BaseToken } from "@/lib/markets/tokens"
 
 import { Change } from "./Change"
@@ -30,7 +30,7 @@ const TickerItem = memo(function TickerItem({ id, symbol, image, price, change }
         <TokenAvatar image={image} symbol={symbol} className="size-4 text-[9px]" />
         <span className="font-medium">{symbol}</span>
         <Flash value={price}>
-          <span className="tabular-nums">{formatUsd(price)}</span>
+          <Money value={price} />
         </Flash>
         <Change value={change} />
       </AppLink>

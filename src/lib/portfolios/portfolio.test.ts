@@ -1,22 +1,32 @@
 import { describe, expect, it } from "vitest"
 
-import { exposureTo, heldSymbols, portfolioValue, rulesText, statusText } from "./portfolio"
+import { exposureTo, heldSymbols, portfolioValue, statusText } from "./portfolio"
 import type { Portfolio } from "./types"
 
 const live: Portfolio = {
   id: "a",
   name: "Robotics",
   brief: "",
+  createdAt: "2026-11-01T10:00:00",
   status: "live",
   holdings: [
-    { symbol: "NVDAc", units: 1, value: 90, cost: 80 },
-    { symbol: "TSLAc", units: 1, value: 60, cost: 70 },
+    { symbol: "NVDAc", units: 1, entryPrice: 80, value: 90, cost: 80 },
+    { symbol: "TSLAc", units: 1, entryPrice: 70, value: 60, cost: 70 },
   ],
   cash: 50,
   rules: { passing: 4, total: 4, checkedAt: "2026-11-20T09:00:00" },
   series: [],
 }
-const draft: Portfolio = { id: "b", name: "AI", brief: "", status: "draft", holdings: [], cash: 0, series: [] }
+const draft: Portfolio = {
+  id: "b",
+  name: "AI",
+  brief: "",
+  createdAt: "2026-11-01T10:00:00",
+  status: "draft",
+  holdings: [],
+  cash: 0,
+  series: [],
+}
 const unbuildable: Portfolio = {
   ...draft,
   id: "c",
@@ -35,15 +45,9 @@ describe("portfolio", () => {
   })
 
   it("says what each status is waiting on", () => {
-    expect(statusText(live, "paper")).toBe("Live · paper")
-    expect(statusText(draft, "paper")).toBe("Waiting for you to confirm rules")
-    expect(statusText(unbuildable, "paper")).toBe("Can't be built")
-  })
-
-  it("reads the rules as passing, draft or failing", () => {
-    expect(rulesText(live)).toBe("4/4")
-    expect(rulesText(draft)).toBe("draft")
-    expect(rulesText(unbuildable)).toBe("1 fails")
+    expect(statusText(live)).toBe("Live")
+    expect(statusText(draft)).toBe("Waiting for you to confirm rules")
+    expect(statusText(unbuildable)).toBe("Can't be built")
   })
 
   it("finds where a stock is held and how it has done", () => {

@@ -49,6 +49,9 @@
    Colours that are HSL triplets there stay triplets here, so web's hsl(var(--x)) pattern carries over. */
 :root {
   --primary: 276 90% 49%; /* #A308F0 */
+  /* The violet that marks a tick, a line or a glow: white in dark mode, where violet does not read */
+  --mark: #7f56d9;
+  --mark-soft: rgba(127, 86, 217, 0.12);
   --primary-foreground: 0 0% 98%;
   --accent: 258 98% 66%; /* #8053FE */
   --accent-foreground: 0 0% 100%;
@@ -97,44 +100,54 @@
 
 .dark {
   color-scheme: dark;
-  --primary: 263 90% 65%; /* #9355F6 */
-  --page-surface: 0 0% 7.1%; /* #121212 */
-  --block-surface: 0 0% 10.2%; /* #1A1A1A */
-  --dropdown-bg: 0 0% 17.6%; /* #2D2D2D */
-  --dropdown-hover: 0 0% 22%;
+  /* Glider's dark: near-black neutrals with no tint, and white where a colour would go */
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 7%;
+  --mark: #ffffff;
+  --mark-soft: rgba(255, 255, 255, 0.07);
+  --page-surface: 0 0% 8.6%; /* #161616 */
+  --block-surface: 0 0% 11.8%; /* #1E1E1E */
+  --dropdown-bg: 0 0% 15.7%; /* #282828 */
+  --dropdown-hover: 0 0% 20%;
   --dropdown-text: #f4f4f4;
-  --border-cool: #343a40;
-  --hover-border: #343a40;
-  --sidebar-hover: 60 1% 19%; /* #313130 */
-  --chat-input-bg: #242424;
-  --chat-input-border: #333333;
-  --base-100: 60 2% 15%; /* #272726 */
-  --base-400: 60 2% 12%; /* #1F1F1E */
-  --base-600: 60 5% 7%; /* #131311 */
-  --placeholder-muted: #a5a5a4;
+  --border-cool: #2e2e2e;
+  --hover-border: #2e2e2e;
+  --sidebar-hover: 0 0% 15%;
+  --chat-input-bg: #1e1e1e;
+  --chat-input-border: #2e2e2e;
+  --base-100: 0 0% 11.8%;
+  --base-400: 0 0% 9.8%;
+  --base-600: 0 0% 7%;
+  --placeholder-muted: #8f8f8f;
   --beta-badge-bg: transparent;
   --beta-badge-text: var(--ink-100);
   --beta-badge-border: hsl(var(--border-tertiary));
-  --border-secondary: 60 2% 28%; /* #494946 */
-  --border-tertiary: 60 2% 25%; /* #40403E */
-  --border-focus: 60 2% 42%;
+  --border-secondary: 0 0% 18%; /* #2E2E2E */
+  --border-tertiary: 0 0% 22%; /* #383838 */
+  --border-focus: 0 0% 40%;
   --ink-100: #ffffff;
-  --ink-200: #9c9a92;
-  --ink-300: #adb5bd;
-  --ink-400: #a5a5a4;
-  --ink-450: #6d6c7d;
+  --ink-200: #b3b3b3;
+  --ink-300: #8f8f8f;
+  --ink-400: #a0a0a0;
+  --ink-450: #6d6d6d;
   --ink-navy: #f8f9fa;
   /* What web keeps light in dark and darkens in each component, set once here so a component that forgets still reads right */
-  --bg-input: 60 4% 16.5%; /* base-700 #2A2A28 */
-  --hover-bg: #313130;
-  --primary-tint-50: #1a0d26;
-  --primary-tint-75: #2a1a3a;
-  --primary-tint-100: #1f0a2e;
+  --bg-input: 0 0% 15%;
+  --hover-bg: #262626;
+  --primary-tint-50: #1a1a1a;
+  --primary-tint-75: #262626;
+  --primary-tint-100: #2c2c2c;
+  --primary-200: #525252;
+  --primary-300: #737373;
+  --primary-700: #e5e5e5;
+  --primary-710: #fafafa;
   --link: #85b7eb;
-  --search-bg: #383838;
+  --search-bg: #2a2a2a;
 }
 
 @theme inline {
+  --color-mark: var(--mark);
+  --color-mark-soft: var(--mark-soft);
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-primary-tint-50: var(--primary-tint-50);
@@ -200,7 +213,7 @@
 */
 /* How tall the header and the price strip are together, for anything that sits under them */
 :root {
-  --shell-top: 5.75rem;
+  --shell-top: 6.25rem;
 }
 
 @layer base {
@@ -273,8 +286,8 @@
 }
 
 @utility animate-fade-up {
-  animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--index, 0) * 60ms);
+  animation: fade-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--index, 0) * 35ms);
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
@@ -522,4 +535,22 @@
    window already leaves at the sides */
 @utility pr-panel {
   padding-right: max(0px, calc(var(--panel) + 1.5rem - (100vw - 100%) / 2));
+}
+
+/* A chart is pointed at and clicked, not typed into, so the browser's focus ring round one is only noise */
+.recharts-wrapper:focus,
+.recharts-wrapper :focus,
+.recharts-surface:focus {
+  outline: none;
+}
+
+.recharts-wrapper {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Navigation is clicked, not copied from, so its words are never highlighted by a stray drag or a select-all */
+header,
+nav {
+  -webkit-user-select: none;
+  user-select: none;
 }

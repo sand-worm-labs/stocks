@@ -30,13 +30,13 @@ export function AgentThinking() {
             gradientUnits="userSpaceOnUse"
             gradientTransform="translate(8.75 7.5) rotate(135) scale(9.54594 9.7989)"
           >
-            <stop stopColor="#A308F0" />
+            <stop stopColor="var(--mark)" />
             <stop offset="0.658654" stopColor="#7BFF42" />
             <stop offset="0.658754" stopColor="#B8B3FA" />
             <stop offset="0.745192" stopColor="#2DB2FF" />
             <stop offset="0.826923" stopColor="#FF0000" />
             <stop offset="0.908654" stopColor="#DED757" />
-            <stop offset="1" stopColor="#A308F0" />
+            <stop offset="1" stopColor="var(--mark)" />
           </radialGradient>
         </defs>
       </svg>

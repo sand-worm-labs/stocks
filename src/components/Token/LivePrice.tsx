@@ -2,7 +2,7 @@
 
 import { Flash } from "@/components/Markets/Flash"
 import { useLiveMarketContext } from "@/components/Markets/LiveMarket"
-import { formatUsd } from "@/lib/format"
+import { Money } from "@/components/Money/Money"
 
 // The token's price in its pool, moving on each trade
 export function LivePrice({ address, initial }: { address: string; initial: number }) {
@@ -11,7 +11,9 @@ export function LivePrice({ address, initial }: { address: string; initial: numb
 
   return (
     <Flash value={price}>
-      <span className="text-3xl font-medium tabular-nums md:text-4xl">{formatUsd(price)}</span>
+      <span className="text-3xl font-medium tabular-nums md:text-4xl">
+        <Money value={price} />
+      </span>
     </Flash>
   )
 }

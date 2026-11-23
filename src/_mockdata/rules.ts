@@ -1,7 +1,7 @@
 import type { Rule, StrategyRow } from "@/lib/rules/types"
 
 export const rulesMockData: Rule[] = [
-  { id: 1, label: "Budget 500 USDC", state: "holds", kind: "budget", limit: 500 },
+  { id: 1, label: "Budget 6,000 USDC", state: "holds", kind: "budget", limit: 6_000 },
   { id: 2, label: "Max 20% in any one stock", state: "holds", kind: "max-weight", limit: 0.2 },
   { id: 3, label: "Liquidity ≥ $100K on Base", state: "holds", kind: "liquidity", limit: 100_000 },
   { id: 4, label: "Ask before buying", state: "holds", kind: "approval" },

@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from "react-dom/server"
+import { renderToReadableStream } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
 import { LiveMarketProvider } from "@/components/Markets/LiveMarket"
@@ -28,6 +28,9 @@ const token = (symbol: string, company: string, rank: number) => ({
   series: [1, 2, 3],
 })
 
+// Fonts are made by the build, so in a test there is only the class name
+vi.mock("next/font/local", () => ({ default: () => ({ className: "font-test" }) }))
+
 vi.mock("@/lib/markets/tokens", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/markets/tokens")>()),
   getBaseTokens: async () => [token("NVDAc", "NVIDIA", 1), token("AAPLc", "Apple", 2), token("SNDKc", "SanDisk", 3)],
@@ -39,31 +42,42 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 
-const render = async (page: Promise<React.ReactElement>) =>
-  renderToStaticMarkup(
+// Waits for everything that streams in behind a Suspense boundary, as a browser does, before reading the markup
+const render = async (page: Promise<React.ReactElement>) => {
+  const stream = await renderToReadableStream(
     <LiveMarketProvider>
       <AppShell session={await getSession()}>{await page}</AppShell>
     </LiveMarketProvider>
   )
+  await stream.allReady
+
+  // Streamed markup marks where one run of text ends and the next begins, which a reader never sees
+  return (await new Response(stream).text()).replaceAll("<!-- -->", "")
+}
 
 describe("app screens", () => {
   it("renders the home screen from the mock data", async () => {
     const html = await render(HomePage())
 
-    expect(html).toContain("Good afternoon, Emmanuel")
-    expect(html).toContain("504.21")
-    expect(html).toContain("Needs you")
+    expect(html).toContain("GM")
+    expect(html).toContain("Emmanuel")
+    expect(html).toContain("Total value")
+    expect(html).toContain("Continue")
     expect(html).toContain("What the agent did")
   })
 
-  it("renders every portfolio with its status", async () => {
-    const html = await render(PortfoliosPage({ searchParams: Promise.resolve({}) }))
-    const searched = await render(PortfoliosPage({ searchParams: Promise.resolve({ q: "chips" }) }))
+  it("renders the portfolios with a live summary, and narrows them by a search", async () => {
+    const all = await render(PortfoliosPage({ searchParams: Promise.resolve({}) }))
+    const robotics = await render(PortfoliosPage({ searchParams: Promise.resolve({ q: "robotics" }) }))
+    const chips = await render(PortfoliosPage({ searchParams: Promise.resolve({ q: "chips" }) }))
 
-    expect(html).toContain("Robotics, capped at 20%")
-    expect(html).toContain("Waiting for you to confirm rules")
-    expect(searched).toContain("AI chips, max 25%")
-    expect(searched).not.toContain("Robotics, capped at 20%")
+    // Forty of them, the most profitable first and ten to a page: the summary and the filters are what all of them share
+    expect(all).toContain("Total value")
+    expect(all).toContain("Most profitable")
+    expect(robotics).toContain("Robotics, capped at 20%")
+    expect(chips).toContain("AI chips, max 25%")
+    expect(chips).toContain("Almost ready")
+    expect(chips).not.toContain("Robotics, capped at 20%")
   })
 
   it("renders every token on the markets page, and nothing when the search matches none", async () => {

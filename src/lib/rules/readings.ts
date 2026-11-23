@@ -16,7 +16,11 @@ export type RuleReading = {
 export const maxWeightOf = (rules: Rule[]) => rules.find(({ kind }) => kind === "max-weight")?.limit
 
 // Each rule set against where the portfolio is now, so a rule shows how much room it has, not only that it holds
-export function readRules(portfolio: Portfolio, rules: Rule[], stocks: Stock[]): RuleReading[] {
+export function readRules(
+  portfolio: Portfolio,
+  rules: Rule[],
+  stocks: Pick<Stock, "symbol" | "liquidity">[]
+): RuleReading[] {
   const total = portfolioValue(portfolio) ?? 0
   const invested = portfolio.holdings.reduce((sum, { cost }) => sum + cost, 0)
   const biggest = portfolio.holdings.toSorted((a, b) => b.value - a.value)[0]

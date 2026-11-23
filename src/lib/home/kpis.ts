@@ -1,5 +1,5 @@
-import { formatTime } from "@/lib/dates"
-import { formatAmount, formatPercent, pluralize } from "@/lib/format"
+import { formatAmount, formatPercent, formatSignedAmount, pluralize } from "@/lib/format"
+import { deposited } from "@/lib/portfolios/performance"
 import { isLive, portfolioValue } from "@/lib/portfolios/portfolio"
 import type { Portfolio } from "@/lib/portfolios/types"
 import { changeTone } from "@/lib/tone"
@@ -12,35 +12,40 @@ export function buildKpis(portfolios: Portfolio[]): Kpi[] {
   const live = portfolios.filter(isLive)
   const values = live.map((portfolio) => portfolioValue(portfolio) ?? 0)
   const total = sum(values)
-  // Each portfolio counts in proportion to what it holds.
-  const weekChange = total ? sum(live.map(({ weekChange = 0 }, i) => weekChange * (values[i] ?? 0))) / total : 0
-  const worstDip = Math.min(0, ...live.flatMap(({ worstDip }) => worstDip ?? []))
-  const rules = live.flatMap(({ rules }) => rules ?? [])
-  const checkedAt = rules
-    .map(({ checkedAt }) => checkedAt)
-    .sort()
-    .at(-1)
+  const put = sum(live.map(deposited))
+  const profit = total - put
+  const cash = sum(live.map((portfolio) => portfolio.cash))
 
   return [
     {
       id: "value",
       label: "Total value",
       value: formatAmount(total),
+      amount: total,
       caption: `USDC across ${pluralize(live.length, "live portfolio")}`,
     },
     {
-      id: "week",
-      label: "This week",
-      value: formatPercent(weekChange, { signed: true }),
-      caption: `worst dip ${formatPercent(worstDip, { signed: true })}`,
-      tone: changeTone(weekChange),
+      id: "deposited",
+      label: "Invested",
+      value: formatAmount(put),
+      amount: put,
+      caption: "USDC you put in",
     },
-    { id: "cash", label: "Cash", value: formatAmount(sum(live.map(({ cash }) => cash))), caption: "USDC ready to use" },
     {
-      id: "rules",
-      label: "Rules",
-      value: `${sum(rules.map(({ passing }) => passing))}/${sum(rules.map(({ total }) => total))}`,
-      caption: checkedAt ? `holding, checked ${formatTime(checkedAt)}` : "nothing to check yet",
+      id: "profit",
+      label: "Profit",
+      value: formatSignedAmount(profit),
+      amount: profit,
+      caption: put ? `${formatPercent(profit / put, { signed: true })} on what you put in` : "nothing put in yet",
+      tone: changeTone(profit),
     },
+    {
+      id: "inStocks",
+      label: "In stocks",
+      value: formatAmount(total - cash),
+      amount: total - cash,
+      caption: "USDC, at today's prices",
+    },
+    { id: "cash", label: "Cash ready", value: formatAmount(cash), amount: cash, caption: "USDC to buy with" },
   ]
 }

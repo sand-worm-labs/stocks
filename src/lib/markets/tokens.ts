@@ -239,6 +239,10 @@ export async function getBaseTokens(): Promise<BaseToken[]> {
     return cached.tokens
   }
 
+  // With nothing to show and the feed having just failed, the page is not held up for another try that is bound to be
+  // refused as well: it shows no tokens now and the next visit after the pause tries again
+  if (Date.now() < retryAt) return []
+
   return refresh()
 }
 

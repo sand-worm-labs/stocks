@@ -1,6 +1,5 @@
-import { PORTFOLIO_PENDING_TEXT, TRADING_MODE_LABEL } from "@/constants/portfolio"
+import { DRAFT_STAGE, PORTFOLIO_PENDING_TEXT } from "@/constants/portfolio"
 import { searchBy } from "@/lib/search"
-import type { Session } from "@/lib/session/types"
 
 import type { Portfolio } from "./types"
 
@@ -10,17 +9,17 @@ export const isLive = (portfolio: Portfolio) => portfolio.status === "live"
 export const portfolioValue = (portfolio: Portfolio) =>
   isLive(portfolio) ? portfolio.holdings.reduce((sum, { value }) => sum + value, portfolio.cash) : undefined
 
+// The live portfolios, biggest first: the order a model's colour and its place on the page follow
+export const rankByValue = (portfolios: Portfolio[]) =>
+  portfolios.filter(isLive).toSorted((a, b) => (portfolioValue(b) ?? 0) - (portfolioValue(a) ?? 0))
+
 export const heldSymbols = (portfolios: Portfolio[]) =>
   new Set(portfolios.filter(isLive).flatMap(({ holdings }) => holdings.map(({ symbol }) => symbol)))
 
-export function statusText(portfolio: Portfolio, mode: Session["network"]["mode"]) {
+export function statusText(portfolio: Portfolio) {
   const { status } = portfolio
-  return status === "live" ? `Live · ${TRADING_MODE_LABEL[mode].toLowerCase()}` : PORTFOLIO_PENDING_TEXT[status]
-}
-
-export function rulesText({ status, rules }: Portfolio) {
-  if (!rules) return "draft"
-  return status === "live" ? `${rules.passing}/${rules.total}` : `${rules.total - rules.passing} fails`
+  if (status === "live") return "Live"
+  return status === "draft" && portfolio.stage ? DRAFT_STAGE[portfolio.stage].label : PORTFOLIO_PENDING_TEXT[status]
 }
 
 export const searchPortfolios = (portfolios: Portfolio[], query: string) =>

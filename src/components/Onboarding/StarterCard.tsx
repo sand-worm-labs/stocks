@@ -1,41 +1,29 @@
 "use client"
 
+import Link from "next/link"
+
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
+import { CARD_SURFACE, CARD_TINTS } from "@/constants/cards"
 import { formatPercent } from "@/lib/format"
 import type { Starter } from "@/lib/onboarding/types"
 import { cn } from "@/lib/utils"
 
 import { StarterChart } from "./StarterChart"
 
-// Each card in its own soft colour, fading out at the bottom
-const TINTS = [
-  "from-rose-100 via-rose-50 to-rose-50/40 dark:from-rose-950/50 dark:via-rose-950/20 dark:to-transparent",
-  "from-emerald-100 via-emerald-50 to-emerald-50/40 dark:from-emerald-950/50 dark:via-emerald-950/20 dark:to-transparent",
-  "from-indigo-100 via-indigo-50 to-indigo-50/40 dark:from-indigo-950/50 dark:via-indigo-950/20 dark:to-transparent",
-]
-
-type StarterCardProps = { starter: Starter; index: number; selected: boolean; onSelect: () => void }
+type StarterCardProps = { starter: Starter; index: number; className?: string } & (
+  | { selected: boolean; onSelect: () => void; href?: never }
+  | { href: string; selected?: never; onSelect?: never }
+)
 
 // A brief to start from: how its backtest did over the last year, the stocks in it, and its name. Choosing one opens
-// the new portfolio with that brief already written.
-export function StarterCard({ starter, index, selected, onSelect }: StarterCardProps) {
+// the new portfolio with that brief already written: from a step that picks it, or as a link to it.
+export function StarterCard({ starter, index, className, selected, onSelect, href }: StarterCardProps) {
   const { title, oneYearReturn, series, symbols } = starter
   const logos = symbols.slice(0, 5)
   const last = logos.length - 1
 
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onSelect}
-      style={{ "--index": index } as React.CSSProperties}
-      className={cn(
-        "animate-fade-up bg-gradient-to-b text-left",
-        TINTS[index % TINTS.length],
-        "border-border-secondary dark:border-border-tertiary flex h-80 w-full flex-col overflow-hidden rounded-[28px] border shadow-[0_10px_40px_-18px_rgba(24,39,75,0.25)] transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5",
-        selected && "ring-ink-100 ring-2 ring-offset-2 ring-offset-transparent dark:ring-white"
-      )}
-    >
+  const face = (
+    <>
       <div className="flex items-baseline justify-between px-5 pt-5">
         <span className="text-2xl leading-none font-normal text-emerald-700 tabular-nums dark:text-emerald-400">
           {formatPercent(oneYearReturn, { signed: true })}
@@ -62,6 +50,24 @@ export function StarterCard({ starter, index, selected, onSelect }: StarterCardP
         })}
       </div>
       <h3 className="px-5 pb-5 text-xl leading-6 font-normal">{title}</h3>
+    </>
+  )
+  const style = { "--index": index } as React.CSSProperties
+  const classes = cn(
+    CARD_SURFACE,
+    CARD_TINTS[index % CARD_TINTS.length],
+    "h-80",
+    selected && "ring-ink-100 ring-2 ring-offset-2 ring-offset-transparent dark:ring-white",
+    className
+  )
+
+  return href ? (
+    <Link href={href} style={style} className={classes}>
+      {face}
+    </Link>
+  ) : (
+    <button type="button" aria-pressed={selected} onClick={onSelect} style={style} className={classes}>
+      {face}
     </button>
   )
 }

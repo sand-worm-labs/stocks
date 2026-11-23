@@ -22,6 +22,7 @@ export const ROUTES = {
   markets: { path: "/markets", label: "Markets", isBuilt: true },
   marketSummary: { path: "/markets/summary", label: "Summary", isBuilt: true },
   stock: { path: "/markets", label: "Stock", isBuilt: true },
+  holdings: { path: "/holdings", label: "Holdings", isBuilt: true },
   activity: { path: "/activity", label: "Activity", isBuilt: true },
   settings: { path: "/settings", label: "Settings", isBuilt: true },
 } as const satisfies Record<string, RouteDefinition>

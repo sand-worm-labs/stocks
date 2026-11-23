@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { FancyIcon } from "@/components/ui/fancy-icon"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
 import {
@@ -80,8 +81,8 @@ export function AddFundsDialog({ portfolios, cap }: AddFundsDialogProps) {
     >
       <DialogTrigger className={buttonVariants({ intent: "dark", size: "compact" })}>Add funds</DialogTrigger>
       <DialogContent aria-label="Add funds" className="max-w-[480px]">
-        <div className="flex items-center gap-2.5 pr-8">
-          <UsdcMark />
+        <div className="flex items-center gap-3 pr-8">
+          <FancyIcon name="funds" size={44} />
           <div className="flex flex-col">
             <DialogTitle>{adding ? "Add funds" : "Remove funds"}</DialogTitle>
             <DialogDescription>

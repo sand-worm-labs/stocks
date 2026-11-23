@@ -1,12 +1,14 @@
 "use client"
 
 import { AppLink } from "@/components/AppLink/AppLink"
+import { useNotifications } from "@/components/Notifications/NotificationsProvider"
 import { ROUTES } from "@/config/routes"
 import { MOBILE_TABS } from "@/constants/navigation"
 import { useCurrentTab } from "@/hooks/use-current-tab"
 import { cn } from "@/lib/utils"
 
-export function BottomNav({ unreadAlerts }: { unreadAlerts: number }) {
+export function BottomNav() {
+  const { unread } = useNotifications()
   const current = useCurrentTab(MOBILE_TABS.map(({ route }) => route))
 
   return (
@@ -38,9 +40,9 @@ export function BottomNav({ unreadAlerts }: { unreadAlerts: number }) {
                   <Icon size={isNew ? 18 : 22} aria-hidden="true" />
                 </span>
                 {ROUTES[route].label.replace(" portfolio", "")}
-                {hasAlertCount && unreadAlerts > 0 && (
+                {hasAlertCount && unread > 0 && (
                   <span className="bg-primary text-primary-foreground absolute top-1 left-1/2 ml-2 min-w-4 rounded-full px-1 text-center text-[10px] leading-4">
-                    {unreadAlerts}
+                    {unread}
                   </span>
                 )}
               </AppLink>

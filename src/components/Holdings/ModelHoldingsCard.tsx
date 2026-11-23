@@ -13,6 +13,7 @@ import { formatPercent, pluralize } from "@/lib/format"
 import type { ModelHoldings } from "@/lib/holdings/groups"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
+import { listItemHoverClassName } from "@/styles/interactive"
 
 // One model and the stocks it holds: how much of it each is, what each is worth and how each is doing. It folds shut,
 // so a long list of models can be read by their names and what each is worth.
@@ -72,7 +73,7 @@ export function ModelHoldingsCard({
               <AppLink
                 route="stock"
                 slug={symbol}
-                className="hover:bg-hover-bg/60 flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
+                className={cn("flex items-center gap-3 px-3 py-2.5", listItemHoverClassName)}
               >
                 <StockAvatar symbol={symbol} className="size-10" />
                 <span className="flex min-w-0 flex-1 flex-col">

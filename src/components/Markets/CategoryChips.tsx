@@ -2,7 +2,7 @@ import { AppLink } from "@/components/AppLink/AppLink"
 import { ALL_TOKENS, HIGHLIGHTED_TOKENS } from "@/constants/categories"
 import { categoryCounts } from "@/lib/markets/categories"
 import type { BaseToken } from "@/lib/markets/tokens"
-import { cn } from "@/lib/utils"
+import { filterPillClassName } from "@/styles/interactive"
 
 import { MoreCategories } from "./MoreCategories"
 
@@ -27,12 +27,7 @@ export function CategoryChips({ tokens, active, keep }: CategoryChipsProps) {
           route="markets"
           query={{ ...keep, category: id }}
           isCurrent={id === active}
-          className={cn(
-            "flex flex-none items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium whitespace-nowrap transition-colors",
-            id === active
-              ? "bg-base-400 text-primary-foreground border-transparent dark:bg-white dark:text-black"
-              : "border-border text-ink-400 hover:text-ink-100 hover:border-primary dark:border-border-tertiary"
-          )}
+          className={filterPillClassName(id === active)}
         >
           {label}
         </AppLink>

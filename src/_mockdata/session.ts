@@ -8,5 +8,4 @@ export const sessionMockData: Session = {
   welcomePending: false,
   interests: [],
   now: "2026-11-20T14:20:00",
-  unreadAlerts: 2,
 }

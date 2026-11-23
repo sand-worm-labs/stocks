@@ -22,3 +22,7 @@ export const ALLOCATION_FILLS = [
 ]
 export const CASH_FILL = "bg-ink-300"
 export const OTHER_FILL = "bg-ink-200"
+
+// The card that opens a page with its totals: a tint at the corner the figures are at and a green one at the other
+export const SUMMARY_CARD_SURFACE =
+  "overflow-hidden bg-[radial-gradient(60%_70%_at_100%_0%,var(--mark-soft),transparent),radial-gradient(45%_50%_at_0%_100%,rgba(16,185,129,0.08),transparent)]"

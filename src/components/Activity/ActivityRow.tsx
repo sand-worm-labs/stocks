@@ -13,6 +13,8 @@ import type { Activity, TradeReceipt } from "@/lib/activity/types"
 import { formatTime } from "@/lib/dates"
 import { formatAmount, shortenAddress } from "@/lib/format"
 
+import { NotificationActions, NotificationDot } from "./NotificationMark"
+
 type ActivityRowProps = {
   activity: Activity
   // The portfolio it belongs to, shown when the list mixes portfolios
@@ -74,7 +76,9 @@ function Receipt({ trade }: { trade: TradeReceipt }) {
 
 export function ActivityRow({ activity, portfolioName }: ActivityRowProps) {
   const { kind, title, detail, at, action, rule, request, trade, checks } = activity
-  const { icon, tone } = ACTIVITY_KIND[kind]
+  const { icon, tone, category } = ACTIVITY_KIND[kind]
+  // An alert is a notification: it can be read, put away and brought back
+  const isNotification = category === "alerts"
 
   return (
     <CardRow className="flex gap-3 p-4">
@@ -84,6 +88,7 @@ export function ActivityRow({ activity, portfolioName }: ActivityRowProps) {
           <div className="flex min-w-0 flex-col">
             <span className="flex flex-wrap items-center gap-2 font-medium">
               {title}
+              {isNotification && <NotificationDot id={activity.id} />}
               {portfolioName && <Badge>{portfolioName}</Badge>}
               {rule && <Badge tone="negative">§ {rule}</Badge>}
               {checks && (
@@ -104,15 +109,18 @@ export function ActivityRow({ activity, portfolioName }: ActivityRowProps) {
           </blockquote>
         )}
         {trade && <Receipt trade={trade} />}
-        {action && (
-          <div>
-            <AppLink
-              route={action.route}
-              slug={action.slug}
-              className={buttonVariants({ intent: "outline", size: "sm", className: "min-h-8 min-w-0 px-3 text-xs" })}
-            >
-              {action.label}
-            </AppLink>
+        {(action || isNotification) && (
+          <div className="flex flex-wrap gap-2">
+            {action && (
+              <AppLink
+                route={action.route}
+                slug={action.slug}
+                className={buttonVariants({ intent: "outline", size: "sm", className: "min-h-8 min-w-0 px-3 text-xs" })}
+              >
+                {action.label}
+              </AppLink>
+            )}
+            {isNotification && <NotificationActions id={activity.id} />}
           </div>
         )}
       </div>

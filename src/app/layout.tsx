@@ -1,6 +1,7 @@
 import "@/styles/tailwind.css"
 
 import type { Metadata } from "next"
+import { CookieBanner } from "@/components/CookieBanner/CookieBanner"
 import { Providers } from "@/components/Providers/Providers"
 import { DynamicProviders } from "@/components/Wallet/DynamicProviders"
 import { baseFont, preloadedFontPaths } from "@/config/fonts"
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${baseFont.className} bg-page-surface text-ink-100`}>
         <Providers>
           <DynamicProviders>{children}</DynamicProviders>
+          <CookieBanner />
         </Providers>
       </body>
     </html>

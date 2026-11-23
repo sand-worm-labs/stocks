@@ -14,5 +14,4 @@ export type Session = {
   region: string
   // The moment the page is rendered for. Mock data pins it so dates read the same on every load.
   now: string
-  unreadAlerts: number
 }

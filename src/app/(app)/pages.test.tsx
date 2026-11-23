@@ -5,12 +5,12 @@ import { LiveMarketProvider } from "@/components/Markets/LiveMarket"
 import { AppShell } from "@/components/Shell/AppShell"
 import { getSession } from "@/lib/session/source"
 
+import HomePage from "./(home)/page"
 import ActivityPage from "./activity/page"
+import MarketsPage from "./markets/(list)/page"
 import StockPage from "./markets/[symbol]/page"
-import MarketsPage from "./markets/page"
 import MarketSummaryPage from "./markets/summary/page"
-import HomePage from "./page"
-import PortfoliosPage from "./portfolios/page"
+import PortfoliosPage from "./portfolios/(list)/page"
 import SettingsPage from "./settings/page"
 
 const token = (symbol: string, company: string, rank: number) => ({

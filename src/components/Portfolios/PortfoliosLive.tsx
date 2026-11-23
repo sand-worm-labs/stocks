@@ -10,6 +10,7 @@ import { SearchInput } from "@/components/SearchInput/SearchInput"
 import { Card } from "@/components/ui/card"
 import { SegmentedControl } from "@/components/ui/segmented-control"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
+import { SUMMARY_CARD_SURFACE } from "@/constants/cards"
 import { deposited, profit } from "@/lib/portfolios/performance"
 import { isLive, portfolioValue } from "@/lib/portfolios/portfolio"
 import type { Portfolio } from "@/lib/portfolios/types"
@@ -24,6 +25,7 @@ import {
 } from "@/lib/portfolios/views"
 import type { Session } from "@/lib/session/types"
 import { cn } from "@/lib/utils"
+import { filterPillClassName } from "@/styles/interactive"
 
 import { PortfolioBoxes } from "./PortfolioBoxes"
 import { PortfolioTable } from "./PortfolioTable"
@@ -78,7 +80,7 @@ export function PortfoliosLive({ portfolios, addresses, mode }: PortfoliosLivePr
 
   return (
     <>
-      <Card className="overflow-hidden bg-[radial-gradient(60%_70%_at_100%_0%,var(--mark-soft),transparent),radial-gradient(45%_50%_at_0%_100%,rgba(16,185,129,0.08),transparent)]">
+      <Card className={SUMMARY_CARD_SURFACE}>
         <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3 px-5 py-4 md:px-6">
           <div className="flex flex-col gap-0.5">
             <span className="text-ink-400 text-sm">Total value</span>
@@ -98,19 +100,14 @@ export function PortfoliosLive({ portfolios, addresses, mode }: PortfoliosLivePr
             placeholder="Search..."
             className="w-full flex-none sm:w-56 md:max-w-none"
           />
-          <div role="group" aria-label="Show" className="flex flex-wrap gap-2">
+          <div role="group" aria-label="Show" className="flex flex-wrap gap-3">
             {PORTFOLIO_VIEWS.map(({ id, label }) => (
               <button
                 key={id}
                 type="button"
                 aria-pressed={view === id}
                 onClick={() => setView(id)}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition-colors",
-                  view === id
-                    ? "border-ink-100 bg-ink-100 text-block-surface"
-                    : "border-border-secondary text-ink-200 hover:text-ink-100 dark:border-border-tertiary"
-                )}
+                className={filterPillClassName(view === id)}
               >
                 {label}
                 <span className={cn("text-xs tabular-nums", view === id ? "opacity-70" : "text-ink-400")}>

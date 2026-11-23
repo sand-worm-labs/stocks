@@ -5,6 +5,7 @@ import { TradingChart } from "@/components/Charts/TradingChart"
 import { ProfitLine } from "@/components/Money/ProfitLine"
 import { Card } from "@/components/ui/card"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
+import { SUMMARY_CARD_SURFACE } from "@/constants/cards"
 import { benchmarkLines } from "@/lib/benchmarks/compare"
 import type { Benchmark } from "@/lib/benchmarks/types"
 import { formatDay, formatTime } from "@/lib/dates"
@@ -39,7 +40,7 @@ export function HomeSummary({ kpis, points, slices, benchmarks, now, addFunds }:
   const put = kpis.find(({ id }) => id === "deposited")
 
   return (
-    <Card className="overflow-hidden bg-[radial-gradient(60%_70%_at_100%_0%,var(--mark-soft),transparent),radial-gradient(45%_50%_at_0%_100%,rgba(16,185,129,0.08),transparent)]">
+    <Card className={SUMMARY_CARD_SURFACE}>
       <div className="flex flex-col gap-5 p-5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">

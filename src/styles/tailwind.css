@@ -64,6 +64,8 @@
   --create-project-tint: 60 3% 46%;
   --border-cool: #e7ebf0;
   --hover-bg: #f1f2f4;
+  --icon-bg: #f5f7fa;
+  --icon-stroke: #1c3b5a;
   --hover-border: #e6e0f1;
   --sidebar-hover: 180 43% 95%; /* #EBF7F7 */
   --border: 210 14% 89%; /* #DEE2E6 */
@@ -84,6 +86,7 @@
   --ink-300: #868e96;
   --ink-400: #6c757d;
   --ink-450: #6d6c7d;
+  --ink-500: #343a40;
   --ink-navy: #1c3b5a;
   --primary-tint-50: #f9f5ff;
   --primary-tint-75: #f7e8ff;
@@ -96,6 +99,9 @@
   --success: #22c55e;
   --link: #005de7;
   --radius: 0.5rem;
+  /* What a placeholder is filled with while its content is on the way, and the soft light that passes over it */
+  --skeleton: #f3f4f7;
+  --skeleton-shine: rgba(255, 255, 255, 0.75);
 }
 
 .dark {
@@ -114,6 +120,8 @@
   --hover-border: #2e2e2e;
   --sidebar-hover: 0 0% 15%;
   --chat-input-bg: #1e1e1e;
+  --icon-bg: #1c1f26;
+  --icon-stroke: #e6eaf0;
   --chat-input-border: #2e2e2e;
   --base-100: 0 0% 11.8%;
   --base-400: 0 0% 9.8%;
@@ -130,6 +138,10 @@
   --ink-300: #8f8f8f;
   --ink-400: #a0a0a0;
   --ink-450: #6d6d6d;
+  /* The main app has no darker ink in dark mode and each component sets its own; here it is the body ink of the mode */
+  --ink-500: #a0a0a0;
+  --skeleton: #2a2a2a;
+  --skeleton-shine: rgba(255, 255, 255, 0.06);
   --ink-navy: #f8f9fa;
   /* What web keeps light in dark and darkens in each component, set once here so a component that forgets still reads right */
   --bg-input: 0 0% 15%;
@@ -190,6 +202,7 @@
   --color-ink-300: var(--ink-300);
   --color-ink-400: var(--ink-400);
   --color-ink-450: var(--ink-450);
+  --color-ink-500: var(--ink-500);
   --color-ink-navy: var(--ink-navy);
   --color-warning: var(--warning);
   --color-success: var(--success);
@@ -288,6 +301,88 @@
 @utility animate-fade-up {
   animation: fade-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--index, 0) * 35ms);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* A placeholder for what is still on its way. A soft light passes over it, moved by transform alone, which the browser can
+   do without the page's scripts, so it stays smooth however busy the page is. */
+@keyframes skeleton-shine {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@utility skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--skeleton);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
+    animation: skeleton-shine 1.8s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+      display: none;
+    }
+  }
+}
+
+/* A page that arrives where a placeholder was settles into its place without the entrance the same page has when it is
+   opened cold: fading up from nothing would blank what the placeholder was holding. SkeletonScope sets the attribute
+   while a placeholder is shown, and for a moment after it has gone. The animation is made instant, not taken away: one
+   that is taken away starts over from nothing when the attribute is removed, and the page would fade in a second time. */
+html[data-skeleton] .animate-fade-up,
+html[data-skeleton] .animate-grow-x {
+  animation-duration: 0s;
+  animation-delay: 0s;
+}
+
+/* The cookie notice rising from the bottom edge, and sinking back once it is answered */
+@keyframes cookie-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cookie-down {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@utility animate-cookie-up {
+  animation: cookie-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility animate-cookie-down {
+  animation: cookie-down 0.28s cubic-bezier(0.4, 0, 1, 1) both;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

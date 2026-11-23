@@ -11,6 +11,8 @@ import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import { formatPercent, pluralize } from "@/lib/format"
 import type { LiveStock } from "@/lib/home/types"
 import { changeTone } from "@/lib/tone"
+import { cn } from "@/lib/utils"
+import { listItemHoverClassName } from "@/styles/interactive"
 
 type StockListProps = { title: string; stocks: LiveStock[]; link: { route: RouteId; label: string } }
 
@@ -52,7 +54,7 @@ export function StockList({ title, stocks, link }: StockListProps) {
               <AppLink
                 route="stock"
                 slug={symbol}
-                className="hover:bg-hover-bg/60 flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
+                className={cn("flex items-center gap-3 px-3 py-2.5", listItemHoverClassName)}
               >
                 <StockAvatar symbol={symbol} className="size-10" />
                 <span className="flex min-w-0 flex-1 flex-col">

@@ -8,6 +8,7 @@ import { formatPercent } from "@/lib/format"
 import type { StockRow } from "@/lib/holdings/groups"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
+import { listItemHoverClassName } from "@/styles/interactive"
 
 // Every stock held, once, with the models it is in shown as their colours
 export function AllStocksTable({ stocks }: { stocks: StockRow[] }) {
@@ -21,7 +22,7 @@ export function AllStocksTable({ stocks }: { stocks: StockRow[] }) {
             <AppLink
               route="stock"
               slug={symbol}
-              className="hover:bg-hover-bg/60 flex items-center gap-3 rounded-xl px-3 py-3 transition-colors"
+              className={cn("flex items-center gap-3 px-3 py-3", listItemHoverClassName)}
             >
               <StockAvatar symbol={symbol} className="size-10" />
               <span className="flex min-w-0 flex-1 flex-col">

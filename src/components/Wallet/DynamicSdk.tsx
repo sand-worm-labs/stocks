@@ -40,7 +40,7 @@ const safeNext = (next: string | null) => (next?.startsWith("/") && !next.starts
 type Publish = (value: Published | undefined) => void
 
 // Inside Dynamic, tells the rest of the app what it says. The app reads plain values, not Dynamic's hooks.
-function Bridge({ publish }: { publish: Publish }) {
+function Bridge({ publish, resume }: { publish: Publish; resume: () => void }) {
   const { user, primaryWallet, network, setShowAuthFlow, setShowDynamicUserProfile, handleLogOut } = useDynamicContext()
   const { setShowLinkNewWalletModal } = useDynamicModals()
 
@@ -68,6 +68,15 @@ function Bridge({ publish }: { publish: Publish }) {
 
   useEffect(() => () => publish(undefined), [publish])
 
+  // Sent to sign in while Dynamic still has them signed in (our cookie ended, theirs didn't): there is no sign-in left to do, so the
+  // session is made again from it, rather than leaving them on a page whose button does nothing
+  const resumed = useRef(false)
+  useEffect(() => {
+    if (!isSignedIn || resumed.current || window.location.pathname !== SIGN_IN_PATH) return
+    resumed.current = true
+    resume()
+  }, [isSignedIn, resume])
+
   // The panel of what a signed-in person holds and has done
   return isSignedIn ? <DynamicUserProfile /> : null
 }
@@ -78,17 +87,28 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
   const router = useRouter()
   const { resolvedTheme } = useTheme()
   const environmentId = env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID
+  // A sign-in can be reported twice (when it happens, and when the sign-in page finds it already there); once is enough
+  const starting = useRef(false)
 
   if (!environmentId) return null
 
   const startSession = async () => {
     const token = getMinAuthToken()
-    if (!token) return
+    if (!token || starting.current) return
+    starting.current = true
 
+    try {
+      await makeSession(token)
+    } finally {
+      starting.current = false
+    }
+  }
+
+  const makeSession = async (token: string) => {
     const response = await fetch("/api/auth/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ provider: "wallet", token }),
     })
     if (!response.ok) {
       toast.error("We couldn't sign you in", { description: "Try again in a moment." })
@@ -124,7 +144,7 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
         events: { onAuthSuccess: startSession, onLogout: endSession },
       }}
     >
-      <Bridge publish={publish} />
+      <Bridge publish={publish} resume={startSession} />
     </DynamicContextProvider>
   )
 }

@@ -3,6 +3,7 @@ import { PiPencilSimple } from "react-icons/pi"
 import { buttonVariants } from "@/components/Button/Button"
 import { CountryFlag } from "@/components/CountryFlag/CountryFlag"
 import { RegionPicker } from "@/components/Region/RegionPicker"
+import { ReplayTourButton } from "@/components/Tour/ReplayTourButton"
 import { countryName, isRegionSupported } from "@/lib/region/countries"
 
 import { SettingRow } from "./SettingRow"
@@ -33,6 +34,12 @@ export function AccountSection({ name, region }: { name: string; region: string 
         }
       >
         <RegionPicker region={region} />
+      </SettingRow>
+      <SettingRow
+        title="Guided tour"
+        description="A 30-second walk through how an idea becomes a strategy you can trade."
+      >
+        <ReplayTourButton />
       </SettingRow>
     </SettingsSection>
   )

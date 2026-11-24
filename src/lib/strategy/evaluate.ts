@@ -1,5 +1,5 @@
 import { read } from "./indicators"
-import type { Condition, History, Node, Weights } from "./types"
+import type { Condition, History, Node, Schedule, Weights } from "./types"
 
 const DEFAULT_VOLATILITY_DAYS = 20
 
@@ -69,6 +69,9 @@ export function evaluate(node: Node, history: History, at: number): Weights {
     case "if":
       return evaluate(holds(node.condition, history, at) ? node.then : node.else, history, at)
 
+    case "rebalance":
+      return evaluate(node.child, history, at)
+
     case "filter": {
       const ranked = node.from
         .map((symbol) => ({ symbol, value: read(history[symbol], at, node.by) }))
@@ -87,6 +90,32 @@ export function evaluate(node: Node, history: History, at: number): Weights {
       }
       return Object.fromEntries(ranked.map(({ symbol }) => [symbol, 1 / ranked.length]))
     }
+  }
+}
+
+export type Band = { drift: number; every: Schedule }
+
+// The stocks that sit inside a rebalance on day `at`, each with the band it is kept in. A stock inside two takes the inner one.
+export function bandsOf(node: Node, history: History, at: number): Record<string, Band> {
+  switch (node.type) {
+    case "group":
+      return Object.assign({}, ...node.children.map(({ node: child }) => bandsOf(child, history, at))) as Record<
+        string,
+        Band
+      >
+    case "if":
+      return bandsOf(holds(node.condition, history, at) ? node.then : node.else, history, at)
+    case "rebalance": {
+      const own = Object.fromEntries(
+        Object.keys(evaluate(node.child, history, at)).map((symbol) => [
+          symbol,
+          { drift: node.drift, every: node.every },
+        ])
+      )
+      return { ...own, ...bandsOf(node.child, history, at) }
+    }
+    default:
+      return {}
   }
 }
 
@@ -110,5 +139,7 @@ export function symbolsOf(node: Node): string[] {
     }
     case "filter":
       return [...new Set(node.from)]
+    case "rebalance":
+      return symbolsOf(node.child)
   }
 }

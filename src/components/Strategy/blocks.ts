@@ -1,5 +1,6 @@
 import type { IconType } from "react-icons"
 import {
+  PiArrowsClockwise,
   PiCoins,
   PiFunnel,
   PiGitFork,
@@ -13,16 +14,17 @@ import {
 import type { BlockInfo } from "@/lib/strategy/catalog"
 import type { BlockKind } from "@/lib/strategy/flow/graph"
 
-// How each kind of block looks, on the canvas and in the palette: its tile, its colour and the word on it
+// How each kind of block looks, on the canvas and in the palette: its tile, its colour, the tint of the whole card and the word on it
 export const BLOCK_STYLE: Record<
   BlockKind,
-  { label: string; icon: IconType; tint: string; accent: string; map: string }
+  { label: string; icon: IconType; tint: string; accent: string; card: string; map: string }
 > = {
   start: {
     label: "Start",
     icon: PiPlayFill,
     tint: "border-ink-100/20 bg-ink-100/10 text-ink-100",
     accent: "bg-ink-100",
+    card: "border-ink-100/20 bg-hover-bg dark:bg-white/5",
     map: "#64748b",
   },
   if: {
@@ -30,6 +32,7 @@ export const BLOCK_STYLE: Record<
     icon: PiGitFork,
     tint: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
     accent: "bg-amber-500",
+    card: "border-amber-500/40 bg-amber-50 dark:bg-amber-950/30",
     map: "#f59e0b",
   },
   group: {
@@ -37,6 +40,7 @@ export const BLOCK_STYLE: Record<
     icon: PiStackSimple,
     tint: "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
     accent: "bg-sky-500",
+    card: "border-sky-500/40 bg-sky-50 dark:bg-sky-950/30",
     map: "#0ea5e9",
   },
   filter: {
@@ -44,13 +48,23 @@ export const BLOCK_STYLE: Record<
     icon: PiFunnel,
     tint: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     accent: "bg-emerald-500",
+    card: "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30",
     map: "#10b981",
+  },
+  rebalance: {
+    label: "Rebalance",
+    icon: PiArrowsClockwise,
+    tint: "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    accent: "bg-violet-500",
+    card: "border-violet-500/40 bg-violet-50 dark:bg-violet-950/30",
+    map: "#8b5cf6",
   },
   asset: {
     label: "Stock",
     icon: PiTrendUp,
     tint: "border-border-secondary bg-hover-bg text-ink-100 dark:border-border-tertiary",
     accent: "bg-ink-400",
+    card: "border-border-secondary bg-slate-50 dark:border-border-tertiary dark:bg-white/5",
     map: "#94a3b8",
   },
   cash: {
@@ -58,6 +72,7 @@ export const BLOCK_STYLE: Record<
     icon: PiCoins,
     tint: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
     accent: "bg-blue-500",
+    card: "border-blue-500/40 bg-blue-50 dark:bg-blue-950/30",
     map: "#3b82f6",
   },
 }
@@ -72,5 +87,6 @@ export const MENU_STYLE: Record<BlockInfo["id"], { icon: IconType; tile: string 
   if: { icon: BLOCK_STYLE.if.icon, tile: "border-transparent bg-blue-600 text-white" },
   "any-all": { icon: PiListChecks, tile: "border-transparent bg-blue-600 text-white" },
   filter: { icon: BLOCK_STYLE.filter.icon, tile: "border-transparent bg-pink-400 text-white" },
+  rebalance: { icon: BLOCK_STYLE.rebalance.icon, tile: "border-transparent bg-violet-600 text-white" },
   cash: { icon: BLOCK_STYLE.cash.icon, tile: PLAIN },
 }

@@ -70,6 +70,14 @@ const node: z.ZodType<Node> = z.lazy(() =>
         days: days.optional(),
       })
       .strict(),
+    z
+      .object({
+        type: z.literal("rebalance"),
+        drift: z.number().gt(0).max(0.5),
+        every: z.enum(["daily", "weekly", "monthly"]),
+        child: node,
+      })
+      .strict(),
   ])
 )
 

@@ -18,6 +18,7 @@ import { getPortfolio } from "@/lib/portfolios/source"
 import { maxWeightOf } from "@/lib/rules/readings"
 import { getRules } from "@/lib/rules/source"
 import { getSession } from "@/lib/session/source"
+import { getStrategy } from "@/lib/strategy/source"
 
 export const metadata: Metadata = { title: "Strategy" }
 
@@ -45,11 +46,12 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
     )
   }
 
-  const [session, activity, benchmarks, addresses] = await Promise.all([
+  const [session, activity, benchmarks, addresses, strategy] = await Promise.all([
     getSession(),
     getActivity(id),
     getBenchmarks(),
     getHeldAddresses([portfolio]),
+    getStrategy(portfolio),
   ])
 
   return (
@@ -63,7 +65,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         mode={session.network.mode}
       />
       <div className="grid gap-4 md:grid-cols-2">
-        <ExitsCard portfolio={portfolio} />
+        <ExitsCard portfolio={portfolio} rules={rules} strategy={strategy} />
         <RecentActivity portfolioId={id} activity={activity} now={session.now} />
       </div>
     </PortfolioShell>

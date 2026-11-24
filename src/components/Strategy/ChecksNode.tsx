@@ -1,6 +1,6 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
 import { use } from "react"
-import { PiListChecks } from "react-icons/pi"
+import { PiListChecks, PiSignOut } from "react-icons/pi"
 
 import { CHECK_WIDTH, type CheckData } from "@/lib/rules/flow"
 import { cn } from "@/lib/utils"
@@ -11,12 +11,12 @@ const HANDLE = "!size-2.5 !border-2 !border-block-surface !bg-ink-400"
 // How far in from a block's left edge the line to what is under it leaves, as on a strategy block
 const RAIL = 20
 
-// The block of its own kind, Rules, that the rules hang from: every trade is checked against what is under it. It is made like
+// The block of its own kind, Rules, that the rules hang from: every trade is checked against what is under it. The same block is made again for the exits, apart from trades, with its own name. It is made like
 // the strategy's blocks (a tile, a title, what it says, its kind on the right), with how many rules there are and whether any
 // is broken.
 export function ChecksNode({ id, data }: NodeProps<Node<CheckData, "checks">>) {
   const hovered = use(HoverContext)
-  const { title, detail, count = 0, brokenCount = 0 } = data
+  const { title, detail, count = 0, brokenCount = 0, tag = "Rules", noun = "rule", exit = false } = data
 
   return (
     <div
@@ -25,17 +25,28 @@ export function ChecksNode({ id, data }: NodeProps<Node<CheckData, "checks">>) {
         filter: `opacity(${isLit(id, hovered) ? 1 : 0.28})`,
         transition: "filter 200ms, box-shadow 150ms",
       }}
-      className="animate-fade-up bg-block-surface border-border-secondary dark:border-border-tertiary relative rounded-xl border shadow-sm hover:shadow-lg"
+      className={cn(
+        "animate-fade-up relative rounded-xl border shadow-sm hover:shadow-lg",
+        exit ? "border-red-500/40 bg-red-50 dark:bg-red-950/40" : "border-teal-500/40 bg-teal-50 dark:bg-teal-950/30"
+      )}
     >
-      <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 rounded-l-xl bg-violet-500" />
+      <span
+        aria-hidden="true"
+        className={cn("absolute inset-y-0 left-0 w-1 rounded-l-xl", exit ? "bg-red-500" : "bg-teal-500")}
+      />
       <Handle type="target" position={Position.Left} className={HANDLE} />
       <Handle type="source" position={Position.Bottom} style={{ left: RAIL }} className={HANDLE} />
       <div className="flex items-center gap-3 py-2 pr-4 pl-5">
         <span
           aria-hidden="true"
-          className="flex size-8 flex-none items-center justify-center rounded-lg border border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400"
+          className={cn(
+            "flex size-8 flex-none items-center justify-center rounded-lg border",
+            exit
+              ? "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400"
+              : "border-teal-500/30 bg-teal-500/10 text-teal-600 dark:text-teal-400"
+          )}
         >
-          <PiListChecks size={18} />
+          {exit ? <PiSignOut size={18} /> : <PiListChecks size={18} />}
         </span>
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
           <span className="text-sm font-medium">{title}</span>
@@ -49,10 +60,12 @@ export function ChecksNode({ id, data }: NodeProps<Node<CheckData, "checks">>) {
               : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
           )}
         >
-          {brokenCount ? `${brokenCount} of ${count} broken` : `${count} ${count === 1 ? "rule" : "rules"} hold`}
+          {brokenCount
+            ? `${brokenCount} of ${count} broken`
+            : `${count} ${count === 1 ? noun : `${noun}s`}${noun === "rule" ? " hold" : ""}`}
         </span>
         <span className="border-border-secondary text-ink-400 dark:border-border-tertiary flex-none rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-wider uppercase">
-          Rules
+          {tag}
         </span>
       </div>
     </div>

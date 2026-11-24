@@ -58,6 +58,9 @@ export type Node =
       weighting?: "equal" | "inverse-volatility"
       days?: number
     }
+  // Keeps what is inside on target: a stock that is still wanted is traded back to its share only when it has drifted more than
+  // `drift` (a fraction of the portfolio) from it, and only looked at this often
+  | { type: "rebalance"; drift: number; every: Schedule; child: Node }
 
 export type Schedule = "daily" | "weekly" | "monthly"
 

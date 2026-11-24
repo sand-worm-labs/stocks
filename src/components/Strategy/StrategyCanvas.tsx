@@ -2,10 +2,8 @@
 
 import type { Edge, Node } from "@xyflow/react"
 import { useMemo, useRef, useState } from "react"
-import { PiArrowClockwise, PiArrowCounterClockwise } from "react-icons/pi"
 
-import { buttonVariants } from "@/components/Button/Button"
-import { CHECKS_ID, toChecks, toOrders } from "@/lib/rules/flow"
+import { CHECKS_ID, toChecks, toExits, toOrders } from "@/lib/rules/flow"
 import type { RuleReading } from "@/lib/rules/readings"
 import {
   addChild,
@@ -15,12 +13,12 @@ import {
   setAsset,
   setCondition,
   setFilter,
+  setRebalance,
   setShare,
   symbolsIn,
 } from "@/lib/strategy/edit"
-import { foldablePaths, toGraph } from "@/lib/strategy/flow/graph"
-import type { Condition, Side, Strategy, Via } from "@/lib/strategy/types"
-import { cn } from "@/lib/utils"
+import { toGraph } from "@/lib/strategy/flow/graph"
+import type { Condition, Schedule, Side, Strategy, Via } from "@/lib/strategy/types"
 
 import { AddBlockMenu } from "./AddBlockMenu"
 import { BlockNode, type BlockNodeData, HoverContext, isLit } from "./BlockNode"
@@ -43,21 +41,20 @@ export function StrategyCanvas({
   onChange,
   symbols = [],
   readings = [],
-  history,
 }: {
   strategy: Strategy
   onChange?: (strategy: Strategy) => void
   // The rules, drawn as blocks under the strategy on the same board
   readings?: RuleReading[]
-  // Taking back and putting back what was changed here, when it can be
-  history?: { onUndo: () => void; onRedo: () => void; canUndo: boolean; canRedo: boolean }
   // Every stock that can be added
   symbols?: string[]
 }) {
   const [folded, setFolded] = useState<ReadonlySet<string>>(new Set())
   const editable = !!onChange
-  const graph = useMemo(() => toGraph(strategy, { tidy: true, folded, editable }), [strategy, folded, editable])
-  const foldable = useMemo(() => foldablePaths(strategy, { tidy: true }), [strategy])
+  const graph = useMemo(
+    () => toGraph(strategy, { tidy: true, folded, editable, separateRebalance: true }),
+    [strategy, folded, editable]
+  )
   const fold = (path: string) =>
     setFolded((current) => {
       const next = new Set(current)
@@ -75,11 +72,14 @@ export function StrategyCanvas({
   // The rules come first, hung under the start; the strategy is moved down to make room for them, and the order goes out last
   const firstBelow = graph.nodes[1]?.position.y ?? 0
   const checks = useMemo(() => toChecks(readings, "start", firstBelow), [readings, firstBelow])
-  const shift = readings.length ? checks.bottom + GAP - firstBelow : 0
-  const orders = useMemo(
-    () => toOrders(readings, "start", graph.size.height + shift + GAP),
+  const shift = checks.nodes.length ? checks.bottom + GAP - firstBelow : 0
+  // The exits come after what the strategy decides, in a block of their own: they are watched on the whole portfolio, not checked on
+  // each trade, and the order goes out last
+  const exits = useMemo(
+    () => toExits(readings, "start", graph.size.height + shift + GAP),
     [readings, graph.size.height, shift]
   )
+  const orders = useMemo(() => toOrders(readings, "start", exits.bottom + GAP), [readings, exits.bottom])
   // Where a block sits in a group that splits by shares: that group, its place there, and the share it has now
   const share = (id: string) => {
     const edge = graph.edges.find(({ target }) => target === id)
@@ -127,6 +127,12 @@ export function StrategyCanvas({
               onFilter: (patch: FilterChange) => change.current?.(setFilter(strategy, node.data.path, patch)),
               choices: [...new Set([...symbols, ...symbolsIn(strategy)])],
             }),
+          // A rebalance has how far a stock may drift, and how often it looks, as fields
+          ...(editable &&
+            node.data.block === "rebalance" && {
+              onRebalance: (patch: { drift?: number; every?: Schedule }) =>
+                change.current?.(setRebalance(strategy, node.data.path, patch)),
+            }),
           // A stock can be held long or short, as the token or through a perp
           ...(editable &&
             node.data.block === "asset" && {
@@ -152,16 +158,21 @@ export function StrategyCanvas({
     // `fold` only sets state, so it is the same every time
     [graph, strategy, editable, seed, symbols, shift]
   )
-  const nodes: Node[] = [...blocks, ...checks.nodes, orders.node]
+  const nodes: Node[] = [...blocks, ...checks.nodes, ...exits.nodes, orders.node]
   // With rules, the strategy follows them rather than the start: every trade passes them first, then the strategy decides
   const strategyEdges = graph.edges.map((edge) =>
-    readings.length && edge.source === "start"
+    checks.nodes.length && edge.source === "start"
       ? { ...edge, id: `${CHECKS_ID}>${edge.target}`, source: CHECKS_ID }
       : edge
   )
   const edges: Edge[] = [
     ...strategyEdges,
-    ...[...checks.edges, orders.edge].map(({ id, source, target }) => ({ id, source, target, data: { order: 0 } })),
+    ...[...checks.edges, ...exits.edges, orders.edge].map(({ id, source, target }) => ({
+      id,
+      source,
+      target,
+      data: { order: 0 },
+    })),
   ].map((edge) => {
     const color =
       "label" in edge && edge.label === "Then"
@@ -190,53 +201,6 @@ export function StrategyCanvas({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-ink-400 text-xs">
-          Hover a block to follow its path. Use the arrows to fold what is inside.
-        </span>
-        <div className="flex items-center gap-2">
-          {editable && history && (
-            <>
-              <button
-                type="button"
-                onClick={history.onUndo}
-                disabled={!history.canUndo}
-                aria-keyshortcuts="Control+Z Meta+Z"
-                title="Undo (Ctrl or Cmd Z)"
-                className={cn(buttonVariants({ intent: "outline", size: "compact" }), "disabled:opacity-40")}
-              >
-                <PiArrowCounterClockwise aria-hidden="true" size={14} />
-                Undo
-              </button>
-              <button
-                type="button"
-                onClick={history.onRedo}
-                disabled={!history.canRedo}
-                aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z"
-                title="Redo (Ctrl or Cmd Shift Z)"
-                className={cn(buttonVariants({ intent: "outline", size: "compact" }), "disabled:opacity-40")}
-              >
-                <PiArrowClockwise aria-hidden="true" size={14} />
-                Redo
-              </button>
-            </>
-          )}
-          <button
-            type="button"
-            onClick={() => setFolded(new Set(foldable.filter((path) => path !== "root")))}
-            className={buttonVariants({ intent: "outline", size: "compact" })}
-          >
-            Fold all
-          </button>
-          <button
-            type="button"
-            onClick={() => setFolded(new Set())}
-            className={buttonVariants({ intent: "outline", size: "compact" })}
-          >
-            Unfold all
-          </button>
-        </div>
-      </div>
       <HoverContext value={hovered}>
         <FlowCanvas
           nodes={nodes}

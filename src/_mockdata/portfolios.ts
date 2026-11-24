@@ -172,6 +172,25 @@ const BASE_MODELS: Portfolio[] = [
     series: makeSeries(7, 0.12),
   },
   {
+    id: "steady-leaders",
+    name: "Steady leaders",
+    brief:
+      "Put 5,000 USDC into the strongest of 9 big stocks, held more evenly the steadier they are. Rebalance when one drifts, sell what falls out of favour, and if the whole strategy falls 30% from its high, sell everything and wait. Trade automatically.",
+    status: "live",
+    holdings: [
+      bought("AAPLc", 1725, 0.021),
+      bought("LLYc", 1335, 0.038),
+      bought("AMZNc", 1135, -0.012),
+      bought("METAc", 805, 0.016),
+    ],
+    cash: 150,
+    createdAt: "2026-11-21T10:20:00",
+    startedAt: "2026-11-21T10:48:00",
+    weekChange: 0.006,
+    worstDip: -0.004,
+    series: makeSeries(61, 0.11),
+  },
+  {
     id: "big-tech-35",
     name: "Big tech, balanced",
     brief: "Grow 7,000 USDC in big tech over 3+ years. Max 35% in any one stock. I'd panic at −20%. Ask before buying.",

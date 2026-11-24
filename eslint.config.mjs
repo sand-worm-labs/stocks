@@ -94,8 +94,9 @@ const config = typescriptEslint.config(
     },
   },
   {
-    // Mock data is read by the source files only, so removing it later means changing those files and nothing else.
-    ignores: ["src/lib/**/source.ts", "src/_mockdata/**"],
+    // Mock data is read by the source files only, so removing it later means changing those files and nothing else. Tests may build
+    // their fixtures from it.
+    ignores: ["src/lib/**/source.ts", "src/_mockdata/**", "src/**/*.test.{ts,tsx}"],
     rules: {
       "no-restricted-imports": ["error", { patterns: [{ group: ["@/_mockdata/*"], message: "Read mock data through a lib/<area>/source.ts file." }] }],
     },

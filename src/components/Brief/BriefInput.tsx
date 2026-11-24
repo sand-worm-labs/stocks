@@ -30,35 +30,37 @@ export function BriefInput({ value, onChange, canContinue, portfolioId, actionLa
   const next = routeHref("rules", undefined, portfolioId) ?? "/strategies"
 
   return (
-    <PromptBox
-      id="brief"
-      label="Your idea"
-      value={value}
-      onChange={onChange}
-      onSubmit={() => canContinue && router.push(next)}
-      prompts={BRIEF_PROMPTS}
-      controls={
-        <>
-          <TradingModeSelect />
-          {canContinue ? (
-            <AppLink route="rules" slug={portfolioId} className={SEND_CLASSNAME}>
-              <PiPaperPlaneTilt size={18} aria-label={actionLabel} />
-            </AppLink>
-          ) : (
-            <button
-              type="button"
-              disabled
-              aria-label={actionLabel}
-              className={cn(
-                SEND_CLASSNAME,
-                "bg-disabled dark:bg-disabled cursor-not-allowed border-transparent dark:text-white"
-              )}
-            >
-              <PiPaperPlaneTilt size={18} />
-            </button>
-          )}
-        </>
-      }
-    />
+    <div data-tour="idea-box">
+      <PromptBox
+        id="brief"
+        label="Your idea"
+        value={value}
+        onChange={onChange}
+        onSubmit={() => canContinue && router.push(next)}
+        prompts={BRIEF_PROMPTS}
+        controls={
+          <>
+            <TradingModeSelect />
+            {canContinue ? (
+              <AppLink route="rules" slug={portfolioId} className={SEND_CLASSNAME}>
+                <PiPaperPlaneTilt size={18} aria-label={actionLabel} />
+              </AppLink>
+            ) : (
+              <button
+                type="button"
+                disabled
+                aria-label={actionLabel}
+                className={cn(
+                  SEND_CLASSNAME,
+                  "bg-disabled dark:bg-disabled cursor-not-allowed border-transparent dark:text-white"
+                )}
+              >
+                <PiPaperPlaneTilt size={18} />
+              </button>
+            )}
+          </>
+        }
+      />
+    </div>
   )
 }

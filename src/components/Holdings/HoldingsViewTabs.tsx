@@ -1,7 +1,7 @@
 import { AppLink } from "@/components/AppLink/AppLink"
 import { cn } from "@/lib/utils"
 
-export type HoldingsView = "models" | "stocks"
+type HoldingsView = "models" | "stocks"
 
 const VIEWS: { id: HoldingsView; label: string }[] = [
   { id: "models", label: "By strategy" },

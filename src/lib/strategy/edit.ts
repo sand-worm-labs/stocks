@@ -1,4 +1,4 @@
-import type { Condition, Node, Side, Strategy, Via, Weighting } from "./types"
+import type { Condition, Node, Schedule, Side, Strategy, Via, Weighting } from "./types"
 
 // Changing a strategy by hand: adding a block into a group, taking one out. Each returns a new strategy and leaves the old one
 // as it was. A block is found by its path, the way the canvas names it: "root", then a step for each level in, a number for the
@@ -18,6 +18,7 @@ function update(node: Node, path: string[], change: (node: Node) => Node): Node 
       ),
     }
   }
+  if (node.type === "rebalance" && step === "child") return { ...node, child: update(node.child, rest, change) }
   if (node.type === "if" && step === "then") return { ...node, then: update(node.then, rest, change) }
   if (node.type === "if" && step === "else") return { ...node, else: update(node.else, rest, change) }
   return node
@@ -112,6 +113,19 @@ export function setFilter(strategy: Strategy, path: string, change: FilterChange
   }
 }
 
+// How far a stock may drift from its share before a rebalance trades it back, and how often it looks, for the rebalance at `path`.
+// The drift is a fraction of the portfolio, kept above nothing and no more than half.
+export function setRebalance(strategy: Strategy, path: string, change: { drift?: number; every?: Schedule }): Strategy {
+  return {
+    ...strategy,
+    root: update(strategy.root, steps(path), (node) => {
+      if (node.type !== "rebalance") return node
+      const drift = change.drift === undefined ? node.drift : Math.min(Math.max(change.drift, 0.01), 0.5)
+      return { ...node, drift, every: change.every ?? node.every }
+    }),
+  }
+}
+
 // Whether the block at `path` can be taken out: it is one of several in a group, since a group is never left empty
 export function canRemove(strategy: Strategy, path: string): boolean {
   const way = steps(path)
@@ -163,6 +177,9 @@ export function symbolsIn(strategy: Strategy): string[] {
       case "filter":
         node.from.forEach((symbol) => found.add(symbol))
         break
+      case "rebalance":
+        walk(node.child)
+        break
     }
   }
   walk(strategy.root)
@@ -178,6 +195,7 @@ export type NewBlock =
   | { kind: "if" }
   | { kind: "any-all"; match: "all" | "any" }
   | { kind: "filter" }
+  | { kind: "rebalance" }
 
 // Kinds that need a stock to read from, and so cannot be made when there is none
 export const NEEDS_STOCK: NewBlock["kind"][] = ["if", "any-all", "filter"]
@@ -201,6 +219,16 @@ export function newBlock(block: NewBlock, symbols: string[]): Node | undefined {
         weighting: block.weighting,
         children: [block.weighting === "specified" ? { ...waiting, weight: 1 } : waiting],
       }
+    // Keeps an equal group of the first few stocks on target, or cash when there are none
+    case "rebalance": {
+      const held = symbols.slice(0, 3).map((held): { node: Node } => ({ node: { type: "asset", symbol: held } }))
+      return {
+        type: "rebalance",
+        drift: 0.02,
+        every: "monthly",
+        child: { type: "group", weighting: "equal", children: held.length ? held : [waiting] },
+      }
+    }
   }
 
   if (!symbol) return undefined

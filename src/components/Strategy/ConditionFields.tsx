@@ -1,6 +1,7 @@
+import { Fragment } from "react"
 import { PiPlus, PiX } from "react-icons/pi"
 
-import { fromList, type Match, newComparison, toList } from "@/lib/strategy/condition"
+import { fromList, JOINER, type Match, newComparison, toList } from "@/lib/strategy/condition"
 import { describeCondition } from "@/lib/strategy/describe"
 import { FRACTIONS } from "@/lib/strategy/explain"
 import type { Comparison, Condition, Indicator, Reading } from "@/lib/strategy/types"
@@ -66,6 +67,24 @@ function ReadingFields({
         </>
       )}
     </>
+  )
+}
+
+// The line between two conditions, with AND (all must hold) or OR (any one will do) sitting on it; pressing it flips the two
+function Joiner({ match, onToggle }: { match: Match; onToggle: () => void }) {
+  const word = match === "all" ? "And" : "Or"
+  return (
+    <div className="flex items-center gap-2" style={{ height: JOINER }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={`${word}: press to change whether all or any one of the conditions must hold`}
+        className="border-border-secondary text-ink-400 hover:text-ink-100 nodrag nopan rounded-full border px-2 py-px text-[10px] leading-[14px] font-semibold tracking-wider uppercase transition-colors"
+      >
+        {word}
+      </button>
+      <span aria-hidden="true" className="bg-border-secondary h-px flex-1" />
+    </div>
   )
 }
 
@@ -193,14 +212,16 @@ export function ConditionFields({
   return (
     <div className={cn(border, "flex flex-col gap-2.5")}>
       {rows.map((row, i) => (
-        <Row
-          key={i}
-          row={row}
-          index={i}
-          stocks={stocks}
-          onChange={(next) => set({ rows: rows.map((one, j) => (j === i ? next : one)) })}
-          onRemove={rows.length > 1 ? () => set({ rows: rows.filter((_, j) => j !== i) }) : undefined}
-        />
+        <Fragment key={i}>
+          {i > 0 && <Joiner match={match} onToggle={() => set({ match: match === "all" ? "any" : "all" })} />}
+          <Row
+            row={row}
+            index={i}
+            stocks={stocks}
+            onChange={(next) => set({ rows: rows.map((one, j) => (j === i ? next : one)) })}
+            onRemove={rows.length > 1 ? () => set({ rows: rows.filter((_, j) => j !== i) }) : undefined}
+          />
+        </Fragment>
       ))}
       <div className="flex items-center gap-3">
         <button

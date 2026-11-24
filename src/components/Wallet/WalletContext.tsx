@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect } from "react"
 
 // Where Dynamic's wallet SDK stands. "off": wallets aren't set up (no environment ID). "idle": set up, the SDK not asked
 // for yet. "loading": its code is on the way. "ready": it is running and what it says is below.
-export type WalletStatus = "off" | "idle" | "loading" | "ready"
+type WalletStatus = "off" | "idle" | "loading" | "ready"
 
 // What the SDK tells the rest of the app, as plain values, so that nothing outside the one file that loads the SDK has to
 // import it, and the pages that only mention a wallet don't carry its weight

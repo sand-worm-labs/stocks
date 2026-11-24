@@ -71,6 +71,8 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: "pnpm dev",
+    // The tests open pages straight away, with no wallet to sign in with
+    env: { AUTH_REQUIRED: "false" },
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
   },

@@ -7,13 +7,18 @@ export type Step = {
   // How far in it is: what is inside an if or a split is further in
   depth: number
   // A condition after "if", the "then" or "otherwise" that follows it, a way of splitting the money, or something to do
-  kind: "if" | "then" | "else" | "split" | "do"
+  kind: "if" | "then" | "else" | "split" | "keep" | "do"
   text: string
+  // The block this line came from, for the icon it wears. An if has its own word instead.
+  block?: "asset" | "cash" | "filter" | "group" | "rebalance"
   // The share of a split that this line gets, when the shares were set
   share?: string
 }
 
 export type Explained = { intro: string; steps: Step[] }
+
+// How often a rebalance looks, said in a sentence
+const EACH = { daily: "every day", weekly: "every week", monthly: "every month" } as const
 
 export const EVERY = { daily: "Every day", weekly: "Every week", monthly: "Every month" } as const
 
@@ -105,6 +110,7 @@ export function explainStrategy(strategy: Strategy): Explained {
         steps.push({
           depth,
           kind: "do",
+          block: "asset",
           text:
             node.side === "short"
               ? `Short ${node.symbol}, through a perp.`
@@ -115,7 +121,7 @@ export function explainStrategy(strategy: Strategy): Explained {
         })
         return
       case "cash":
-        steps.push({ depth, kind: "do", text: "Stay in cash (USDC), holding no stock.", share })
+        steps.push({ depth, kind: "do", block: "cash", text: "Stay in cash (USDC), holding no stock.", share })
         return
       case "filter": {
         const { pick, count, by, from, weighting } = node
@@ -123,6 +129,7 @@ export function explainStrategy(strategy: Strategy): Explained {
         steps.push({
           depth,
           kind: "do",
+          block: "filter",
           text: `Out of ${from.join(", ")}, pick ${which} with the ${pick === "top" ? "highest" : "lowest"} ${plainIndicator(by)}, and hold ${count === 1 ? "it" : "them"}${weighting === "inverse-volatility" ? ", giving more to the steadier ones" : count === 1 ? "" : " equally"}.`,
           share,
         })
@@ -139,6 +146,7 @@ export function explainStrategy(strategy: Strategy): Explained {
         steps.push({
           depth,
           kind: "split",
+          block: "group",
           text: `${node.name ? `${node.name}: split` : "Split"} the money ${how}:`,
           share,
         })
@@ -149,6 +157,18 @@ export function explainStrategy(strategy: Strategy): Explained {
             node.weighting === "specified" && total > 0 ? percent(Math.max(weight ?? 0, 0) / total) : undefined
           )
         }
+        return
+      }
+      case "rebalance": {
+        const points = Math.round(node.drift * 100)
+        steps.push({
+          depth,
+          kind: "keep",
+          block: "rebalance",
+          text: `Back to target when any stock drifts more than ${points} ${points === 1 ? "point" : "points"} from its share, checked ${EACH[node.every]}:`,
+          share,
+        })
+        walk(node.child, depth + 1)
         return
       }
       case "if":
@@ -184,6 +204,8 @@ const indicatorsOf = (node: Node): Indicator[] => {
       return [...readingsOf(node.condition), ...indicatorsOf(node.then), ...indicatorsOf(node.else)]
     case "filter":
       return [node.by]
+    case "rebalance":
+      return indicatorsOf(node.child)
     default:
       return []
   }

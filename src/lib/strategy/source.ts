@@ -1,6 +1,7 @@
 import { STOCK_POOL } from "@/_mockdata/portfolios"
 import {
   buildStrategyMockData,
+  HAND_MADE_STRATEGIES,
   sampleStrategyMockData,
   STRATEGY_KIND_BY_ID,
   STRATEGY_KINDS,
@@ -10,10 +11,15 @@ import { pick, seedOf } from "@/lib/seed"
 
 import type { Strategy } from "./types"
 
+// Whether a strategy was designed by hand, rather than built from the stocks it holds
+export const isDesigned = (id: string) => id in HAND_MADE_STRATEGIES
+
 // The strategy a portfolio runs, built from the stocks it holds: its own kind of logic, and its own numbers. Without a
 // portfolio, the sample.
 export async function getStrategy(portfolio?: Portfolio): Promise<Strategy> {
   if (!portfolio) return sampleStrategyMockData
+  const designed = HAND_MADE_STRATEGIES[portfolio.id]
+  if (designed) return designed
 
   const seed = seedOf(portfolio.id)
   const held = portfolio.holdings.map(({ symbol }) => symbol)

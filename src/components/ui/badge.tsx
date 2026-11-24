@@ -24,4 +24,4 @@ function Badge({ className, tone, ...props }: ComponentProps<"span"> & VariantPr
   return <span data-slot="badge" className={cn(badgeVariants({ tone }), className)} {...props} />
 }
 
-export { Badge, badgeVariants }
+export { Badge }

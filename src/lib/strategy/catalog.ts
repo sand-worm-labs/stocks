@@ -3,7 +3,7 @@ import type { Indicator, Weighting } from "./types"
 // Everything a strategy can be built from, in one place: the palette on the canvas lists it, and the add menu will offer it.
 
 export type BlockInfo = {
-  id: "asset" | "group" | "weight" | "if" | "any-all" | "filter" | "cash"
+  id: "asset" | "group" | "weight" | "if" | "any-all" | "filter" | "rebalance" | "cash"
   label: string
   description: string
 }
@@ -37,6 +37,11 @@ export const BLOCKS: BlockInfo[] = [
     id: "filter",
     label: "Filter",
     description: "From a set of stocks, keep only the best or worst few by an indicator.",
+  },
+  {
+    id: "rebalance",
+    label: "Rebalance",
+    description: "Keep what is inside on target: trade back only when a stock has drifted too far from its share.",
   },
   { id: "cash", label: "Cash", description: "Hold USDC, no stock at all. Where to wait out a bad market." },
 ]

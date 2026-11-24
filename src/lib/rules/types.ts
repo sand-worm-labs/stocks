@@ -4,8 +4,18 @@ export type Rule = {
   id: number
   label: string
   // What the rule measures, and the line it draws, for a rule that can be read off the portfolio
-  kind?: "budget" | "max-weight" | "liquidity" | "approval" | "condition" | "stop-loss" | "take-profit"
+  kind?:
+    | "budget"
+    | "max-weight"
+    | "liquidity"
+    | "approval"
+    | "condition"
+    | "stop-loss"
+    | "take-profit"
+    | "portfolio-stop"
   limit?: number
+  // For a portfolio stop: how many trading days it stays in cash once it has sold everything
+  pause?: number
   // For a condition rule: whether it is never or only while the condition is true, and the condition
   mode?: "never" | "only"
   condition?: Condition

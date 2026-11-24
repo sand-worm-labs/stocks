@@ -50,6 +50,39 @@ export const sampleStrategyMockData: Strategy = {
   },
 }
 
+// The nine large stocks the Steady leaders strategy picks from
+export const STEADY_UNIVERSE = ["AAPLc", "GOOGLc", "NVDAc", "METAc", "AMZNc", "TSLAc", "NFLXc", "LLYc", "TTWOc"]
+
+// Designed from a 10-year backtest on real daily prices (Nov 2016 to Nov 2026), and tested on each half of it. What it does:
+// - Picks: once a month, the 4 of the 9 with the best 126-day (about 6-month) return. A stock that falls out of the top 4 is sold
+//   at the next look; that is its main exit.
+// - Sizes: the steadier a pick has been over the last 60 days, the more of it is held (inverse volatility). In the test this took the
+//   worst fall from -38% to -30% at about the same return, and held up in both halves.
+// - Rebalances: held picks are traded back to their share only when they drift more than 5 points, checked weekly. In the test this
+//   cut the orders from 532 to 239 and did not cost return.
+// - Left out on purpose: a market-wide switch to cash, and a take-profit. Both lowered the return per unit of risk in both halves.
+export const steadyLeadersStrategyMockData: Strategy = {
+  name: "Steady leaders",
+  schedule: "monthly",
+  root: {
+    type: "rebalance",
+    drift: 0.05,
+    every: "weekly",
+    child: {
+      type: "filter",
+      pick: "top",
+      count: 4,
+      by: { kind: "return", days: 126 },
+      from: STEADY_UNIVERSE,
+      weighting: "inverse-volatility",
+      days: 60,
+    },
+  },
+}
+
+// Strategies designed by hand, by the id of the portfolio that runs each
+export const HAND_MADE_STRATEGIES: Record<string, Strategy> = { "steady-leaders": steadyLeadersStrategyMockData }
+
 export type StrategyKind = "trend" | "dip" | "defensive" | "rotation" | "relative" | "calm" | "laggards"
 
 // Which kind each hand-made strategy is, to fit what it is for; the rest are given one from their id

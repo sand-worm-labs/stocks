@@ -2,8 +2,8 @@ import type { ReactNode } from "react"
 
 import { LiveMarketProvider } from "@/components/Markets/LiveMarket"
 import { PriceTicker } from "@/components/Markets/PriceTicker"
-import { WelcomeDialog } from "@/components/Onboarding/WelcomeDialog"
 import { AppShell } from "@/components/Shell/AppShell"
+import { ProductTour } from "@/components/Tour/ProductTour"
 import { Toaster } from "@/components/ui/sonner"
 import { getActivity } from "@/lib/activity/source"
 import { getAllPoolQuotes } from "@/lib/markets/pools"
@@ -44,7 +44,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       >
         {children}
       </AppShell>
-      <WelcomeDialog initiallyOpen={session.welcomePending} />
+      <ProductTour initiallyOpen={session.welcomePending} />
       <Toaster />
     </LiveMarketProvider>
   )

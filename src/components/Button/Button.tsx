@@ -1,6 +1,4 @@
-import { cva, type VariantProps } from "class-variance-authority"
-
-import { cn } from "@/lib/utils"
+import { cva } from "class-variance-authority"
 
 export const buttonVariants = cva(
   [
@@ -69,17 +67,3 @@ export const buttonVariants = cva(
     },
   }
 )
-
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLAnchorElement>, VariantProps<typeof buttonVariants> {
-  underline?: boolean
-  href: string
-}
-
-export function Button({ className, intent, size, underline, ...props }: ButtonProps) {
-  return (
-    <a className={cn(buttonVariants({ intent, size, className, underline }))} {...props}>
-      {props.children}
-    </a>
-  )
-}

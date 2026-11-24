@@ -6,7 +6,7 @@ import type { Condition, Indicator, Node, Schedule, Side, Strategy, Via, Weighti
 // and it can be made again from them. Each box carries everything it is (`spec`) and each line where it sits among its
 // brothers, so nothing is lost either way, and where a box is drawn is worked out from the strategy's shape.
 
-export type BlockKind = "start" | "asset" | "cash" | "group" | "if" | "filter"
+export type BlockKind = "start" | "asset" | "cash" | "group" | "if" | "filter" | "rebalance"
 
 // What a block is, apart from what it leads to: this is what is saved
 export type BlockSpec =
@@ -15,6 +15,7 @@ export type BlockSpec =
   | { type: "cash" }
   | { type: "group"; name?: string; weighting: Weighting; days?: number }
   | { type: "if"; condition: Condition }
+  | { type: "rebalance"; drift: number; every: Schedule }
   | {
       type: "filter"
       pick: "top" | "bottom"
@@ -118,6 +119,9 @@ export type GraphView = {
   tidy?: boolean
   // Blocks, by path, that are folded shut: what is inside them is left out
   folded?: ReadonlySet<string>
+  // A rebalance that wraps the whole strategy is drawn as a block of its own after what the strategy decides, not as the first
+  // block everything hangs from: it keeps what is held on target, it does not decide what to hold
+  separateRebalance?: boolean
 }
 
 export type FlowGraph = { nodes: FlowNode[]; edges: FlowEdge[]; size: { width: number; height: number } }
@@ -131,6 +135,8 @@ const blocksIn = (node: Node): number => {
       return 1 + node.children.reduce((sum, { node: child }) => sum + blocksIn(child), 0)
     case "if":
       return 1 + blocksIn(node.then) + blocksIn(node.else)
+    case "rebalance":
+      return 1 + blocksIn(node.child)
     default:
       return 1
   }
@@ -149,9 +155,23 @@ export function foldablePaths(strategy: Strategy, { tidy }: GraphView = {}): str
       walk(node.then, `${path}.then`)
       walk(node.else, `${path}.else`)
     }
+    if (node.type === "rebalance") {
+      paths.push(path)
+      walk(node.child, `${path}.child`)
+    }
   }
   walk(strategy.root, "root")
   return paths
+}
+
+const rebalanceDisplay = (node: Extract<Node, { type: "rebalance" }>) => {
+  const points = Math.round(node.drift * 100)
+  return {
+    block: "rebalance" as const,
+    title: "Rebalance",
+    detail: `Back to target past ${points} ${points === 1 ? "point" : "points"}, checked ${node.every}`,
+    spec: { type: "rebalance" as const, drift: node.drift, every: node.every },
+  }
 }
 
 // Straight down, the way Composer reads: a block, then what is in it a step further in, one after another, so the whole
@@ -257,6 +277,17 @@ export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
         return id
       }
 
+      case "rebalance": {
+        const display = rebalanceDisplay(node)
+        if (view.folded?.has(path)) {
+          return place(path, path, depth, { ...display, foldable: true, folded: true, hidden: blocksIn(node) - 1 })
+        }
+        const id = place(path, path, depth, { ...display, foldable: true })
+        const inside = add(node.child, `${path}.child`, depth + 1)
+        edges.push({ id: `${id}>${inside}`, source: id, target: inside, data: { order: 0 } })
+        return id
+      }
+
       case "if": {
         const display = {
           block: "if" as const,
@@ -285,6 +316,14 @@ export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
     detail: `Looks again ${strategy.schedule}`,
     spec: { type: "start", name: strategy.name, schedule: strategy.schedule },
   })
+  if (view.separateRebalance && strategy.root.type === "rebalance") {
+    // What the strategy decides first, then the rebalance after it. The rebalance keeps its path, "root", so an edit still finds it.
+    const inside = add(strategy.root.child, "root.child", 1)
+    edges.push({ id: `${start}>${inside}`, source: start, target: inside, data: { order: 0 } })
+    const apart = place("root", "root", 1, rebalanceDisplay(strategy.root))
+    edges.push({ id: `${start}>${apart}`, source: start, target: apart, data: { order: 1 } })
+    return { nodes, edges, size: { width: widest, height: Math.max(cursor - GAP, 0) } }
+  }
   const root = add(strategy.root, "root", 1)
   edges.push({ id: `${start}>${root}`, source: start, target: root, data: { order: 0 } })
 

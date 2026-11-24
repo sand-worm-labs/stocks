@@ -55,7 +55,7 @@ export function AgentDock({ aside, children }: AgentDockProps) {
         <button
           type="button"
           onClick={() => toggle(true)}
-          className="animate-fade-up border-border-secondary fixed right-6 bottom-6 z-30 flex items-center gap-2.5 rounded-full border bg-white py-1.5 pr-6 pl-3 text-sm font-medium text-black shadow-[0_4px_16px_rgba(15,15,15,0.14),0_1px_3px_rgba(15,15,15,0.1)] transition-shadow hover:shadow-[0_6px_22px_rgba(15,15,15,0.2),0_1px_3px_rgba(15,15,15,0.12)]"
+          className="animate-fade-up border-border-secondary fixed right-6 bottom-6 z-30 flex items-center gap-2.5 rounded-xl border bg-white py-1.5 pr-6 pl-3 text-sm font-medium text-black shadow-[0_4px_16px_rgba(15,15,15,0.14),0_1px_3px_rgba(15,15,15,0.1)] transition-shadow hover:shadow-[0_6px_22px_rgba(15,15,15,0.2),0_1px_3px_rgba(15,15,15,0.12)]"
         >
           <SparkleAI size={32} />
           Ask the agent

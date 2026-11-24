@@ -32,7 +32,7 @@ export default async function ResearchPage({ params }: { params: Promise<{ id: s
         steps={<StepProgress current="research" portfolioId={portfolio.id} />}
         aside={<AgentWorkspace script={script} />}
       >
-        <Card className="flex flex-col gap-3 p-4 md:p-6">
+        <Card data-tour="research-progress" className="flex flex-col gap-3 p-4 md:p-6">
           <div className="flex items-baseline justify-between gap-3">
             <span className="font-medium">{RESEARCH_STEPS[DONE_STEPS - 1]}…</span>
             <span className="text-ink-400 text-sm">

@@ -36,6 +36,18 @@ function conditionNow(condition: Condition, stocks: Pick<Stock, "symbol" | "seri
   return holds(condition, history, length - 1)
 }
 
+// How a portfolio gets out of a stock, which every list of rules puts first
+// An exit is watched on its own and acts by selling; it never holds a trade back, so it is not one of the rules a trade is checked against
+export const isExitRule = ({ kind }: Rule) =>
+  kind === "stop-loss" || kind === "take-profit" || kind === "portfolio-stop"
+export const isExit = ({ rule }: RuleReading) => isExitRule(rule)
+
+// The readings with the exit rules first and the rest after them, each in the order it was in
+export const exitsFirst = (readings: RuleReading[]) => [
+  ...readings.filter(isExit),
+  ...readings.filter((r) => !isExit(r)),
+]
+
 export const maxWeightOf = (rules: Rule[]) => rules.find(({ kind }) => kind === "max-weight")?.limit
 
 // Each rule set against where the portfolio is now, so a rule shows how much room it has, not only that it holds
@@ -91,6 +103,17 @@ export function readRules(
         reading: `${kind === "stop-loss" ? "Worst" : "Best"} is ${made.symbol} at ${formatPercent(made.change, { signed: true })}`,
         // Past its line the stock should already have been sold, so the rule is not being kept
         closeness: closeness >= 1 ? 1.001 : closeness,
+      }
+    }
+    // The whole strategy against its own high: how far down it is, against the line at which everything is sold
+    if (kind === "portfolio-stop" && limit) {
+      const series = portfolio.series.filter((value) => value > 0)
+      if (series.length < 2) return { rule, reading: "There is no history yet to check this against" }
+      const fall = (series.at(-1) ?? 0) / Math.max(...series) - 1
+      return {
+        rule,
+        reading: fall === 0 ? "At its high" : `${formatPercent(-fall)} below its high`,
+        closeness: Math.max(-fall, 0) / limit,
       }
     }
     if (kind === "condition" && rule.condition && rule.mode) {

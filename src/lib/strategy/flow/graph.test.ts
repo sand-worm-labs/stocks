@@ -124,3 +124,35 @@ describe("toGraph, compressed", () => {
     expect(foldablePaths(strategy, { tidy: true })).toEqual(["root", "root.then", "root.else"])
   })
 })
+
+describe("a rebalance drawn apart", () => {
+  const strategy: Strategy = {
+    name: "S",
+    schedule: "monthly",
+    root: {
+      type: "rebalance",
+      drift: 0.05,
+      every: "weekly",
+      child: { type: "filter", pick: "top", count: 2, by: { kind: "return", days: 60 }, from: ["AAA", "BBB", "CCC"] },
+    },
+  }
+
+  it("draws the rebalance after what the strategy decides, and keeps its path", () => {
+    const { nodes, edges } = toGraph(strategy, { separateRebalance: true })
+    expect(nodes.map(({ data }) => data.block)).toEqual(["start", "filter", "rebalance"])
+    const [, filter, rebalance] = nodes
+    expect(filter?.data.path).toBe("root.child")
+    expect(rebalance?.data.path).toBe("root")
+    expect((rebalance?.position.y ?? 0) > (filter?.position.y ?? 0)).toBe(true)
+    expect(edges.map(({ source, target }) => `${source}>${target}`)).toEqual(["start>root.child", "start>root"])
+  })
+
+  it("is drawn first, as before, unless asked", () => {
+    expect(toGraph(strategy).nodes.map(({ data }) => data.block)).toEqual(["start", "rebalance", "filter"])
+  })
+
+  it("leaves a strategy that is not wrapped in a rebalance as it was", () => {
+    const plain: Strategy = { ...strategy, root: { type: "cash" } }
+    expect(toGraph(plain, { separateRebalance: true })).toEqual(toGraph(plain))
+  })
+})

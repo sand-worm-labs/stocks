@@ -6,7 +6,10 @@ import { redirect } from "next/navigation"
 
 import { ONBOARDING_COOKIES } from "@/constants/onboarding"
 
+import { getSignedInUserId } from "@/lib/auth/session"
+
 import { cleanInterests, cleanName } from "./profile"
+import { onboardedMarker } from "./profile-marker"
 import { getStarter } from "./source"
 
 const A_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
@@ -26,8 +29,11 @@ export async function saveOnboarding(answers: { name?: string; interests?: strin
 // Having chosen a starting brief, or to look around the stocks, goes there; otherwise to the home screen.
 export async function finishOnboarding(to?: { starter?: string; stocks?: boolean }) {
   const jar = await cookies()
-  jar.set(ONBOARDING_COOKIES.done, "1", OPTIONS)
-  if (!jar.get(ONBOARDING_COOKIES.welcome)) jar.set(ONBOARDING_COOKIES.welcome, "pending", OPTIONS)
+  const marker = onboardedMarker(await getSignedInUserId())
+  // The welcome window is for an account's first time through, not for going through it again by choice
+  const first = jar.get(ONBOARDING_COOKIES.done)?.value !== marker
+  jar.set(ONBOARDING_COOKIES.done, marker, OPTIONS)
+  if (first || !jar.get(ONBOARDING_COOKIES.welcome)) jar.set(ONBOARDING_COOKIES.welcome, "pending", OPTIONS)
   revalidatePath("/", "layout")
 
   if (to?.stocks) redirect("/strategies/new/stocks")

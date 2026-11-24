@@ -52,6 +52,12 @@ export function fromGraph(
         const { type, ...rest } = spec
         return { type, ...rest, children }
       }
+      case "rebalance": {
+        const line = out(id)[0]
+        const child = line ? build(line.target) : "A rebalance has nothing inside it"
+        if (typeof child === "string") return child
+        return { type: "rebalance", drift: spec.drift, every: spec.every, child }
+      }
       case "if": {
         const branch = (handle: "then" | "else") => {
           const line = out(id).find(({ sourceHandle }) => sourceHandle === handle)

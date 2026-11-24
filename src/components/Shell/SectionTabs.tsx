@@ -22,6 +22,7 @@ export function SectionTabs() {
             key={route}
             route={route}
             isCurrent={isCurrent}
+            tour={`nav-${route}`}
             className={cn(
               "inline-flex h-9 items-center gap-1.5 px-3 text-sm font-normal",
               isCurrent

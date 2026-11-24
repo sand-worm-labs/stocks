@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 import { ResearchProgress } from "./ResearchProgress"
 
 // Where a model is: its rules waiting to be confirmed, the agent at work, or results ready to read and trade from
-export type Phase = "rules" | "researching" | "ready"
+type Phase = "rules" | "researching" | "ready"
 
 const STATUS: Record<Phase, { label: string; tone: Tone }> = {
   rules: { label: "Draft", tone: "warning" },

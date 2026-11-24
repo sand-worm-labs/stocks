@@ -17,7 +17,7 @@ export function StepProgress({ current, portfolioId }: StepProgressProps) {
   const index = FLOW_STEPS.findIndex(({ id }) => id === current)
 
   return (
-    <nav aria-label="Progress" className="flex flex-wrap items-center justify-center gap-2.5">
+    <nav aria-label="Progress" data-tour="flow-steps" className="flex flex-wrap items-center justify-center gap-2.5">
       {FLOW_STEPS.map(({ id, label, route }, i) => {
         const isDone = i < index
         const isCurrent = i === index

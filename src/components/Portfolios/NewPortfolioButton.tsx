@@ -8,6 +8,7 @@ export function NewPortfolioButton({ className }: { className?: string }) {
   return (
     <AppLink
       route="newPortfolio"
+      tour="new-strategy"
       className={cn(buttonVariants({ intent: "dark", size: "compact" }), "rounded-xl", className)}
     >
       <PiPlus size={16} aria-hidden="true" />

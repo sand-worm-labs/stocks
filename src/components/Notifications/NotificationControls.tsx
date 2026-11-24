@@ -28,9 +28,9 @@ export function NotificationTabs({
   return <SegmentedControl label="Show" options={TABS} value={value} onChange={onChange} fullWidth />
 }
 
-export const PILL = "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium"
+const PILL = "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium"
 
-export function PillButton({
+function PillButton({
   icon: Icon,
   disabled,
   onClick,

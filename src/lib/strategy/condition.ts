@@ -33,12 +33,16 @@ export const newComparison = (symbol: string): Comparison => ({
 const LINE = 32
 const BETWEEN = 10
 const PADDING = 21
+// The AND / OR divider drawn between two conditions, and the gap that comes with it
+export const JOINER = 16
 
 // How tall the editing body of an If block is: a row for each comparison (two lines when it is read against another stock, one
-// when against a number), then the button to add one. A condition that is not a list is a single line of words.
+// when against a number), a divider between each two, then the button to add one. A condition that is not a list is a single
+// line of words.
 export function editorHeight(condition: Condition) {
   const list = toList(condition)
   if (!list) return PADDING + LINE
   const rows = list.rows.reduce((sum, { right }) => sum + ("value" in right ? LINE : LINE * 2 + 6) + BETWEEN, 0)
-  return PADDING + rows + LINE
+  const joins = Math.max(list.rows.length - 1, 0) * (JOINER + BETWEEN)
+  return PADDING + rows + joins + LINE
 }

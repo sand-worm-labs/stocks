@@ -1,9 +1,6 @@
-import { AppLink } from "@/components/AppLink/AppLink"
-import { buttonVariants } from "@/components/Button/Button"
-import { SandwormLogo } from "@/components/SandwormLogo/SandwormLogo"
 import { env } from "env.mjs"
 
-import { EmailSignInForm } from "./EmailSignInForm"
+import { SandwormOption } from "./SandwormOption"
 import { WalletOptions } from "./WalletOptions"
 
 export function SignIn() {
@@ -18,16 +15,9 @@ export function SignIn() {
         <p className="text-ink-200 mt-1 text-sm font-medium">Your reports run in your Sandworm workspace</p>
 
         <div className="mt-6 flex w-full flex-col gap-2">
-          <AppLink route="portfolios" className={buttonVariants({ intent: "outline", size: "md", className: "gap-2" })}>
-            <SandwormLogo size={20} />
-            Continue with Sandworm
-          </AppLink>
+          <SandwormOption />
           <WalletOptions />
         </div>
-
-        <span className="text-ink-100 my-2.5 text-sm font-medium">or</span>
-
-        <EmailSignInForm />
 
         <a
           href={`${env.NEXT_PUBLIC_WEB_APP_URL}/signup`}

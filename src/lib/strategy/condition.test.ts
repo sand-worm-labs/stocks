@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { editorHeight, fromList, newComparison, toList } from "./condition"
+import { editorHeight, fromList, JOINER, newComparison, toList } from "./condition"
 import { setCondition } from "./edit"
 import { strategySchema } from "./schema"
 import type { Condition, Strategy } from "./types"
@@ -31,6 +31,11 @@ describe("a condition as a list", () => {
   it("makes room for a row of two lines when it reads against another stock", () => {
     expect(editorHeight({ all: [one, two] })).toBeGreaterThan(editorHeight({ all: [two, two] }))
     expect(editorHeight(one)).toBeGreaterThan(editorHeight(two))
+  })
+
+  it("makes room for the AND / OR divider between conditions", () => {
+    // A second one-line row adds its line, the gap before it, the divider, and the gap after the divider
+    expect(editorHeight({ all: [two, two] }) - editorHeight(two)).toBe(32 + 10 + JOINER + 10)
   })
 })
 

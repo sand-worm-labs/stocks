@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { Portfolio } from "@/lib/portfolios/types"
 
 import type { Condition } from "@/lib/strategy/types"
-import { toChecks, toOrders } from "./flow"
+import { toChecks, toExits, toOrders } from "./flow"
 
 import { checkRules, describeRule, explainRule, type RuleSpec, rulesSchema, specOf } from "./spec"
 
@@ -188,5 +188,52 @@ describe("toChecks", () => {
   it("marks a rule near its line as the one to watch", () => {
     const { nodes } = toChecks(checkRules(portfolio, [{ type: "budget", amount: 4000 }], stocks), "start", 0)
     expect(nodes[1]?.data.state).toBe("watch")
+  })
+})
+
+describe("a portfolio stop", () => {
+  const stop: RuleSpec = { type: "portfolio-stop", limit: 0.3, pause: 63 }
+  // Up, then 20% off its high
+  const falling: Portfolio = { ...portfolio, series: [100, 120, 110, 96] }
+
+  it("is saved, read back and said in words", () => {
+    expect(rulesSchema.safeParse([stop]).success).toBe(true)
+    expect(rulesSchema.safeParse([{ type: "portfolio-stop", limit: 0.3 }]).success).toBe(true)
+    expect(rulesSchema.safeParse([{ type: "portfolio-stop", limit: 0 }]).success).toBe(false)
+    expect(specOf(checkRules(portfolio, [stop], stocks)[0]!.rule)).toEqual(stop)
+    expect(describeRule(stop)).toBe("Portfolio stop 30%")
+    expect(explainRule(stop).text).toBe(
+      "sell everything if the strategy falls 30% from its high, then stay in cash for 3 months."
+    )
+  })
+
+  it("reads how far the whole portfolio is below its high", () => {
+    const [reading] = checkRules(falling, [stop], stocks)
+    expect(reading?.reading).toBe("20% below its high")
+    expect(reading?.closeness).toBeCloseTo(0.667, 2)
+    expect(checkRules(portfolio, [stop], stocks)[0]?.reading).toMatch(/no history/)
+  })
+
+  it("is drawn apart from the rules every trade is checked against, and never holds an order back", () => {
+    const past: Portfolio = { ...portfolio, series: [100, 200, 100] }
+    const readings = checkRules(past, [{ type: "budget", amount: 6000 }, stop], stocks)
+    expect(readings[1]?.rule.state).toBe("broken")
+
+    const checks = toChecks(readings, "start", 0)
+    expect(checks.nodes.map(({ data }) => data.kind)).toEqual(["checks", "rule"])
+    expect(checks.nodes.every(({ id }) => id.startsWith("checks"))).toBe(true)
+
+    const exits = toExits(readings, "start", 200)
+    expect(exits.nodes.map(({ data }) => data.kind)).toEqual(["checks", "rule"])
+    expect(exits.nodes[0]?.data).toMatchObject({ title: "Exits", tag: "Exits", noun: "exit" })
+    expect(exits.nodes[1]?.data).toMatchObject({ word: "Sells", state: "watch" })
+    expect(exits.nodes.every(({ id }) => id.startsWith("exits"))).toBe(true)
+    expect(exits.nodes[0]?.position.y).toBe(200)
+
+    expect(toOrders(readings, "start", 0).node.data.state).toBe("holds")
+  })
+
+  it("draws no exits block when there are no exits", () => {
+    expect(toExits(checkRules(portfolio, specs, stocks), "start", 0).nodes).toEqual([])
   })
 })

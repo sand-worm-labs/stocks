@@ -11,7 +11,7 @@ function note({ benchmark, was, note, kind }: Metric) {
 
 export function MetricTiles({ metrics }: { metrics: Metric[] }) {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div data-tour="results-metrics" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {metrics.map((metric, i) => (
         <Card
           key={metric.id}

@@ -5,12 +5,13 @@ import { PiCaretDown, PiCaretRight, PiTrash } from "react-icons/pi"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import type { FilterChange } from "@/lib/strategy/edit"
 import { BLOCK_WIDTH, type BlockData } from "@/lib/strategy/flow/graph"
-import type { Condition, Side, Via } from "@/lib/strategy/types"
+import type { Condition, Schedule, Side, Via } from "@/lib/strategy/types"
 import { cn } from "@/lib/utils"
 
 import { BLOCK_STYLE } from "./blocks"
 import { ConditionFields } from "./ConditionFields"
 import { FIELD, FilterFields, FilterPool } from "./FilterFields"
+import { RebalanceFields } from "./RebalanceFields"
 
 // How far in from a block's left edge the line to what is under it leaves, so it runs down the gap before the next level
 const RAIL = 20
@@ -44,6 +45,8 @@ export type BlockNodeData = BlockData & {
   onChipShare?: (index: number, percent: number) => void
   // Only on a filter, on a canvas that can be changed: the way to change any of what it says, and every stock it could choose from
   onFilter?: (change: FilterChange) => void
+  // Only on a rebalance, on a canvas that can be changed: the way to change how far a stock may drift and how often it is looked at
+  onRebalance?: (change: { drift?: number; every?: Schedule }) => void
   // Only on an if, on a canvas that can be changed: the way to change what it reads
   onCondition?: (condition: Condition) => void
   // Only on a stock, on a canvas that can be changed: the way to hold it long or short, as the token or through a perp
@@ -121,12 +124,13 @@ export function BlockNode({ id, data, positionAbsoluteY }: NodeProps<Node<BlockN
     onShare,
     onChipShare,
     onFilter,
+    onRebalance,
     onCondition,
     onAsset,
     choices,
     spec,
   } = data
-  const { label, icon: Icon, tint, accent } = BLOCK_STYLE[block]
+  const { label, icon: Icon, tint, accent, card } = BLOCK_STYLE[block]
   const leaf = block === "asset" || block === "cash" || block === "filter"
 
   return (
@@ -140,7 +144,7 @@ export function BlockNode({ id, data, positionAbsoluteY }: NodeProps<Node<BlockN
           transition: "filter 200ms, box-shadow 150ms",
         } as React.CSSProperties
       }
-      className="group/block animate-fade-up bg-block-surface border-border-secondary dark:border-border-tertiary relative rounded-xl border shadow-sm hover:shadow-lg"
+      className={cn("group/block animate-fade-up relative rounded-xl border shadow-sm hover:shadow-lg", card)}
     >
       <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-1 rounded-l-xl", accent)} />
       {block !== "start" && <Handle type="target" position={Position.Left} className={HANDLE} />}
@@ -182,6 +186,8 @@ export function BlockNode({ id, data, positionAbsoluteY }: NodeProps<Node<BlockN
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
           {spec.type === "filter" && onFilter ? (
             <FilterFields filter={{ ...spec }} onChange={onFilter} />
+          ) : spec.type === "rebalance" && onRebalance ? (
+            <RebalanceFields drift={spec.drift} every={spec.every} onChange={onRebalance} />
           ) : (
             <>
               <span className="text-sm font-medium">{title}</span>

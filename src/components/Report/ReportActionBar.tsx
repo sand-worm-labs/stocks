@@ -12,6 +12,7 @@ type ReportActionBarProps = { plan: string; verdict: Report["verdict"]; children
 export function ReportActionBar({ plan, verdict, children }: ReportActionBarProps) {
   return (
     <div
+      data-tour="results-actions"
       className={cn(
         "border-border-secondary bg-block-surface/95 dark:border-border-tertiary flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 backdrop-blur-md",
         children && "sticky top-[calc(var(--shell-top)+0.5rem)] z-20 shadow-sm"

@@ -8,7 +8,7 @@ import { searchPortfolios } from "@/lib/portfolios/portfolio"
 import { getPortfolios } from "@/lib/portfolios/source"
 import { getSession } from "@/lib/session/source"
 
-export const metadata: Metadata = { title: "Portfolios" }
+export const metadata: Metadata = { title: "Strategies" }
 
 type PortfoliosPageProps = { searchParams: Promise<{ q?: string }> }
 
@@ -19,7 +19,7 @@ export default async function PortfoliosPage({ searchParams }: PortfoliosPagePro
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader icon="portfolio" title="My portfolios" actions={<NewPortfolioButton />} />
+      <PageHeader icon="portfolio" title="My strategies" actions={<NewPortfolioButton />} />
       <PortfoliosLive portfolios={searchPortfolios(portfolios, q)} addresses={addresses} mode={session.network.mode} />
     </div>
   )

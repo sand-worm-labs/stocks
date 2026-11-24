@@ -26,7 +26,7 @@ export function parseModel(input: unknown): ParsedModel {
   const result = modelSchema.safeParse(value)
   if (result.success) return { ok: true, doc: result.data }
   const issue = result.error.issues[0]
-  return { ok: false, error: `${issue?.path.join(".") || "model"}: ${issue?.message ?? "is not valid"}` }
+  return { ok: false, error: `${issue?.path.join(".") || "strategy"}: ${issue?.message ?? "is not valid"}` }
 }
 
 // JSON out

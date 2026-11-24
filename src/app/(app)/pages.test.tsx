@@ -76,7 +76,7 @@ describe("app screens", () => {
     expect(all).toContain("Most profitable")
     expect(robotics).toContain("Robotics, capped at 20%")
     expect(chips).toContain("AI chips, max 25%")
-    expect(chips).toContain("Almost ready")
+    expect(chips).toContain("Results ready")
     expect(chips).not.toContain("Robotics, capped at 20%")
   })
 

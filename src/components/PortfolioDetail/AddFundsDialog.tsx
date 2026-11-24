@@ -88,7 +88,7 @@ export function AddFundsDialog({ portfolios, cap }: AddFundsDialogProps) {
             <DialogDescription>
               {adding
                 ? "New money is bought into stocks that have room under your rules."
-                : "Cash comes out of the portfolio and back to your wallet."}
+                : "Cash comes out of the strategy and back to your wallet."}
             </DialogDescription>
           </div>
         </div>
@@ -97,7 +97,7 @@ export function AddFundsDialog({ portfolios, cap }: AddFundsDialogProps) {
           <div className="flex flex-col gap-1.5">
             <span className="text-ink-400 text-xs font-medium">Add to</span>
             <Select value={portfolio.id} onValueChange={setChosen}>
-              <SelectTrigger aria-label="Portfolio to add to" className="w-full justify-between">
+              <SelectTrigger aria-label="Strategy to add to" className="w-full justify-between">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-72">

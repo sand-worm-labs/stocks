@@ -32,7 +32,7 @@ export function BriefInput({ value, onChange, canContinue, portfolioId, actionLa
   return (
     <PromptBox
       id="brief"
-      label="Your brief"
+      label="Your idea"
       value={value}
       onChange={onChange}
       onSubmit={() => canContinue && router.push(next)}

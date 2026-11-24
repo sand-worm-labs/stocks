@@ -104,8 +104,8 @@ describe("toGraph, compressed", () => {
       { tidy: true }
     )
     expect(nodes.find(({ id }) => id === "root")?.data.chips).toEqual([
-      { symbol: "AAA", note: "75%" },
-      { symbol: "BBB", note: "25%" },
+      { symbol: "AAA", note: "75%", percent: 75 },
+      { symbol: "BBB", note: "25%", percent: 25 },
     ])
   })
 

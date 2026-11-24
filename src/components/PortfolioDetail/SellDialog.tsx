@@ -178,7 +178,7 @@ export function SellDialog({ portfolio, symbol: fixed, pickable, className, mode
                 everything
                   ? `Sold everything for ${formatAmount(quote.receive)} USDC`
                   : `Sold ${share === 1 ? "all" : formatPercent(share)} of ${symbol} for ${formatAmount(quote.receive)} USDC`,
-                { description: "The USDC is back in your portfolio as cash." }
+                { description: "The USDC is back in your strategy as cash." }
               )
             }
             className={cn(

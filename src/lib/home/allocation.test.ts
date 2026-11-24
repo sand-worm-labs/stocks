@@ -29,7 +29,7 @@ describe("buildAllocation", () => {
     const slices = buildAllocation(many)
 
     expect(slices.filter(({ index }) => index !== undefined)).toHaveLength(5)
-    expect(slices.find(({ id }) => id === "other")).toMatchObject({ label: "3 other models", value: 100 + 101 + 102 })
+    expect(slices.find(({ id }) => id === "other")).toMatchObject({ label: "3 other strategies", value: 100 + 101 + 102 })
   })
 
   it("says which way each is going, from what it has gained on what was put in", () => {

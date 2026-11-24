@@ -17,7 +17,7 @@ export default async function HoldingsPage({ searchParams }: HoldingsPageProps) 
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader icon="holdings" title="Holdings" description="Every stock you hold, and the model it is held in" />
+      <PageHeader icon="holdings" title="Holdings" description="Every stock you hold, and the strategy it is held in" />
       <HoldingsLive
         portfolios={portfolios}
         addresses={addresses}

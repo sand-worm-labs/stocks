@@ -15,3 +15,7 @@ export function filterPillClassName(active: boolean) {
       : "border-border text-ink-400 hover:text-ink-100 hover:border-primary dark:border-border-tertiary",
   ].join(" ")
 }
+
+// The dark-mode look of a tag: a soft tint, a border and a light shadow
+export const tintPillDarkClassName =
+  "dark:bg-create-project-tint/[0.16] dark:border-border-tertiary dark:text-white dark:shadow-[0px_2px_2px_-1px_rgba(0,0,0,0.12),0px_4px_4px_-2px_rgba(0,0,0,0.12)]"

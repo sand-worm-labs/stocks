@@ -11,7 +11,7 @@ export function NewPortfolioButton({ className }: { className?: string }) {
       className={cn(buttonVariants({ intent: "dark", size: "compact" }), "rounded-xl", className)}
     >
       <PiPlus size={16} aria-hidden="true" />
-      New portfolio
+      New strategy
     </AppLink>
   )
 }

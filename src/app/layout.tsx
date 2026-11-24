@@ -9,7 +9,7 @@ import { baseFont, preloadedFontPaths } from "@/config/fonts"
 export const metadata: Metadata = {
   title: { default: "Sandworm Stocks", template: "%s · Sandworm Stocks" },
   description:
-    "Tell an AI agent your investing goals. Get a researched, sourced portfolio of tokenized stocks, and trade it onchain once you approve.",
+    "Tell an AI agent your investing goals. Get a researched, sourced strategy of tokenized stocks, and trade it onchain once you approve.",
   icons: { icon: "/logo.svg" },
   openGraph: { siteName: "Sandworm", title: "Sandworm Stocks" },
 }

@@ -17,7 +17,7 @@ import { getPortfolio } from "@/lib/portfolios/source"
 import { getOrders, getReport } from "@/lib/report/source"
 import { getSession } from "@/lib/session/source"
 
-export const metadata: Metadata = { title: "Report" }
+export const metadata: Metadata = { title: "Results" }
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const [portfolio, report, orders, session] = await Promise.all([
@@ -40,11 +40,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       >
         <ReportActionBar plan={report.plan} verdict={report.verdict}>
           <AppLink route="adapt" slug={portfolio.id} className={buttonVariants({ intent: "outline", size: "compact" })}>
-            Adapt
+            Refine
           </AppLink>
           <ReviewAndBuy orders={orders} report={report} portfolioId={portfolio.id} network={session.network} />
         </ReportActionBar>
-        <ReportHeader report={report} eyebrow={`Strategy report · ${portfolio.name}`} />
+        <ReportHeader report={report} eyebrow={`Strategy results · ${portfolio.name}`} />
         <MetricTiles metrics={report.metrics} />
         <ReportColumn report={report} portfolioId={portfolio.id} />
       </FlowLayout>

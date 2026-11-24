@@ -94,7 +94,7 @@ export function HoldingsSkeleton() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Holdings" description="Every stock you hold, and the model it is held in" />
+      <PageHeader title="Holdings" description="Every stock you hold, and the strategy it is held in" />
       <HoldingsTabs current={tab} />
       {tab === "summary" ? (
         <>
@@ -105,7 +105,7 @@ export function HoldingsSkeleton() {
         <>
           <div className="flex flex-wrap items-center gap-3">
             <HoldingsViewTabs view={view} query={query} />
-            <SearchInput param="q" label="Search holdings" placeholder="Search stocks you hold..." />
+            <SearchInput param="q" label="Search your portfolio" placeholder="Search stocks you hold..." />
           </div>
           <div className="flex flex-col gap-6">
             {view === "stocks" ? (

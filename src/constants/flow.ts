@@ -1,25 +1,25 @@
 import type { RouteId } from "@/config/routes"
 
 export const FLOW_STEPS = [
-  { id: "brief", label: "Brief", hint: "Say what you want", route: "brief" },
-  { id: "rules", label: "Rules", hint: "Confirm and lock them", route: "rules" },
-  { id: "research", label: "Research", hint: "The agent works", route: "research" },
-  { id: "report", label: "Report", hint: "Read, adapt, decide", route: "report" },
-  { id: "buy", label: "Buy", hint: "Review and sign", route: "buy" },
+  { id: "brief", label: "Idea", hint: "Say what you want to test", route: "brief" },
+  { id: "rules", label: "Rules", hint: "Set the limits it can't break", route: "rules" },
+  { id: "research", label: "Research", hint: "The agent designs and backtests it", route: "research" },
+  { id: "report", label: "Results", hint: "See how it did, refine, decide", route: "report" },
+  { id: "buy", label: "Trade", hint: "Review and sign on Base", route: "buy" },
 ] as const satisfies { id: string; label: string; hint: string; route: RouteId }[]
 
 export type FlowStepId = (typeof FLOW_STEPS)[number]["id"]
 
 // What the agent does while it researches, each step in its own Sandworm notebook
 export const RESEARCH_STEPS = [
-  "Read the brief",
+  "Read the idea",
   "Research",
   "Design",
   "Backtest",
   "Bias check",
   "Score",
   "Honesty check",
-  "Report",
+  "Results",
 ] as const
 
 export const SANDWORM_APP_URL = "https://app.sandwormlab.xyz/"

@@ -78,7 +78,7 @@ export const activityMockData: Activity[] = [
     id: "report-ready",
     portfolioId: PORTFOLIO,
     kind: "report",
-    title: "Strategy report ready",
+    title: "Strategy results ready",
     detail: "Some edge, mostly market risk. Beat the S&P 500 in the backtest, past your −20% drop.",
     at: "2026-11-18T15:12:00",
     action: { label: "Report →", route: "report", slug: PORTFOLIO },

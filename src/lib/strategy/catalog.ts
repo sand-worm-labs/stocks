@@ -2,26 +2,43 @@ import type { Indicator, Weighting } from "./types"
 
 // Everything a strategy can be built from, in one place: the palette on the canvas lists it, and the add menu will offer it.
 
-export type BlockInfo = { id: "asset" | "cash" | "group" | "if" | "filter"; label: string; description: string }
+export type BlockInfo = {
+  id: "asset" | "group" | "weight" | "if" | "any-all" | "filter" | "cash"
+  label: string
+  description: string
+}
 
+// In the order the add menu shows them. Weight and any / all are not blocks of their own in a strategy: a weight is a group
+// with its weighting chosen, and any / all is an if with several conditions. They are offered as blocks because that is how
+// they are reached for.
 export const BLOCKS: BlockInfo[] = [
   { id: "asset", label: "Stock", description: "Hold one stock." },
-  { id: "cash", label: "Cash", description: "Hold USDC, no stock at all. Where to wait out a bad market." },
   {
     id: "group",
     label: "Group",
-    description: "Hold several things at once, divided by a weighting. Groups nest in groups.",
+    description: "Hold several things at once, split equally. Groups nest in groups.",
+  },
+  {
+    id: "weight",
+    label: "Weight",
+    description: "Hold several things at once, split how you choose: equally, by shares, or the steadier the more.",
   },
   {
     id: "if",
     label: "If / else",
-    description: "Look at the market and take one path or the other. One or several conditions.",
+    description: "Look at the market and take one path or the other.",
+  },
+  {
+    id: "any-all",
+    label: "Any / all",
+    description: "An if with several conditions: all of them must hold, or any one is enough.",
   },
   {
     id: "filter",
     label: "Filter",
     description: "From a set of stocks, keep only the best or worst few by an indicator.",
   },
+  { id: "cash", label: "Cash", description: "Hold USDC, no stock at all. Where to wait out a bad market." },
 ]
 
 export const WEIGHTINGS: { id: Weighting; label: string; description: string }[] = [

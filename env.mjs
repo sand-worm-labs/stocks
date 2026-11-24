@@ -5,6 +5,8 @@ export const env = createEnv({
   server: {
     // Signs the sign-in nonce and the session. A random string of 32 characters or more, kept secret.
     AUTH_SECRET: z.string().min(32).optional(),
+    // A CoinGecko "Demo" API key (free). Without one the feed is shared and rate-limited, and can refuse a deployed app.
+    COINGECKO_API_KEY: z.string().optional(),
     ANALYZE: z
       .enum(["true", "false"])
       .optional()
@@ -21,6 +23,7 @@ export const env = createEnv({
   },
   runtimeEnv: {
     ANALYZE: process.env.ANALYZE,
+    COINGECKO_API_KEY: process.env.COINGECKO_API_KEY,
     AUTH_SECRET: process.env.AUTH_SECRET,
     NEXT_PUBLIC_WEB_APP_URL: process.env.NEXT_PUBLIC_WEB_APP_URL,
     NEXT_PUBLIC_LANDING_URL: process.env.NEXT_PUBLIC_LANDING_URL,

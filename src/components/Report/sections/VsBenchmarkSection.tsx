@@ -8,14 +8,14 @@ import { GrowthChart } from "../charts/GrowthChart"
 import { ReportSection, SectionIntro } from "../ReportSection"
 
 const LEGEND = [
-  { label: "This portfolio", color: CHART_COLORS.primary },
+  { label: "This strategy", color: CHART_COLORS.primary },
   { label: "S&P 500", color: CHART_COLORS.muted, dashed: true },
 ]
 
 export function VsBenchmarkSection({ report: { performance, periods } }: { report: Report }) {
   const [built, held] = periods
   const rows = [
-    { label: "This portfolio", values: periods.map(({ portfolio }) => portfolio) },
+    { label: "This strategy", values: periods.map(({ portfolio }) => portfolio) },
     { label: "S&P 500", values: periods.map(({ benchmark }) => benchmark) },
   ]
 
@@ -34,7 +34,7 @@ export function VsBenchmarkSection({ report: { performance, periods } }: { repor
           <thead>
             <tr className="text-ink-400 text-xs font-medium">
               <th scope="col" className="pr-2 pb-2 text-left font-medium">
-                <span className="sr-only">Portfolio</span>
+                <span className="sr-only">Strategy</span>
               </th>
               {periods.map(({ label }) => (
                 <th key={label} scope="col" className="pr-2 pb-2 text-right font-medium">

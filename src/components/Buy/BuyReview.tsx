@@ -66,8 +66,8 @@ export function BuyReview({ orders: planned, report, portfolioId, network, onBou
     const portfolioHref = routeHref("portfolio", undefined, portfolioId)
     onBought()
     toast.success(`Bought ${pluralize(orders.length, "stock")} for ${formatAmount(total)} USDC`, {
-      description: `${network.mode === "paper" ? "Paper" : "Live"} · ${network.chain}. Your portfolio is live.`,
-      action: portfolioHref ? { label: "View portfolio", onClick: () => router.push(portfolioHref) } : undefined,
+      description: `${network.mode === "paper" ? "Paper" : "Live"} · ${network.chain}. Your strategy is live.`,
+      action: portfolioHref ? { label: "View strategy", onClick: () => router.push(portfolioHref) } : undefined,
     })
     router.push(routeHref("portfolios") ?? "/portfolios")
   }

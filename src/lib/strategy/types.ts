@@ -33,11 +33,17 @@ export type Comparison = {
 // One comparison, or several that must all hold, or any one of which will do
 export type Condition = Comparison | { all: Condition[] } | { any: Condition[] }
 
+export type Side = "long" | "short"
+// How a stock is held: the token itself, or a perpetual futures contract on its price
+export type Via = "spot" | "perp"
+
 // How a group divides itself between what is in it
 export type Weighting = "equal" | "specified" | "inverse-volatility"
 
 export type Node =
-  | { type: "asset"; symbol: string }
+  // Hold a stock, or short it. A short is only possible through a perp; a stock held long can be held as the token itself (spot)
+  // or through a perp.
+  | { type: "asset"; symbol: string; side?: Side; via?: Via }
   // Sit in cash: no stock at all
   | { type: "cash" }
   | { type: "group"; name?: string; weighting: Weighting; days?: number; children: { node: Node; weight?: number }[] }
@@ -57,7 +63,7 @@ export type Schedule = "daily" | "weekly" | "monthly"
 
 export type Strategy = { name: string; schedule: Schedule; root: Node }
 
-// How much of the portfolio each stock should be. What does not add up to one is cash.
+// How much of the strategy each stock should be, a short being below zero. What does not add up to one is cash.
 export type Weights = Record<string, number>
 
 // Daily closing prices, oldest first, every stock the same length and lined up by day

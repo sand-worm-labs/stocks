@@ -200,7 +200,7 @@ export function HomeSkeleton() {
       <HomeLayout rail={<RailSkeleton />}>
         <SummarySkeleton />
         <section className="flex flex-col gap-3">
-          <SectionHeader title="Your portfolios" link={{ route: "portfolios", label: "See all →" }} />
+          <SectionHeader title="Your strategies" link={{ route: "portfolios", label: "See all →" }} />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: BOXES }, (_, i) => (
               <BoxSkeleton key={i} />

@@ -11,7 +11,7 @@ import { getMarketSummary, getStocks } from "@/lib/markets/source"
 import { isBuyable } from "@/lib/markets/stock"
 import { getStarter } from "@/lib/onboarding/source"
 
-export const metadata: Metadata = { title: "Brief" }
+export const metadata: Metadata = { title: "Idea" }
 
 export default async function BriefPage({ searchParams }: { searchParams: Promise<{ starter?: string }> }) {
   const [{ starter }, draft, stocks, summary] = await Promise.all([
@@ -27,7 +27,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
     <div className="mx-auto w-full max-w-[820px]">
       <FlowLayout steps={<StepProgress current="brief" />}>
         <h1 className="mt-4 text-center text-3xl font-medium md:text-[40px] md:leading-[48px]">
-          What should this portfolio do?
+          What should this strategy do?
         </h1>
         <BriefTabs current="brief" />
         <BriefWorkspace

@@ -20,14 +20,14 @@ export function buildGettingStarted({ walletConnected, hasPortfolio, hasBought }
     },
     {
       id: "portfolio",
-      title: "Create your first portfolio",
-      description: "Say what you want and the agent researches it.",
+      title: "Create your first strategy",
+      description: "Describe an idea and the agent researches it.",
       done: hasPortfolio,
     },
     {
       id: "buy",
-      title: "Buy your first stock",
-      description: "Review the proposal, then buy it with USDC.",
+      title: "Trade your first strategy",
+      description: "Review the results, then trade it with USDC.",
       done: hasBought,
     },
   ] as const

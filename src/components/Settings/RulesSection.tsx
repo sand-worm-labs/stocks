@@ -9,7 +9,7 @@ import { SettingsSection } from "./SettingsSection"
 
 export function RulesSection({ rules }: { rules: Settings["rules"] }) {
   return (
-    <SettingsSection title="Default rules for new portfolios" description="They lock per portfolio when you confirm.">
+    <SettingsSection title="Default rules for new strategies" description="They lock per strategy when you confirm.">
       <SettingRow title="Max in any one stock" tag="Rule 2" description="No stock can hold more than this share">
         <SettingSelect
           label="Max in any one stock"

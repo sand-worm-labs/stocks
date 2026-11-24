@@ -7,7 +7,7 @@ import type { Starter } from "@/lib/onboarding/types"
 export function StarterPortfolios({ starters }: { starters: Starter[] }) {
   return (
     <section className="flex flex-col gap-3">
-      <SectionHeader title="Or start from a ready-made portfolio" meta="Backtested over the last year" />
+      <SectionHeader title="Or start from a ready-made strategy" meta="Backtested over the last year" />
       <div className="grid gap-4 md:grid-cols-3">
         {starters.map((starter, index) => (
           <StarterCard

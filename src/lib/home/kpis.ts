@@ -22,7 +22,7 @@ export function buildKpis(portfolios: Portfolio[]): Kpi[] {
       label: "Total value",
       value: formatAmount(total),
       amount: total,
-      caption: `USDC across ${pluralize(live.length, "live portfolio")}`,
+      caption: `USDC across ${pluralize(live.length, "live strategy")}`,
     },
     {
       id: "deposited",

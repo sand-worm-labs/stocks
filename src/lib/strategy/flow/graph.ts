@@ -1,5 +1,6 @@
+import { editorHeight } from "../condition"
 import { describeCondition, describeIndicator } from "../describe"
-import type { Condition, Indicator, Node, Schedule, Strategy, Weighting } from "../types"
+import type { Condition, Indicator, Node, Schedule, Side, Strategy, Via, Weighting } from "../types"
 
 // A strategy drawn as boxes and lines, for React Flow. The strategy is the one thing that is kept: the boxes are made from it,
 // and it can be made again from them. Each box carries everything it is (`spec`) and each line where it sits among its
@@ -10,7 +11,7 @@ export type BlockKind = "start" | "asset" | "cash" | "group" | "if" | "filter"
 // What a block is, apart from what it leads to: this is what is saved
 export type BlockSpec =
   | { type: "start"; name: string; schedule: Schedule }
-  | { type: "asset"; symbol: string }
+  | { type: "asset"; symbol: string; side?: Side; via?: Via }
   | { type: "cash" }
   | { type: "group"; name?: string; weighting: Weighting; days?: number }
   | { type: "if"; condition: Condition }
@@ -25,12 +26,14 @@ export type BlockSpec =
     }
 
 // A stock a block draws from, shown as a small tag, with something said beside it such as its share
-export type Chip = { symbol: string; note?: string }
+export type Chip = { symbol: string; note?: string; percent?: number }
 
 export type BlockData = {
   block: BlockKind
   title: string
   detail?: string
+  // How a group or filter weights what it holds: equal, set by you, or by inverse volatility
+  weightType?: string
   chips?: Chip[]
   // The path to this block in the strategy, which is how an edit finds it
   path: string
@@ -47,6 +50,8 @@ export type EdgeData = {
   order: number
   // What a group was told to give what this leads to, as it was given
   weight?: number
+  // Its share of a group that splits by shares, as a percentage
+  share?: number
 }
 
 export type FlowNode = { id: string; type: "block"; position: { x: number; y: number }; data: BlockData }
@@ -67,11 +72,20 @@ const GAP = 14
 
 const WEIGHTING = {
   equal: "Split equally",
-  specified: "Split by weight",
+  specified: "Shares set by you",
   "inverse-volatility": "Steadier gets more",
 } as const
 
+// The kind of weighting a block uses, as a tag on the block
+const WEIGHT_TYPE = {
+  equal: "Equal weight",
+  specified: "Set weights",
+  "inverse-volatility": "Inverse volatility",
+} as const
+
 const percent = (share: number) => `${Math.round(share * 100)}%`
+// The same, as a number with a tenth of a point kept, for a field to be edited in
+const points = (share: number) => Math.round(share * 1000) / 10
 
 // A spec with only what is there, so a block with no name has no `name` rather than a name of nothing
 const defined = <T extends object>(spec: T): T =>
@@ -83,12 +97,23 @@ const BAR = 52
 const LINE_LETTERS = 90
 const TAGS_PER_ROW = 8
 
-const heightOf = ({ title, detail, chips }: Omit<BlockData, "path" | "spec">) =>
-  BAR +
-  (Math.ceil((title.length * 1.2 + (detail?.length ?? 0)) / LINE_LETTERS) - 1) * 18 +
-  (chips ? 17 + Math.ceil(chips.length / TAGS_PER_ROW) * 26 : 0)
+// A filter that can be changed has room for a tag to add a stock and for the weighting beside them, and its tags are wider with
+// a logo and a way to take each out
+const EDITABLE_TAGS_PER_ROW = 6
+const EDITABLE_EXTRA_TAGS = 2
+
+const heightOf = ({ title, detail, chips }: Omit<BlockData, "path" | "spec">, roomy = false) => {
+  const base = BAR + (Math.ceil((title.length * 1.2 + (detail?.length ?? 0)) / LINE_LETTERS) - 1) * 18
+  if (!chips) return base
+  if (!roomy) return base + 17 + Math.ceil(chips.length / TAGS_PER_ROW) * 26
+  // A row of logos is 34 tall with the switch in it, 8 between rows, and 21 of padding and rule around them
+  const rows = Math.ceil((chips.length + EDITABLE_EXTRA_TAGS) / EDITABLE_TAGS_PER_ROW)
+  return base + 21 + rows * 34 + (rows - 1) * 8
+}
 
 export type GraphView = {
+  // Drawn to be changed, so a filter is given the room its fields and tags need
+  editable?: boolean
   // A group of nothing but stocks is one block with the stocks as tags, instead of a block for each
   tidy?: boolean
   // Blocks, by path, that are folded shut: what is inside them is left out
@@ -141,7 +166,10 @@ export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
   const place = (id: string, path: string, depth: number, display: Omit<BlockData, "path">): string => {
     const x = depth * INDENT
     nodes.push({ id, type: "block", position: { x, y: cursor }, data: { ...display, path } })
-    cursor += heightOf(display) + GAP
+    cursor +=
+      heightOf(display, view.editable && display.block === "filter") +
+      (view.editable && display.spec.type === "if" && !display.folded ? editorHeight(display.spec.condition) : 0) +
+      GAP
     widest = Math.max(widest, x + BLOCK_WIDTH)
     return id
   }
@@ -152,8 +180,13 @@ export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
         return place(path, path, depth, {
           block: "asset",
           title: node.symbol,
-          detail: "Buy and hold",
-          spec: { type: "asset", symbol: node.symbol },
+          detail:
+            node.side === "short"
+              ? "Short, through a perp"
+              : node.via === "perp"
+                ? "Hold, through a perp"
+                : "Buy and hold",
+          spec: defined({ type: "asset" as const, symbol: node.symbol, side: node.side, via: node.via }),
         })
 
       case "cash":
@@ -170,6 +203,7 @@ export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
           block: "filter",
           title: `${pick === "top" ? "Best" : "Worst"} ${count} by ${describeIndicator(by)}`,
           detail: weighting === "inverse-volatility" ? "Steadier gets more" : "Held equally",
+          weightType: WEIGHT_TYPE[weighting ?? "equal"],
           chips: from.map((symbol) => ({ symbol })),
           spec: defined({ type, pick, count, by, from, weighting, days }),
         })
@@ -182,10 +216,13 @@ export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
           block: "group" as const,
           title: node.name ?? "Group",
           detail: WEIGHTING[node.weighting],
+          weightType: WEIGHT_TYPE[node.weighting],
           spec,
         }
         const share = (weight?: number) =>
           node.weighting === "specified" && total > 0 ? percent(Math.max(weight ?? 0, 0) / total) : undefined
+        const sharePoints = (weight?: number) =>
+          node.weighting === "specified" && total > 0 ? points(Math.max(weight ?? 0, 0) / total) : undefined
 
         if (view.tidy && onlyStocks(node)) {
           return place(path, path, depth, {
@@ -193,6 +230,7 @@ export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
             chips: node.children.map(({ node: child, weight }) => ({
               symbol: child.type === "asset" ? child.symbol : "",
               note: share(weight),
+              percent: sharePoints(weight),
             })),
           })
         }
@@ -213,7 +251,7 @@ export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
             source: id,
             target: childId,
             label: share(weight),
-            data: defined({ order, weight }),
+            data: defined({ order, weight, share: sharePoints(weight) }),
           })
         })
         return id

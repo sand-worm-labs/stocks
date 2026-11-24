@@ -92,7 +92,7 @@ export function HomeSummary({ kpis, points, slices, benchmarks, now, addFunds }:
         <TradingChart
           points={points}
           lines={benchmarkLines(benchmarks, points)}
-          name="My portfolios"
+          name="My strategies"
           label="The value of everything you hold over the last week, against index funds and ETFs"
         />
       </div>

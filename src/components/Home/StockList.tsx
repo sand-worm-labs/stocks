@@ -62,7 +62,7 @@ export function StockList({ title, stocks, link }: StockListProps) {
                   <span className="text-ink-400 truncate text-sm">{name}</span>
                   {heldIn && share !== undefined && (
                     <span className="text-ink-400 truncate text-xs">
-                      In {pluralize(heldIn, "model")} · {formatPercent(share)} of what you hold
+                      In {pluralize(heldIn, "strategy")} · {formatPercent(share)} of what you hold
                     </span>
                   )}
                 </span>

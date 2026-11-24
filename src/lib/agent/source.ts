@@ -67,7 +67,7 @@ export async function getResearchScript(portfolio: Portfolio, done: number): Pro
           { type: "steps", title: "Research", steps: researchSteps(done) },
           {
             type: "actions",
-            actions: [{ label: "Skip to the report", route: "report", slug: portfolio.id, intent: "outline" }],
+            actions: [{ label: "Skip to the results", route: "report", slug: portfolio.id, intent: "outline" }],
           },
         ],
       },
@@ -91,8 +91,8 @@ export async function getReportScript(portfolio: Portfolio): Promise<AgentScript
           {
             type: "actions",
             actions: [
-              { label: "Review & buy", route: "buy", slug: portfolio.id, intent: "dark" },
-              { label: "Adapt", route: "adapt", slug: portfolio.id, intent: "outline" },
+              { label: "Review and trade", route: "buy", slug: portfolio.id, intent: "dark" },
+              { label: "Refine", route: "adapt", slug: portfolio.id, intent: "outline" },
             ],
           },
         ],

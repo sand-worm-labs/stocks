@@ -63,7 +63,7 @@ export function HoldingsLive({ portfolios, addresses, names, tab, view, query }:
             slices={slices}
             figures={[
               { id: "stocks", label: "Stocks", value: String(counts.stocks), caption: "different ones, once each" },
-              { id: "models", label: "Models", value: String(counts.models), caption: "holding them" },
+              { id: "models", label: "Strategies", value: String(counts.models), caption: "holding them" },
               {
                 id: "gain",
                 label: "Profit / loss",
@@ -82,7 +82,7 @@ export function HoldingsLive({ portfolios, addresses, names, tab, view, query }:
         <>
           <div className="flex flex-wrap items-center gap-3">
             <HoldingsViewTabs view={view} query={query} />
-            <SearchInput param="q" label="Search holdings" placeholder="Search stocks you hold..." />
+            <SearchInput param="q" label="Search your portfolio" placeholder="Search stocks you hold..." />
           </div>
           {/* Keyed by what is shown, so a new view or a new search starts on its first page */}
           <PagedList

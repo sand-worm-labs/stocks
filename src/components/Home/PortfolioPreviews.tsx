@@ -14,13 +14,13 @@ const SHOWN = 5
 export function PortfolioPreviews({ portfolios, mode }: { portfolios: Portfolio[]; mode: Session["network"]["mode"] }) {
   const ranked = rankByValue(portfolios)
   const drafts = portfolios.filter(({ status }) => status === "draft").length
-  const meta = [pluralize(ranked.length, "live model"), drafts ? pluralize(drafts, "draft") : ""]
+  const meta = [pluralize(ranked.length, "live strategy"), drafts ? pluralize(drafts, "draft") : ""]
     .filter(Boolean)
     .join(" · ")
 
   return (
     <section className="flex flex-col gap-3">
-      <SectionHeader title="Your portfolios" meta={meta} link={{ route: "portfolios", label: "See all →" }} />
+      <SectionHeader title="Your strategies" meta={meta} link={{ route: "portfolios", label: "See all →" }} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {ranked.slice(0, SHOWN).map((portfolio, index) => (
           <PortfolioPreviewCard key={portfolio.id} portfolio={portfolio} index={index} mode={mode} />

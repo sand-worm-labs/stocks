@@ -1,7 +1,7 @@
 import { BLOCKS, INDICATORS, WEIGHTINGS } from "@/lib/strategy/catalog"
 import { cn } from "@/lib/utils"
 
-import { BLOCK_STYLE } from "./blocks"
+import { MENU_STYLE } from "./blocks"
 
 // Everything a strategy can be built from: the blocks, the ways to divide a group, and the indicators a decision can read
 export function BlockPalette() {
@@ -12,9 +12,9 @@ export function BlockPalette() {
         <span className="text-ink-400 text-xs">Blocks go inside blocks, as deep as you like.</span>
       </div>
 
-      <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+      <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         {BLOCKS.map(({ id, label, description }) => {
-          const { icon: Icon, tint } = BLOCK_STYLE[id]
+          const { icon: Icon, tile } = MENU_STYLE[id]
 
           return (
             <li
@@ -23,7 +23,7 @@ export function BlockPalette() {
             >
               <span
                 aria-hidden="true"
-                className={cn("flex size-8 items-center justify-center rounded-lg border", tint)}
+                className={cn("flex size-8 items-center justify-center rounded-lg border", tile)}
               >
                 <Icon size={16} />
               </span>

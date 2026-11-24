@@ -3,6 +3,9 @@ import type { Stock } from "@/lib/markets/types"
 import { portfolioValue } from "@/lib/portfolios/portfolio"
 import type { Portfolio } from "@/lib/portfolios/types"
 
+import { holds } from "@/lib/strategy/evaluate"
+import type { Condition, History } from "@/lib/strategy/types"
+
 import type { Rule } from "./types"
 
 export type RuleReading = {
@@ -11,6 +14,26 @@ export type RuleReading = {
   reading: string
   // How close to the line: 1 is on it. Missing for a rule with no line to be close to.
   closeness?: number
+  // A rule with no line to be close to, such as a condition, that is broken outright
+  broken?: boolean
+}
+
+const symbolsIn = (condition: Condition): string[] =>
+  "all" in condition
+    ? condition.all.flatMap(symbolsIn)
+    : "any" in condition
+      ? condition.any.flatMap(symbolsIn)
+      : [condition.left.symbol, ...("symbol" in condition.right ? [condition.right.symbol] : [])]
+
+// Whether a condition is true as of the latest day, from each stock's own prices lined up at their ends. Missing when there
+// are no prices yet for a stock it reads.
+function conditionNow(condition: Condition, stocks: Pick<Stock, "symbol" | "series">[]): boolean | undefined {
+  const symbols = [...new Set(symbolsIn(condition))]
+  const series = symbols.map((symbol) => stocks.find((stock) => stock.symbol === symbol)?.series)
+  if (series.some((one) => !one?.length)) return undefined
+  const length = Math.min(...series.map((one) => one?.length ?? 0))
+  const history: History = Object.fromEntries(symbols.map((symbol, i) => [symbol, (series[i] ?? []).slice(-length)]))
+  return holds(condition, history, length - 1)
 }
 
 export const maxWeightOf = (rules: Rule[]) => rules.find(({ kind }) => kind === "max-weight")?.limit
@@ -19,7 +42,7 @@ export const maxWeightOf = (rules: Rule[]) => rules.find(({ kind }) => kind === 
 export function readRules(
   portfolio: Portfolio,
   rules: Rule[],
-  stocks: Pick<Stock, "symbol" | "liquidity">[]
+  stocks: Pick<Stock, "symbol" | "liquidity" | "series">[]
 ): RuleReading[] {
   const total = portfolioValue(portfolio) ?? 0
   const invested = portfolio.holdings.reduce((sum, { cost }) => sum + cost, 0)
@@ -53,6 +76,30 @@ export function readRules(
         rule,
         reading: `Thinnest is ${thinnest.symbol} at ${formatCompactUsd(thinnestLiquidity)}`,
         closeness: limit / thinnestLiquidity,
+      }
+    }
+    // What each stock has made or lost on what was paid for it: the worst against a stop-loss, the best against a take-profit
+    if ((kind === "stop-loss" || kind === "take-profit") && limit) {
+      const made = portfolio.holdings
+        .filter(({ cost }) => cost > 0)
+        .map(({ symbol, value, cost }) => ({ symbol, change: value / cost - 1 }))
+        .toSorted((a, b) => (kind === "stop-loss" ? a.change - b.change : b.change - a.change))[0]
+      if (!made) return { rule, reading: "There is nothing held yet to check this against" }
+      const closeness = kind === "stop-loss" ? Math.max(-made.change, 0) / limit : Math.max(made.change, 0) / limit
+      return {
+        rule,
+        reading: `${kind === "stop-loss" ? "Worst" : "Best"} is ${made.symbol} at ${formatPercent(made.change, { signed: true })}`,
+        // Past its line the stock should already have been sold, so the rule is not being kept
+        closeness: closeness >= 1 ? 1.001 : closeness,
+      }
+    }
+    if (kind === "condition" && rule.condition && rule.mode) {
+      const met = conditionNow(rule.condition, stocks)
+      if (met === undefined) return { rule, reading: "There are no prices yet to check this against" }
+      return {
+        rule,
+        reading: met ? "It is true right now" : "It is not true right now",
+        broken: rule.mode === "never" ? met : !met,
       }
     }
     if (kind === "approval") return { rule, reading: "Nothing is bought or sold without your OK" }

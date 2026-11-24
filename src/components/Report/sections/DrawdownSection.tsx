@@ -21,7 +21,7 @@ export function DrawdownSection({ report: { performance, drawdown, tolerance } }
       <SectionIntro>{drawdown.text}</SectionIntro>
       <ChartLegend
         items={[
-          { label: "This portfolio", color: CHART_COLORS.negative },
+          { label: "This strategy", color: CHART_COLORS.negative },
           { label: "S&P 500", color: CHART_COLORS.muted, dashed: true },
           { label: "You'd panic", color: CHART_COLORS.warning, dashed: true },
         ]}

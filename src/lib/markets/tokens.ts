@@ -5,6 +5,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 import { COINGECKO_URL } from "@/constants/markets"
+import { env } from "env.mjs"
 
 export type BaseToken = {
   id: string
@@ -55,9 +56,15 @@ const marketsSchema = z.array(
 
 const RATE_LIMIT_WAIT_MS = 20_000
 
+// With a key the calls count against its own allowance, not the shared one a deployed app is refused on
+const headers = () => ({
+  accept: "application/json",
+  ...(env.COINGECKO_API_KEY && { "x-cg-demo-api-key": env.COINGECKO_API_KEY }),
+})
+
 async function get<T>(path: string, schema: z.ZodType<T>, retry = true): Promise<T> {
   const response = await fetch(`${COINGECKO_URL}${path}`, {
-    headers: { accept: "application/json" },
+    headers: headers(),
     cache: "no-store",
     signal: AbortSignal.timeout(30_000),
   })
@@ -145,7 +152,7 @@ async function getBaseAddresses(): Promise<Record<string, string>> {
   try {
     // Twenty thousand coins come back, so they are filtered as they are read, not checked one by one against a schema
     const response = await fetch(`${COINGECKO_URL}/coins/list?include_platform=true`, {
-      headers: { accept: "application/json" },
+      headers: headers(),
       cache: "no-store",
       signal: AbortSignal.timeout(30_000),
     })

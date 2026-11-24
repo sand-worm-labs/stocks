@@ -11,8 +11,8 @@ export function NewPortfolioCard() {
       className="border-border dark:border-border-tertiary hover:border-primary hover:bg-hover-bg/40 flex h-72 flex-col items-center justify-center gap-2 rounded-[28px] border border-dashed p-4 text-center transition-colors"
     >
       <IconTile icon={PiPlus} />
-      <span className="font-medium">New portfolio</span>
-      <span className="text-ink-400 text-sm">Start from a brief or a stock</span>
+      <span className="font-medium">New strategy</span>
+      <span className="text-ink-400 text-sm">Start from an idea or a stock</span>
     </AppLink>
   )
 }

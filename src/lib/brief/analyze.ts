@@ -39,7 +39,7 @@ function returnTarget(text: string, fields: BriefFields): BriefIssue | undefined
 
   return {
     kind: "unrealistic",
-    message: `${Math.round(multiple)}× ${when} isn't something any stock portfolio can plan for. Chasing it means betting everything on one move, which is gambling, not investing.`,
+    message: `${Math.round(multiple)}× ${when} isn't something any strategy can plan for. Chasing it means betting everything on one move, which is gambling, not investing.`,
     fixes: [`Grow ${amount} USDC over 3+ years`, `Learn with paper trading first, with ${amount} USDC`],
   }
 }

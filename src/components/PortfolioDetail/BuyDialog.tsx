@@ -125,7 +125,7 @@ export function BuyDialog({ portfolio, symbol, cap, mode, className }: BuyDialog
             disabled={noRoom || reading.amount === undefined}
             onClick={() =>
               toast.success(`Bought ${symbol} for ${formatAmount(amount)} USDC`, {
-                description: `${quote.units.toFixed(4)} ${symbol} added to the portfolio.`,
+                description: `${quote.units.toFixed(4)} ${symbol} added to the strategy.`,
               })
             }
             className={cn(

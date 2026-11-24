@@ -7,12 +7,12 @@ const TABS: { id: PortfolioTab | "report"; route: RouteId; label: string }[] = [
   { id: "overview", route: "portfolio", label: "Overview" },
   { id: "rules", route: "rules", label: "Rules" },
   { id: "activity", route: "portfolioActivity", label: "Activity" },
-  { id: "report", route: "report", label: "Report" },
+  { id: "report", route: "report", label: "Results" },
 ]
 
 export function PortfolioTabs({ portfolioId, current }: { portfolioId: string; current: PortfolioTab }) {
   return (
-    <nav aria-label="Portfolio" className="border-border-secondary dark:border-border-tertiary flex gap-1 border-b">
+    <nav aria-label="Strategy" className="border-border-secondary dark:border-border-tertiary flex gap-1 border-b">
       {TABS.map(({ id, route, label }) => (
         <AppLink
           key={id}

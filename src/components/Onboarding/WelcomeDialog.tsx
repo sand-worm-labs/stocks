@@ -13,18 +13,18 @@ import { cn } from "@/lib/utils"
 const POINTS = [
   {
     icon: PiChatTeardropText,
-    title: "Say what you want",
-    text: "Describe a goal and the agent researches it.",
+    title: "Start with an idea",
+    text: "Describe what you want to test. The agent researches and designs it.",
   },
   {
     icon: PiLockKey,
     title: "Rules it can't break",
-    text: "Caps and limits are locked. It won't break them.",
+    text: "Your caps and limits are locked in. It never goes past them.",
   },
   {
     icon: PiCoins,
-    title: "Approve, then trade on Base",
-    text: "Review it, then buy on Base with your USDC.",
+    title: "Test it, then trade it",
+    text: "Check how it would have done, then trade it on Base with your USDC.",
   },
 ]
 

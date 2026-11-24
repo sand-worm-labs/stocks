@@ -17,7 +17,7 @@ import { getPortfolio } from "@/lib/portfolios/source"
 import { getOrders, getReport } from "@/lib/report/source"
 import { getSession } from "@/lib/session/source"
 
-export const metadata: Metadata = { title: "Adapt" }
+export const metadata: Metadata = { title: "Refine" }
 
 export default async function AdaptPage({ params }: { params: Promise<{ id: string }> }) {
   const [portfolio, report, orders, session] = await Promise.all([
@@ -38,7 +38,7 @@ export default async function AdaptPage({ params }: { params: Promise<{ id: stri
         aside={<AgentWorkspace script={script} />}
       >
         <ReportActionBar plan={report.plan} verdict={report.verdict} />
-        <ReportHeader report={report} eyebrow={`Strategy report · ${portfolio.name}`} />
+        <ReportHeader report={report} eyebrow={`Strategy results · ${portfolio.name}`} />
         <MetricTiles metrics={report.metrics} />
         <AdaptColumn
           report={report}

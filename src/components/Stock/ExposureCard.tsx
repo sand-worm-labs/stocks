@@ -10,7 +10,7 @@ import { changeTone } from "@/lib/tone"
 export function ExposureCard({ exposures }: { exposures: ReturnType<typeof exposureTo> }) {
   return (
     <section className="flex flex-col gap-3">
-      <SectionHeader title="In your portfolios" />
+      <SectionHeader title="In your strategies" />
       <Card>
         {exposures.map(({ portfolio, value, weight, gain, gainRate }) => (
           <CardRow key={portfolio.id}>

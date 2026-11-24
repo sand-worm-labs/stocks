@@ -11,13 +11,13 @@ import { cn } from "@/lib/utils"
 
 import { ResearchProgress } from "./ResearchProgress"
 
-// Where a model is: its rules waiting to be confirmed, the agent at work, or a report ready to read and buy from
+// Where a model is: its rules waiting to be confirmed, the agent at work, or results ready to read and trade from
 export type Phase = "rules" | "researching" | "ready"
 
 const STATUS: Record<Phase, { label: string; tone: Tone }> = {
   rules: { label: "Draft", tone: "warning" },
   researching: { label: "Researching", tone: "info" },
-  ready: { label: "Ready to review", tone: "positive" },
+  ready: { label: "Results ready", tone: "positive" },
 }
 
 type ModelWorkspaceProps = {

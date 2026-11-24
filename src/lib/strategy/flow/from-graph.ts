@@ -29,7 +29,12 @@ export function fromGraph(
       case "start":
         return "The start block can only be the start"
       case "asset":
-        return { type: "asset", symbol: spec.symbol }
+        return {
+          type: "asset",
+          symbol: spec.symbol,
+          ...(spec.side && { side: spec.side }),
+          ...(spec.via && { via: spec.via }),
+        }
       case "cash":
         return { type: "cash" }
       case "filter": {

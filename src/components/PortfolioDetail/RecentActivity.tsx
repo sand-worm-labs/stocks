@@ -33,7 +33,7 @@ export function RecentActivity({ portfolioId, activity, now }: RecentActivityPro
         <EmptyResults
           icon={PiPulse}
           title="Nothing yet"
-          hint="What the agent does for this portfolio will show up here."
+          hint="What the agent does for this strategy will show up here."
           className="flex-1 py-8"
         />
       )}

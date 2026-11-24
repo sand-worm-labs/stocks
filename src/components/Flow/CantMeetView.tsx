@@ -37,7 +37,7 @@ export function CantMeetView({ portfolio, rules, universe, summary, script }: Ca
         aside={<AgentWorkspace script={script} />}
       >
         <header className="flex flex-col gap-2">
-          <h1 className="text-2xl font-medium md:text-[32px] md:leading-10">This portfolio can&apos;t exist</h1>
+          <h1 className="text-2xl font-medium md:text-[32px] md:leading-10">This strategy can&apos;t exist</h1>
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-ink-400">
               {positions} robotics stocks · each at least {formatPercent(minimum)}

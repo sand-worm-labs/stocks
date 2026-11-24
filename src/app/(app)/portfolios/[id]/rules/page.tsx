@@ -35,7 +35,7 @@ export default async function RulesPage({ params }: { params: Promise<{ id: stri
       <PortfolioShell portfolio={portfolio} current="rules">
         <LiveRules
           portfolio={portfolio}
-          stocks={stocks.map(({ symbol, liquidity }) => ({ symbol, liquidity }))}
+          stocks={stocks.map(({ symbol, liquidity, series }) => ({ symbol, liquidity, series }))}
           doc={doc}
           strategy={rules.strategy}
           checks={activity.filter(({ kind }) => kind === "checked" || kind === "locked").slice(0, 4)}

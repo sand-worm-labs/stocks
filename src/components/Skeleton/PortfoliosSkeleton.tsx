@@ -24,7 +24,7 @@ const COLUMNS: SkeletonColumn[] = [
 export function PortfoliosSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="My portfolios" actions={<NewPortfolioButton />} />
+      <PageHeader title="My strategies" actions={<NewPortfolioButton />} />
 
       <Card className={SUMMARY_CARD_SURFACE}>
         <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3 px-5 py-4 md:px-6">

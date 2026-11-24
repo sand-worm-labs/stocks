@@ -15,10 +15,10 @@ export type Step = {
 
 export type Explained = { intro: string; steps: Step[] }
 
-const EVERY = { daily: "Every day", weekly: "Every week", monthly: "Every month" } as const
+export const EVERY = { daily: "Every day", weekly: "Every week", monthly: "Every month" } as const
 
 // Figures read as percentages: what is a fraction of a price rather than a price, or a score
-const FRACTIONS = new Set<Indicator["kind"]>(["return", "sma-return", "drawdown", "volatility"])
+export const FRACTIONS = new Set<Indicator["kind"]>(["return", "sma-return", "drawdown", "volatility"])
 
 const trimmed = (value: number) => String(Number(value.toFixed(1)))
 
@@ -102,7 +102,17 @@ export function explainStrategy(strategy: Strategy): Explained {
   const walk = (node: Node, depth: number, share?: string) => {
     switch (node.type) {
       case "asset":
-        steps.push({ depth, kind: "do", text: `Hold ${node.symbol}.`, share })
+        steps.push({
+          depth,
+          kind: "do",
+          text:
+            node.side === "short"
+              ? `Short ${node.symbol}, through a perp.`
+              : node.via === "perp"
+                ? `Hold ${node.symbol} through a perp.`
+                : `Hold ${node.symbol}.`,
+          share,
+        })
         return
       case "cash":
         steps.push({ depth, kind: "do", text: "Stay in cash (USDC), holding no stock.", share })

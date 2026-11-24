@@ -56,7 +56,7 @@ export async function DraftWorkspace({ portfolio }: { portfolio: Portfolio }) {
       report={
         // One element, not a fragment: a fragment of several children comes across to the client as a list with no keys
         <div className="contents">
-          <ReportHeader key="header" report={report} eyebrow={`Strategy report · ${portfolio.name}`} />
+          <ReportHeader key="header" report={report} eyebrow={`Strategy results · ${portfolio.name}`} />
           <MetricTiles key="metrics" metrics={report.metrics} />
           <ReportColumn key="sections" report={report} portfolioId={portfolio.id} />
         </div>

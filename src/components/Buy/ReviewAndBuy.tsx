@@ -16,7 +16,7 @@ type ReviewAndBuyProps = BuyReviewProps & {
 }
 
 // The button that opens the review of a purchase over the page it was pressed on
-export function ReviewAndBuy({ label = "Review & buy", intent = "dark", startOpen, ...review }: ReviewAndBuyProps) {
+export function ReviewAndBuy({ label = "Review and trade", intent = "dark", startOpen, ...review }: ReviewAndBuyProps) {
   const router = useRouter()
   const [open, setOpen] = useState(Boolean(startOpen))
 
@@ -28,7 +28,7 @@ export function ReviewAndBuy({ label = "Review & buy", intent = "dark", startOpe
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger className={buttonVariants({ intent, size: "compact" })}>{label}</DialogTrigger>
-      <DialogContent aria-label="Review and buy">
+      <DialogContent aria-label="Review and trade">
         <DialogDescription className="sr-only">
           What buying would do: the amounts, the fees and the checks, to read before you buy.
         </DialogDescription>

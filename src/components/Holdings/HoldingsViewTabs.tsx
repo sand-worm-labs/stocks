@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 export type HoldingsView = "models" | "stocks"
 
 const VIEWS: { id: HoldingsView; label: string }[] = [
-  { id: "models", label: "By model" },
+  { id: "models", label: "By strategy" },
   { id: "stocks", label: "All stocks" },
 ]
 

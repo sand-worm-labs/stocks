@@ -38,7 +38,7 @@ const live = <T,>(portfolio: Portfolio, figure: (portfolio: Portfolio) => T) =>
 
 const buildColumns = (mode: Session["network"]["mode"]) => [
   column.accessor("name", {
-    header: "Portfolio",
+    header: "Strategy",
     cell: ({ row: { original: portfolio } }) => {
       const { route } = PORTFOLIO_STATUS[portfolio.status]
 
@@ -151,7 +151,7 @@ export function PortfolioTable({ portfolios, mode, initialSorting }: PortfolioTa
       pageSize={PAGE_SIZE}
       pageSizes={PAGE_SIZES}
       getRowHref={({ id, status }) => routeHref(PORTFOLIO_STATUS[status].route, undefined, id)}
-      emptyMessage="No portfolios match."
+      emptyMessage="No strategies match."
     />
   )
 }

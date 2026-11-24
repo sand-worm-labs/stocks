@@ -15,10 +15,10 @@ export function DemoDataSection({ count }: { count: number }) {
   const [, startTransition] = useTransition()
 
   return (
-    <SettingsSection title="Demo portfolios" description="How many portfolios to try the app with, at any size.">
-      <SettingRow title="Portfolios" description="None shows the home of a new account">
+    <SettingsSection title="Demo strategies" description="How many strategies to try the app with, at any size.">
+      <SettingRow title="Strategies" description="None shows the home of a new account">
         <ChoiceChips
-          label="Number of portfolios"
+          label="Number of strategies"
           choices={DEMO_MODEL_CHOICES}
           value={value}
           onChange={(next) => {

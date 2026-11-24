@@ -3,6 +3,10 @@ import { z } from "zod"
 import { formatCompactUsd, formatPercent } from "@/lib/format"
 import type { Stock } from "@/lib/markets/types"
 import type { Portfolio } from "@/lib/portfolios/types"
+import { describeCondition } from "@/lib/strategy/describe"
+import { plainCondition } from "@/lib/strategy/explain"
+import { conditionSchema } from "@/lib/strategy/schema"
+import type { Condition } from "@/lib/strategy/types"
 
 import { readRules, type RuleReading } from "./readings"
 import type { Rule } from "./types"
@@ -18,12 +22,21 @@ export type RuleSpec =
   | { type: "min-liquidity"; amount: number }
   // Nothing is bought or sold without the owner's OK
   | { type: "approval" }
+  // Sell a stock that has fallen this far, as a fraction, below what was paid for it
+  | { type: "stop-loss"; limit: number }
+  // Sell a stock that has risen this far, as a fraction, above what was paid for it
+  | { type: "take-profit"; limit: number }
+  // A condition on the market, held to at the top level: never trade while it is true, or only trade while it is
+  | { type: "condition"; mode: "never" | "only"; condition: Condition }
 
 export const ruleSchema: z.ZodType<RuleSpec> = z.union([
   z.object({ type: z.literal("budget"), amount: z.number().positive() }).strict(),
   z.object({ type: z.literal("max-weight"), limit: z.number().gt(0).max(1) }).strict(),
   z.object({ type: z.literal("min-liquidity"), amount: z.number().positive() }).strict(),
   z.object({ type: z.literal("approval") }).strict(),
+  z.object({ type: z.literal("stop-loss"), limit: z.number().gt(0).max(1) }).strict(),
+  z.object({ type: z.literal("take-profit"), limit: z.number().gt(0).max(10) }).strict(),
+  z.object({ type: z.literal("condition"), mode: z.enum(["never", "only"]), condition: conditionSchema }).strict(),
 ])
 
 export const rulesSchema = z.array(ruleSchema).max(20)
@@ -39,20 +52,47 @@ export function describeRule(spec: RuleSpec) {
       return `Liquidity ≥ ${formatCompactUsd(spec.amount)} on Base`
     case "approval":
       return "Ask before buying"
+    case "stop-loss":
+      return `Stop-loss ${formatPercent(spec.limit)}`
+    case "take-profit":
+      return `Take profit ${formatPercent(spec.limit)}`
+    case "condition":
+      return `Trade while ${describeCondition(spec.condition)}`
   }
 }
 
-// A rule as a sentence to a person: what it stops, and why it is there
-export function explainRule(spec: RuleSpec) {
+// A rule as a line to a person, in the same words as the rest of the model's rules: a lead word and what follows it
+export function explainRule(spec: RuleSpec): { lead: "Never" | "Only" | "Always"; text: string } {
   switch (spec.type) {
     case "budget":
-      return `Never put more than ${spec.amount.toLocaleString("en-US", { maximumFractionDigits: 0 })} USDC into this model.`
+      return {
+        lead: "Never",
+        text: `put more than ${spec.amount.toLocaleString("en-US", { maximumFractionDigits: 0 })} USDC into this strategy.`,
+      }
     case "max-weight":
-      return `No single stock may be more than ${formatPercent(spec.limit)} of the model, so one bad pick can't sink it.`
+      return {
+        lead: "Never",
+        text: `let one stock be more than ${formatPercent(spec.limit)} of the strategy, so one bad pick can't sink it.`,
+      }
     case "min-liquidity":
-      return `Only trade stocks whose pool holds at least ${formatCompactUsd(spec.amount)}, so you can always get out.`
+      return {
+        lead: "Only",
+        text: `trade stocks whose pool holds at least ${formatCompactUsd(spec.amount)}, so you can always get out.`,
+      }
     case "approval":
-      return "Nothing is bought or sold until you say OK."
+      return { lead: "Always", text: "wait for your OK before buying or selling." }
+    case "stop-loss":
+      return {
+        lead: "Always",
+        text: `sell a stock that falls ${formatPercent(spec.limit)} below what you paid for it.`,
+      }
+    case "take-profit":
+      return {
+        lead: "Always",
+        text: `sell a stock once it is up ${formatPercent(spec.limit)} on what you paid for it.`,
+      }
+    case "condition":
+      return { lead: spec.mode === "never" ? "Never" : "Only", text: `trade while ${plainCondition(spec.condition)}.` }
   }
 }
 
@@ -68,15 +108,24 @@ export function ruleOf(spec: RuleSpec, id: number): Rule {
       return { id, label, kind: "liquidity", limit: spec.amount, state: "holds" }
     case "approval":
       return { id, label, kind: "approval", state: "holds" }
+    case "stop-loss":
+      return { id, label, kind: "stop-loss", limit: spec.limit, state: "holds" }
+    case "take-profit":
+      return { id, label, kind: "take-profit", limit: spec.limit, state: "holds" }
+    case "condition":
+      return { id, label, kind: "condition", mode: spec.mode, condition: spec.condition, state: "holds" }
   }
 }
 
 // The other way: a rule that was read off the portfolio, as data. A rule that can't be measured has none.
-export function specOf({ kind, limit }: Rule): RuleSpec | undefined {
+export function specOf({ kind, limit, mode, condition }: Rule): RuleSpec | undefined {
   if (kind === "budget" && limit) return { type: "budget", amount: limit }
   if (kind === "max-weight" && limit) return { type: "max-weight", limit }
   if (kind === "liquidity" && limit) return { type: "min-liquidity", amount: limit }
   if (kind === "approval") return { type: "approval" }
+  if (kind === "stop-loss" && limit) return { type: "stop-loss", limit }
+  if (kind === "take-profit" && limit) return { type: "take-profit", limit }
+  if (kind === "condition" && mode && condition) return { type: "condition", mode, condition }
   return undefined
 }
 
@@ -85,7 +134,7 @@ export function specOf({ kind, limit }: Rule): RuleSpec | undefined {
 export function checkRules(
   portfolio: Portfolio,
   specs: RuleSpec[],
-  stocks: Pick<Stock, "symbol" | "liquidity">[]
+  stocks: Pick<Stock, "symbol" | "liquidity" | "series">[]
 ): RuleReading[] {
   return readRules(
     portfolio,
@@ -93,6 +142,9 @@ export function checkRules(
     stocks
   ).map((reading) => ({
     ...reading,
-    rule: { ...reading.rule, state: reading.closeness !== undefined && reading.closeness > 1 ? "broken" : "holds" },
+    rule: {
+      ...reading.rule,
+      state: reading.broken || (reading.closeness !== undefined && reading.closeness > 1) ? "broken" : "holds",
+    },
   }))
 }

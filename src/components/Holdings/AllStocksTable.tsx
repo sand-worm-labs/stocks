@@ -43,7 +43,7 @@ export function AllStocksTable({ stocks }: { stocks: StockRow[] }) {
                   ))}
                 </span>
                 <span className="text-ink-400 text-sm">
-                  {models.length === 1 ? (models[0]?.name ?? "") : `${models.length} models`}
+                  {models.length === 1 ? (models[0]?.name ?? "") : `${models.length} strategies`}
                 </span>
               </span>
               <span className="text-ink-400 hidden w-14 text-right text-sm tabular-nums md:block">

@@ -30,3 +30,5 @@ test-results
 
 # reference screenshots that show personal details
 docs/reference/dashboard/private/
+.vercel
+.env*

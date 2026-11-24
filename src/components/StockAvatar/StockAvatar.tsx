@@ -1,13 +1,14 @@
 "use client"
 
 import Image from "next/image"
-import { useState } from "react"
+import { memo, useState } from "react"
 
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
 import { stockLogoUrl } from "@/lib/markets/stock"
 import { cn } from "@/lib/utils"
 
-export function StockAvatar({ symbol, className }: { symbol: string; className?: string }) {
+// Memoised: Next's image sets its own src again every time it is drawn, so a logo drawn again for nothing can blink
+export const StockAvatar = memo(function StockAvatar({ symbol, className }: { symbol: string; className?: string }) {
   const [hasLogo, setHasLogo] = useState(true)
   if (symbol === "$" || symbol === "USDC") return <UsdcMark className={cn("size-8", className)} />
 
@@ -34,4 +35,4 @@ export function StockAvatar({ symbol, className }: { symbol: string; className?:
       )}
     </span>
   )
-}
+})

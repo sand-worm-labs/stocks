@@ -14,7 +14,7 @@ import type { ModelDoc } from "@/lib/strategy/document"
 type LiveRulesProps = {
   portfolio: Portfolio
   // What the liquidity rule is measured against
-  stocks: Pick<Stock, "symbol" | "liquidity">[]
+  stocks: Pick<Stock, "symbol" | "liquidity" | "series">[]
   // The strategy and the rules, as data
   doc: ModelDoc
   strategy: StrategyRow[]
@@ -25,21 +25,15 @@ type LiveRulesProps = {
 // The rules a live portfolio is held to and the strategy it follows, drawn from one piece of JSON that can be edited, and the
 // recent checks
 export function LiveRules({ portfolio, stocks, doc, strategy, checks, now }: LiveRulesProps) {
-  const { rules, startedAt, id } = portfolio
+  const { id } = portfolio
 
   return (
     <div className="flex flex-col gap-4">
-      <StrategyWorkbench
-        portfolio={portfolio}
-        stocks={stocks}
-        initial={doc}
-        lockedAt={startedAt}
-        checkedAt={rules?.checkedAt}
-      />
+      <StrategyWorkbench portfolio={portfolio} stocks={stocks} initial={doc} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="flex flex-col gap-2 rounded-[14px] p-4 md:px-6 md:py-5">
-          <h3 className="text-[17px] font-medium">Your brief</h3>
+          <h3 className="text-[17px] font-medium">Your idea</h3>
           <dl>
             {strategy.map(({ label, value }) => (
               <div

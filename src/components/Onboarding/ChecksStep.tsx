@@ -22,7 +22,7 @@ export function ChecksStep({ region, chain, onContinue }: ChecksStepProps) {
         title={
           <span className="inline-flex items-center gap-3">
             Can you trade tokenized stocks?
-            <Tooltip title="Three quick checks, so you don't write a brief you can't act on." side="top" wide>
+            <Tooltip title="Three quick checks, so you don't test an idea you can't trade." side="top" wide>
               <button
                 type="button"
                 aria-label="Why these checks"

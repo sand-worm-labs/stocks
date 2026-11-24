@@ -13,7 +13,7 @@ const merge = (parts: Weights[]) => {
   return total
 }
 
-function holds(condition: Condition, history: History, at: number): boolean {
+export function holds(condition: Condition, history: History, at: number): boolean {
   if ("all" in condition) return condition.all.every((part) => holds(part, history, at))
   if ("any" in condition) return condition.any.some((part) => holds(part, history, at))
   const { left, op, right } = condition
@@ -55,7 +55,7 @@ function shares(node: Extract<Node, { type: "group" }>, history: History, at: nu
 export function evaluate(node: Node, history: History, at: number): Weights {
   switch (node.type) {
     case "asset":
-      return { [node.symbol]: 1 }
+      return { [node.symbol]: node.side === "short" ? -1 : 1 }
 
     case "cash":
       return {}

@@ -36,7 +36,7 @@ export const PORTFOLIO_PENDING_TEXT = {
 export const DRAFT_STAGE = {
   rules: { label: "Rules to confirm", detail: "Read the rules, then confirm them" },
   researching: { label: "Researching", detail: "The agent is working on it" },
-  ready: { label: "Almost ready", detail: "Research is done. Review it, then buy." },
+  ready: { label: "Results ready", detail: "Research is done. Review the results, then trade." },
 } as const
 
 export type DraftStage = keyof typeof DRAFT_STAGE

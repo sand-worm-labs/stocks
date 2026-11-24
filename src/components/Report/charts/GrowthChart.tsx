@@ -17,7 +17,7 @@ export function GrowthChart({ rows }: { rows: GrowthRow[] }) {
   const last = rows.at(-1)
 
   return (
-    <ChartFrame height={280} label="Value of 100 USDC in the portfolio against the S&P 500 over three years">
+    <ChartFrame height={280} label="Value of 100 USDC in the strategy against the S&P 500 over three years">
       {(animate) => (
         <ResponsiveChart>
           <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
@@ -64,7 +64,7 @@ export function GrowthChart({ rows }: { rows: GrowthRow[] }) {
                     title={row.held ? `${row.label} · out-of-sample` : row.label}
                     rows={[
                       {
-                        label: "This portfolio",
+                        label: "This strategy",
                         value: `${row.portfolio.toFixed(2)}× · ${formatAmount(row.portfolio * 100)} USDC`,
                         color: CHART_COLORS.primary,
                       },

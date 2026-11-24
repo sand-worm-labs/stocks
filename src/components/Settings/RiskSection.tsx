@@ -10,7 +10,7 @@ export function RiskSection({ risk }: { risk: Settings["risk"] }) {
   return (
     <SettingsSection
       title="Your risk profile"
-      description="The agent pre-fills new briefs with this. You can change it per portfolio."
+      description="The agent pre-fills new briefs with this. You can change it per strategy."
     >
       <SettingRow title="Goal" description="What you want most">
         <SettingSelect label="Goal" options={RISK_GOAL_OPTIONS} defaultValue={risk.goal} />

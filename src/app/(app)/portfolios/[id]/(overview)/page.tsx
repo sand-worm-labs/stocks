@@ -19,7 +19,7 @@ import { maxWeightOf } from "@/lib/rules/readings"
 import { getRules } from "@/lib/rules/source"
 import { getSession } from "@/lib/session/source"
 
-export const metadata: Metadata = { title: "Portfolio" }
+export const metadata: Metadata = { title: "Strategy" }
 
 // A portfolio opens on the page its status calls for: a draft is one page that builds itself, a brief that can't be
 // met is explained, and a live portfolio shows how it is doing.

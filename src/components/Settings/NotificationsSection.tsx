@@ -10,7 +10,7 @@ export function NotificationsSection({ notifications }: { notifications: Setting
       <SettingRow title="A rule would be broken" description="Always on">
         <Switch aria-label="A rule would be broken" checked disabled />
       </SettingRow>
-      <SettingRow title="Daily summary" description="Your portfolios at 09:00">
+      <SettingRow title="Daily summary" description="Your strategies at 09:00">
         <Switch aria-label="Daily summary" defaultChecked={notifications.dailySummary} />
       </SettingRow>
       <SettingRow title="Big price moves" description="Any holding moves more than 5% in a day">

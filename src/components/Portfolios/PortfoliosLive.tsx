@@ -96,7 +96,7 @@ export function PortfoliosLive({ portfolios, addresses, mode }: PortfoliosLivePr
         <div className="border-border-secondary dark:border-border-tertiary flex flex-wrap items-center gap-x-3 gap-y-2.5 border-t px-4 py-3 md:px-5">
           <SearchInput
             param="q"
-            label="Search portfolios"
+            label="Search strategies"
             placeholder="Search..."
             className="w-full flex-none sm:w-56 md:max-w-none"
           />

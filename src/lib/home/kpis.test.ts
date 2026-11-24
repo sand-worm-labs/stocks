@@ -34,7 +34,7 @@ describe("buildKpis", () => {
   it("summarises the live portfolios and ignores drafts", () => {
     const [value, deposited, profit, invested, cash] = buildKpis([live, draft])
 
-    expect(value).toMatchObject({ value: "504.21", caption: "USDC across 1 live portfolio" })
+    expect(value).toMatchObject({ value: "504.21", caption: "USDC across 1 live strategy" })
     expect(value?.amount).toBeCloseTo(504.21)
     expect(deposited).toMatchObject({ value: "500.00", amount: 500 })
     expect(profit).toMatchObject({ value: "+4.21", tone: "positive" })

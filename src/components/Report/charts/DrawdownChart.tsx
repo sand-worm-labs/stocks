@@ -18,7 +18,7 @@ export function DrawdownChart({ rows, panic }: DrawdownChartProps) {
   const floor = Math.floor(Math.min(panic, ...rows.map(({ portfolio }) => portfolio)) * 10) / 10
 
   return (
-    <ChartFrame height={240} label="How far below its peak the portfolio was, against the loss you said you'd panic at">
+    <ChartFrame height={240} label="How far below its peak the strategy was, against the loss you said you'd panic at">
       {(animate) => (
         <ResponsiveChart>
           <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
@@ -67,7 +67,7 @@ export function DrawdownChart({ rows, panic }: DrawdownChartProps) {
                   <ChartTooltip
                     title={row.label}
                     rows={[
-                      { label: "This portfolio", value: formatPercent(row.portfolio), color: CHART_COLORS.negative },
+                      { label: "This strategy", value: formatPercent(row.portfolio), color: CHART_COLORS.negative },
                       {
                         label: "S&P 500",
                         value: formatPercent(row.benchmark),

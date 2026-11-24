@@ -36,6 +36,8 @@ describe("format", () => {
   it("pluralizes by count", () => {
     expect(pluralize(1, "live portfolio")).toBe("1 live portfolio")
     expect(pluralize(2, "live portfolio")).toBe("2 live portfolios")
+    expect(pluralize(2, "strategy")).toBe("2 strategies")
+    expect(pluralize(1, "strategy")).toBe("1 strategy")
   })
 
   it("keeps the start and end of a wallet address", () => {

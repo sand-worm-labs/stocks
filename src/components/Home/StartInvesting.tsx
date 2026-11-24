@@ -14,7 +14,7 @@ export function StartInvesting() {
       <div className="flex max-w-md flex-col gap-2">
         <h2 className="text-[32px] leading-10 font-normal tracking-tight">Start investing with Sandworm</h2>
         <p className="text-ink-400 text-base">
-          Say what you want. The agent researches it and builds a portfolio you can check before you buy.
+          Say what you want. The agent researches it and builds a strategy you can check before you buy.
         </p>
       </div>
       <div className="flex flex-col items-center gap-3">
@@ -22,7 +22,7 @@ export function StartInvesting() {
           route="newPortfolio"
           className={cn(buttonVariants({ intent: "dark", size: "compact" }), "h-11 rounded-full px-6 text-base")}
         >
-          Create a portfolio
+          Create a strategy
         </AppLink>
         <AppLink route="markets" className="text-ink-400 hover:text-ink-100 text-sm font-medium transition-colors">
           or look around the markets first

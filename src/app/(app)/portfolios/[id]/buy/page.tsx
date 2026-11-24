@@ -16,7 +16,7 @@ import { getPortfolio } from "@/lib/portfolios/source"
 import { getOrders, getReport } from "@/lib/report/source"
 import { getSession } from "@/lib/session/source"
 
-export const metadata: Metadata = { title: "Buy" }
+export const metadata: Metadata = { title: "Trade" }
 
 // Buying is a review over the report of the version being bought, so this is that report with the review already open.
 // Closing it goes back to the version.
@@ -35,7 +35,7 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
       <FlowLayout steps={<StepProgress current="buy" portfolioId={portfolio.id} />}>
         <ReportActionBar plan={report.plan} verdict={report.verdict}>
           <AppLink route="adapt" slug={portfolio.id} className={buttonVariants({ intent: "outline", size: "compact" })}>
-            Adapt
+            Refine
           </AppLink>
           <ReviewAndBuy
             orders={orders}
@@ -45,7 +45,7 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
             startOpen={{ closeHref: routeHref("adapt", undefined, portfolio.id) ?? "/portfolios" }}
           />
         </ReportActionBar>
-        <ReportHeader report={report} eyebrow={`Strategy report · ${portfolio.name}`} />
+        <ReportHeader report={report} eyebrow={`Strategy results · ${portfolio.name}`} />
         <MetricTiles metrics={report.metrics} />
         <AdaptColumn report={report} portfolioId={portfolio.id} />
       </FlowLayout>

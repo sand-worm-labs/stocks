@@ -48,7 +48,7 @@ export default async function ResearchPage({ params }: { params: Promise<{ id: s
         </Card>
 
         <header className="flex flex-col gap-1">
-          <span className="text-ink-400 text-sm">Strategy report · {portfolio.name}</span>
+          <span className="text-ink-400 text-sm">Strategy results · {portfolio.name}</span>
           <h1 className="text-2xl font-medium md:text-[32px] md:leading-10">Writing the verdict…</h1>
           <p className="text-ink-400 text-sm">Writing… sections appear as each step finishes</p>
         </header>
@@ -60,7 +60,7 @@ export default async function ResearchPage({ params }: { params: Promise<{ id: s
           slug={portfolio.id}
           className={buttonVariants({ intent: "outline", size: "compact", className: "self-start" })}
         >
-          Skip to the report
+          Skip to the results
         </AppLink>
       </FlowLayout>
     </div>

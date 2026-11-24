@@ -1,6 +1,16 @@
 import type { IconType } from "react-icons"
-import { PiCoins, PiFunnel, PiGitFork, PiPlayFill, PiStackSimple, PiTrendUp } from "react-icons/pi"
+import {
+  PiCoins,
+  PiFunnel,
+  PiGitFork,
+  PiListChecks,
+  PiPlayFill,
+  PiScales,
+  PiStackSimple,
+  PiTrendUp,
+} from "react-icons/pi"
 
+import type { BlockInfo } from "@/lib/strategy/catalog"
 import type { BlockKind } from "@/lib/strategy/flow/graph"
 
 // How each kind of block looks, on the canvas and in the palette: its tile, its colour and the word on it
@@ -50,4 +60,17 @@ export const BLOCK_STYLE: Record<
     accent: "bg-blue-500",
     map: "#3b82f6",
   },
+}
+
+const PLAIN = "border-border-secondary bg-white text-ink-100 dark:border-border-tertiary dark:bg-white/5"
+
+// The tile each thing in the add menu wears, after Composer's: plain for what holds, a colour for what decides or divides
+export const MENU_STYLE: Record<BlockInfo["id"], { icon: IconType; tile: string }> = {
+  asset: { icon: BLOCK_STYLE.asset.icon, tile: PLAIN },
+  group: { icon: BLOCK_STYLE.group.icon, tile: PLAIN },
+  weight: { icon: PiScales, tile: "border-transparent bg-green-700 text-white" },
+  if: { icon: BLOCK_STYLE.if.icon, tile: "border-transparent bg-blue-600 text-white" },
+  "any-all": { icon: PiListChecks, tile: "border-transparent bg-blue-600 text-white" },
+  filter: { icon: BLOCK_STYLE.filter.icon, tile: "border-transparent bg-pink-400 text-white" },
+  cash: { icon: BLOCK_STYLE.cash.icon, tile: PLAIN },
 }

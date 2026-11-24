@@ -175,7 +175,7 @@ export function TokenTable({ tokens }: TokenTableProps) {
             className={buttonVariants({ intent: "outline", size: "sm", className: "min-h-9 min-w-0 px-2.5" })}
           >
             <PiPlus size={14} aria-hidden="true" />
-            <span className="sr-only">Add to brief</span>
+            <span className="sr-only">Add to a new strategy</span>
           </AppLink>
         ),
       }),

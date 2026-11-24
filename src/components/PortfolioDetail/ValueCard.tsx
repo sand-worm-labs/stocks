@@ -21,7 +21,7 @@ export function ValueCard({ portfolio, benchmarks, now }: ValueCardProps) {
       <TradingChart
         points={points}
         lines={benchmarkLines(benchmarks, points)}
-        label="The value of the portfolio over the last week, against index funds and ETFs"
+        label="The value of the strategy over the last week, against index funds and ETFs"
       />
     </Card>
   )

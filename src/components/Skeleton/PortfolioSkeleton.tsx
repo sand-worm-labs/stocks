@@ -34,7 +34,7 @@ export function PortfolioSkeleton() {
     <div className="flex flex-col gap-4">
       <p className="text-ink-400 flex items-center gap-2 text-sm">
         <AppLink route="portfolios" className="hover:text-ink-100 transition-colors">
-          Portfolios
+          Strategies
         </AppLink>
         /
         <SkeletonText lineHeight={20} className="w-40" />

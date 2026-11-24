@@ -53,7 +53,7 @@ type TradingChartProps = { points: ValuePoint[]; lines: BenchmarkLine[]; label: 
 
 // The portfolio's value against any of the index funds and ETFs, drawn with TradingView's chart library. The funds are
 // picked from the chips above it, each held to the same start so the lines say who did better.
-export function TradingChart({ points, lines, label, name = "Portfolio" }: TradingChartProps) {
+export function TradingChart({ points, lines, label, name = "Strategy" }: TradingChartProps) {
   const { resolvedTheme } = useTheme()
   const reduced = usePrefersReducedMotion()
   const [frame, inView] = useInView<HTMLDivElement>()
@@ -290,7 +290,7 @@ export function TradingChart({ points, lines, label, name = "Portfolio" }: Tradi
 
   return (
     <div className="flex flex-col gap-3">
-      <div role="group" aria-label="Compare the portfolio with" className="flex flex-wrap items-center gap-2">
+      <div role="group" aria-label="Compare the strategy with" className="flex flex-wrap items-center gap-2">
         <Pill dot="var(--color-primary)" detail={formatPercent(own, { signed: true })}>
           {name}
         </Pill>

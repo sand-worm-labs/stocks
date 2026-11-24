@@ -20,7 +20,7 @@ const indicator: z.ZodType<Indicator> = z.union([
 
 const reading = z.object({ symbol, indicator }).strict()
 
-const condition: z.ZodType<Condition> = z.lazy(() =>
+export const conditionSchema: z.ZodType<Condition> = z.lazy(() =>
   z.union([
     z
       .object({
@@ -29,14 +29,25 @@ const condition: z.ZodType<Condition> = z.lazy(() =>
         right: z.union([reading, z.object({ value: z.number() }).strict()]),
       })
       .strict(),
-    z.object({ all: z.array(condition).min(1) }).strict(),
-    z.object({ any: z.array(condition).min(1) }).strict(),
+    z.object({ all: z.array(conditionSchema).min(1) }).strict(),
+    z.object({ any: z.array(conditionSchema).min(1) }).strict(),
   ])
 )
 
 const node: z.ZodType<Node> = z.lazy(() =>
   z.union([
-    z.object({ type: z.literal("asset"), symbol }).strict(),
+    z
+      .object({
+        type: z.literal("asset"),
+        symbol,
+        side: z.enum(["long", "short"]).optional(),
+        via: z.enum(["spot", "perp"]).optional(),
+      })
+      .strict()
+      .refine(({ side, via }) => side !== "short" || via === "perp", {
+        message: "A short has to be held through a perp",
+        path: ["via"],
+      }),
     z.object({ type: z.literal("cash") }).strict(),
     z
       .object({
@@ -47,7 +58,7 @@ const node: z.ZodType<Node> = z.lazy(() =>
         children: z.array(z.object({ node, weight: z.number().min(0).optional() }).strict()).min(1),
       })
       .strict(),
-    z.object({ type: z.literal("if"), condition, then: node, else: node }).strict(),
+    z.object({ type: z.literal("if"), condition: conditionSchema, then: node, else: node }).strict(),
     z
       .object({
         type: z.literal("filter"),

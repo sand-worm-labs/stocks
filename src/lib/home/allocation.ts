@@ -29,7 +29,7 @@ export function buildAllocation(portfolios: Portfolio[]): AllocationSlice[] {
     ? [
         {
           id: OTHER_MODELS_ID,
-          label: `${rest.length} other ${rest.length === 1 ? "model" : "models"}`,
+          label: `${rest.length} other ${rest.length === 1 ? "strategy" : "strategies"}`,
           value: rest.reduce((sum, portfolio) => sum + stocksIn(portfolio), 0),
           // Together, as one: all they have gained over all that was put into them
           change: restPut ? rest.reduce((sum, portfolio) => sum + profit(portfolio), 0) / restPut : 0,

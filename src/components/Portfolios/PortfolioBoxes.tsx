@@ -12,7 +12,7 @@ const PAGE = 12
 // The portfolios as boxes, the way the home shows them: each its own colour, line and icon
 export function PortfolioBoxes({ portfolios, mode }: { portfolios: Portfolio[]; mode: Session["network"]["mode"] }) {
   const [shown, setShown] = useState(PAGE)
-  if (!portfolios.length) return <p className="text-ink-400 py-20 text-center text-sm">No portfolios match.</p>
+  if (!portfolios.length) return <p className="text-ink-400 py-20 text-center text-sm">No strategies match.</p>
 
   return (
     <div className="flex flex-col items-center gap-5">

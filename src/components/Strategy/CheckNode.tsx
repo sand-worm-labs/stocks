@@ -1,8 +1,12 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
-import { PiHandPalm, PiLightning, PiPaperPlaneTilt, PiShieldCheck, PiShieldWarning } from "react-icons/pi"
+import { use } from "react"
+import { PiPaperPlaneTilt, PiShieldCheck, PiShieldWarning } from "react-icons/pi"
 
 import { CHECK_WIDTH, type CheckData, type CheckState } from "@/lib/rules/flow"
 import { cn } from "@/lib/utils"
+
+import { HoverContext, isLit } from "./BlockNode"
+import { LEADS } from "./leads"
 
 const TONE: Record<CheckState, { tint: string; bar: string; word: string }> = {
   holds: {
@@ -22,45 +26,46 @@ const TONE: Record<CheckState, { tint: string; bar: string; word: string }> = {
   },
 }
 
-const NEUTRAL = "border-border-secondary bg-hover-bg text-ink-100 dark:border-border-tertiary"
 const HANDLE = "!size-2.5 !border-2 !border-block-surface !bg-ink-400"
 
-// One step a trade goes through, a bar like a strategy's: what it is, what it says now, and for a rule how close the portfolio
-// is to its line, drawn along the bottom
-export function CheckNode({ data }: NodeProps<Node<CheckData, "check">>) {
-  const { kind, title, detail, state, closeness } = data
+// One block of the rules, a bar like a strategy's, on the same board: a rule with how close the portfolio is to its line along
+// the bottom, and the order that goes out last. The block they hang from is `ChecksNode`.
+export function CheckNode({ id, data }: NodeProps<Node<CheckData, "check">>) {
+  const hovered = use(HoverContext)
+  const { kind, title, detail, lead, state, closeness } = data
   const tone = TONE[state]
-  const Icon =
-    kind === "decide"
-      ? PiLightning
-      : kind === "approval"
-        ? PiHandPalm
-        : kind === "orders"
-          ? PiPaperPlaneTilt
-          : state === "broken"
-            ? PiShieldWarning
-            : PiShieldCheck
-  const coloured = kind === "rule" || kind === "orders"
+  const Icon = kind === "orders" ? PiPaperPlaneTilt : state === "broken" ? PiShieldWarning : PiShieldCheck
   const word = kind === "rule" ? tone.word : kind === "orders" ? (state === "broken" ? "Blocked" : "Ready") : undefined
 
   return (
     <div
-      style={{ width: CHECK_WIDTH }}
-      className="animate-fade-up bg-block-surface border-border-secondary dark:border-border-tertiary relative overflow-hidden rounded-xl border shadow-sm"
+      style={{
+        width: CHECK_WIDTH,
+        filter: `opacity(${isLit(id, hovered) ? 1 : 0.28})`,
+        transition: "filter 200ms, box-shadow 150ms",
+      }}
+      className="animate-fade-up bg-block-surface border-border-secondary dark:border-border-tertiary relative overflow-hidden rounded-xl border shadow-sm hover:shadow-lg"
     >
-      {kind !== "decide" && <Handle type="target" position={Position.Top} className={HANDLE} />}
-      {kind !== "orders" && <Handle type="source" position={Position.Bottom} className={HANDLE} />}
-      <div className="flex items-center gap-3 py-2 pr-4 pl-4">
+      <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-1 rounded-l-xl", tone.bar)} />
+      <Handle type="target" position={Position.Left} className={HANDLE} />
+      <div className="flex items-center gap-3 py-2 pr-4 pl-5">
         <span
           aria-hidden="true"
-          className={cn(
-            "flex size-8 flex-none items-center justify-center rounded-lg border",
-            coloured ? tone.tint : NEUTRAL
-          )}
+          className={cn("flex size-8 flex-none items-center justify-center rounded-lg border", tone.tint)}
         >
           <Icon size={18} />
         </span>
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+          {lead && (
+            <span
+              className={cn(
+                "flex-none rounded-md px-1.5 py-0.5 text-[11px] font-medium tracking-wide uppercase",
+                LEADS[lead].className
+              )}
+            >
+              {lead}
+            </span>
+          )}
           <span className="text-sm font-medium">{title}</span>
           {detail && <span className="text-ink-400 text-[13px]">{detail}</span>}
         </div>

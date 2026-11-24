@@ -43,6 +43,9 @@ export type DraftStage = keyof typeof DRAFT_STAGE
 
 export const TRADING_MODE_LABEL = { paper: "Paper", live: "Live" } as const
 
+// Where the person's choice between paper trading and their wallet is kept
+export const TRADING_MODE_COOKIE = "sw_trading_mode"
+
 export const TRADING_MODE_OPTIONS = [
   { value: "paper", title: "Paper trading", detail: "live prices" },
   { value: "live", title: "My wallet", detail: "real USDC" },

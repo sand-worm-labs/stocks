@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
 import { AgentWorkspace } from "@/components/Agent/AgentWorkspace"
 import { AppLink } from "@/components/AppLink/AppLink"
@@ -16,17 +16,22 @@ import { getReportScript } from "@/lib/agent/source"
 import { getPortfolio } from "@/lib/portfolios/source"
 import { getOrders, getReport } from "@/lib/report/source"
 import { getSession } from "@/lib/session/source"
+import { getOwnStrategy } from "@/lib/strategies/source"
 
 export const metadata: Metadata = { title: "Results" }
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
-  const [portfolio, report, orders, session] = await Promise.all([
-    getPortfolio((await params).id),
-    getReport(1),
-    getOrders(1),
+  const { id } = await params
+  const [portfolio, report, orders, session, own] = await Promise.all([
+    getPortfolio(id),
+    getReport(1, id),
+    getOrders(1, id),
     getSession(),
+    getOwnStrategy(id),
   ])
   if (!portfolio) notFound()
+  // A strategy made here has results once its research has finished; until then its own page shows where it is up to
+  if (own && own.status === "draft" && own.stage !== "ready") redirect(`/strategies/${id}`)
 
   const script = await getReportScript(portfolio)
 
@@ -42,7 +47,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <AppLink route="adapt" slug={portfolio.id} className={buttonVariants({ intent: "outline", size: "compact" })}>
             Refine
           </AppLink>
-          <ReviewAndBuy orders={orders} report={report} portfolioId={portfolio.id} network={session.network} />
+          {portfolio.status !== "live" && (
+            <ReviewAndBuy orders={orders} report={report} portfolioId={portfolio.id} network={session.network} demo={!own} />
+          )}
         </ReportActionBar>
         <ReportHeader report={report} eyebrow={`Strategy results · ${portfolio.name}`} />
         <MetricTiles metrics={report.metrics} />

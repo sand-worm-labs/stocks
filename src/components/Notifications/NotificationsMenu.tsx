@@ -62,7 +62,7 @@ export function NotificationsMenu() {
             <ul className="flex flex-col gap-0.5">
               {list.slice(0, NOTIFICATIONS_SHOWN).map(({ id, kind, title, detail, at, action }) => {
                 const isNew = tab === "inbox" && isUnread(id)
-                const { icon, tone } = ACTIVITY_KIND[kind]
+                const { icon } = ACTIVITY_KIND[kind]
 
                 return (
                   <li key={id}>
@@ -74,7 +74,7 @@ export function NotificationsMenu() {
                       }}
                       className={cn("flex items-start gap-3 px-2.5 py-2.5", listItemHoverClassName)}
                     >
-                      <IconTile icon={icon} tone={tone} className="size-9 rounded-xl" />
+                      <IconTile icon={icon} className="size-9 rounded-xl" />
                       <span className="flex min-w-0 flex-1 flex-col">
                         <span className="text-sm font-medium">{title}</span>
                         <span className="text-ink-400 line-clamp-2 text-[13px] leading-5">{detail}</span>

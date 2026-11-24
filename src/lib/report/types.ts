@@ -29,6 +29,8 @@ export type FanPoint = { month: number; low: number; median: number; high: numbe
 
 export type Report = {
   version: 1 | 2
+  // Made by the stand-in for the research agent, which runs no test: the numbers are an example and the report says so
+  preview?: boolean
   verdict: { label: string; tone: Tone }
   headline: string
   plan: string

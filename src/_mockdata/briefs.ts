@@ -1,6 +1,5 @@
 // The brief a new portfolio starts from, and briefs to try. Real ones are written by the person.
 export const briefDraftMockData = {
-  portfolioId: "ai-chips-25",
   text: "Grow 500 USDC with robotics over 3+ years. Max 20% in any one stock, only stocks with $100K+ liquidity on Base. I'd panic at −20%. Ask before buying.",
   examples: [
     "Grow 500 USDC with robotics over 3+ years. Max 20% in any one stock. I'd panic at −20%. Ask before buying.",

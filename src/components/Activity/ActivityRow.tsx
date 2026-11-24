@@ -1,17 +1,18 @@
 import { PiArrowRight } from "react-icons/pi"
 
+import { Address } from "@/components/Address/Address"
 import { AppLink } from "@/components/AppLink/AppLink"
 import { BaseMark } from "@/components/BaseMark/BaseMark"
 import { buttonVariants } from "@/components/Button/Button"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
-import { Badge } from "@/components/ui/badge"
 import { CardRow } from "@/components/ui/card"
 import { IconTile } from "@/components/ui/icon-tile"
+import { Tag } from "@/components/ui/tag"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
 import { ACTIVITY_KIND, explorerTxUrl } from "@/constants/activity"
 import type { Activity, TradeReceipt } from "@/lib/activity/types"
 import { formatTime } from "@/lib/dates"
-import { formatAmount, shortenAddress } from "@/lib/format"
+import { formatAmount } from "@/lib/format"
 
 import { NotificationActions, NotificationDot } from "./NotificationMark"
 
@@ -57,16 +58,7 @@ function Receipt({ trade }: { trade: TradeReceipt }) {
         <div className="flex gap-1.5">
           <dt>Receipt</dt>
           <dd>
-            <a
-              href={explorerTxUrl(tx)}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Open on the Base Sepolia explorer"
-              className="text-ink-100 hover:text-accent inline-flex items-center gap-1 font-mono tabular-nums transition-colors"
-            >
-              <BaseMark size={12} />
-              {shortenAddress(tx)}
-            </a>
+            <Address value={tx} kind="tx" href={explorerTxUrl(tx)} icon={<BaseMark size={12} />} />
           </dd>
         </div>
       </dl>
@@ -76,25 +68,25 @@ function Receipt({ trade }: { trade: TradeReceipt }) {
 
 export function ActivityRow({ activity, portfolioName }: ActivityRowProps) {
   const { kind, title, detail, at, action, rule, request, trade, checks } = activity
-  const { icon, tone, category } = ACTIVITY_KIND[kind]
+  const { icon, category } = ACTIVITY_KIND[kind]
   // An alert is a notification: it can be read, put away and brought back
   const isNotification = category === "alerts"
 
   return (
     <CardRow className="flex gap-3 p-4">
-      {trade ? <StockAvatar symbol={trade.symbol} className="size-10" /> : <IconTile icon={icon} tone={tone} />}
+      {trade ? <StockAvatar symbol={trade.symbol} className="size-10" /> : <IconTile icon={icon} />}
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col">
             <span className="flex flex-wrap items-center gap-2 font-medium">
               {title}
               {isNotification && <NotificationDot id={activity.id} />}
-              {portfolioName && <Badge>{portfolioName}</Badge>}
-              {rule && <Badge tone="negative">§ {rule}</Badge>}
+              {portfolioName && <Tag>{portfolioName}</Tag>}
+              {rule && <Tag dot="negative">§ {rule}</Tag>}
               {checks && (
-                <Badge tone={checks.passing === checks.total ? "positive" : "negative"}>
+                <Tag dot={checks.passing === checks.total ? "positive" : "negative"}>
                   {checks.passing}/{checks.total} hold
-                </Badge>
+                </Tag>
               )}
             </span>
             <span className="text-ink-400 text-sm">{detail}</span>

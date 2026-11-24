@@ -298,6 +298,26 @@
   }
 }
 
+/* A row that opens from nothing: it grows to its height while it fades in, so what is under it moves down smoothly. */
+@keyframes row-in {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+@utility animate-row-in {
+  animation: row-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 @utility animate-fade-up {
   animation: fade-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--index, 0) * 35ms);

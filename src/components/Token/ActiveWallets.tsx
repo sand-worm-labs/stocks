@@ -2,9 +2,10 @@
 
 import { createColumnHelper } from "@tanstack/react-table"
 
+import { Address } from "@/components/Address/Address"
+import { Card } from "@/components/ui/card"
 import { DataTable } from "@/components/ui/data-table"
 import { TOKEN_TABLE_PAGE_SIZE } from "@/constants/token"
-import { shortenAddress } from "@/lib/format"
 import type { activeWallets } from "@/lib/markets/transfers"
 
 type Wallet = ReturnType<typeof activeWallets>[number]
@@ -18,16 +19,7 @@ export function ActiveWallets({ wallets, symbol }: { wallets: Wallet[]; symbol: 
     column.accessor("address", {
       header: "Wallet",
       enableSorting: false,
-      cell: ({ getValue }) => (
-        <a
-          href={`https://basescan.org/address/${getValue()}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-accent dark:text-primary font-body-mono hover:underline"
-        >
-          {shortenAddress(getValue())}
-        </a>
-      ),
+      cell: ({ getValue }) => <Address value={getValue()} />,
     }),
     column.accessor("transfers", {
       header: "Transfers",
@@ -55,13 +47,15 @@ export function ActiveWallets({ wallets, symbol }: { wallets: Wallet[]; symbol: 
   ]
 
   return (
-    <DataTable
-      data={wallets}
-      columns={columns}
-      getRowId={({ address }) => address}
-      initialSorting={[{ id: "received", desc: true }]}
-      pageSize={TOKEN_TABLE_PAGE_SIZE}
-      emptyMessage="No wallets moved this token in the last hour."
-    />
+    <Card className="overflow-hidden [&_[data-slot=table-container]]:rounded-none [&_[data-slot=table-container]]:border-0">
+      <DataTable
+        data={wallets}
+        columns={columns}
+        getRowId={({ address }) => address}
+        initialSorting={[{ id: "received", desc: true }]}
+        pageSize={TOKEN_TABLE_PAGE_SIZE}
+        emptyMessage="No wallets moved this token in the last hour."
+      />
+    </Card>
   )
 }

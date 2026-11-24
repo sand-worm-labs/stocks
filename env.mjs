@@ -7,6 +7,9 @@ export const env = createEnv({
     AUTH_SECRET: z.string().min(32).optional(),
     // A CoinGecko "Demo" API key (free). Without one the feed is shared and rate-limited, and can refuse a deployed app.
     COINGECKO_API_KEY: z.string().optional(),
+    // Where strategies are kept: any Postgres (Neon, or the main app's). Without it they are kept in a file, which is for trying the app,
+    // not for real use.
+    DATABASE_URL: z.string().url().optional(),
     ANALYZE: z
       .enum(["true", "false"])
       .optional()
@@ -24,6 +27,7 @@ export const env = createEnv({
   runtimeEnv: {
     ANALYZE: process.env.ANALYZE,
     COINGECKO_API_KEY: process.env.COINGECKO_API_KEY,
+    DATABASE_URL: process.env.DATABASE_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
     NEXT_PUBLIC_WEB_APP_URL: process.env.NEXT_PUBLIC_WEB_APP_URL,
     NEXT_PUBLIC_LANDING_URL: process.env.NEXT_PUBLIC_LANDING_URL,

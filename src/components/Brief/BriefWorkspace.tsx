@@ -11,11 +11,11 @@ import { BriefControls } from "./BriefControls"
 import { BriefFeedback } from "./BriefFeedback"
 import { BriefInput } from "./BriefInput"
 
-type BriefWorkspaceProps = { initialText: string; portfolioId: string; examples: string[] }
+type BriefWorkspaceProps = { initialText: string; examples: string[] }
 
 // The brief, and what the agent makes of it. The words are the one source of truth: everything else is read from them,
 // and a change to a control is written back into them, so what you typed and what the controls say can't disagree.
-export function BriefWorkspace({ initialText, portfolioId, examples }: BriefWorkspaceProps) {
+export function BriefWorkspace({ initialText, examples }: BriefWorkspaceProps) {
   const [text, setText] = useState(initialText)
   const analysis = useMemo(() => analyzeBrief(text), [text])
 
@@ -34,7 +34,6 @@ export function BriefWorkspace({ initialText, portfolioId, examples }: BriefWork
         value={text}
         onChange={setText}
         canContinue={canContinue}
-        portfolioId={portfolioId}
         actionLabel={status === "needs-answers" ? "Research with these answers" : "Continue"}
       />
       <section className="flex flex-col gap-4">

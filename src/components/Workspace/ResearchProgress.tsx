@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 // How long each of the agent's steps takes, while the research is made up
 const STEP_MS = 850
 
-type ResearchProgressProps = { running: boolean; onDone: () => void }
+type ResearchProgressProps = { running: boolean; onDone: () => void | Promise<void> }
 
 // What the agent does, step by step: a tick for each done, a spinner on the one it is on. When all are done it says so
 // and folds down to one line.
@@ -19,7 +19,10 @@ export function ResearchProgress({ running, onDone }: ResearchProgressProps) {
 
   useEffect(() => {
     if (!running) return setDone(RESEARCH_STEPS.length)
-    if (done >= RESEARCH_STEPS.length) return onDone()
+    if (done >= RESEARCH_STEPS.length) {
+      onDone()
+      return
+    }
 
     const timer = setTimeout(() => setDone((count) => count + 1), STEP_MS)
     return () => clearTimeout(timer)

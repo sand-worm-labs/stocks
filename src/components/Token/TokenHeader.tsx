@@ -6,9 +6,9 @@ import type { BaseToken } from "@/lib/markets/tokens"
 import { LiveChanges } from "./LiveChanges"
 import { LivePrice } from "./LivePrice"
 
-type TokenHeaderProps = { token: BaseToken; researchId: string }
+type TokenHeaderProps = { token: BaseToken }
 
-export function TokenHeader({ token, researchId }: TokenHeaderProps) {
+export function TokenHeader({ token }: TokenHeaderProps) {
   const { image, symbol, company, issuer, price, address } = token
 
   return (
@@ -27,7 +27,7 @@ export function TokenHeader({ token, researchId }: TokenHeaderProps) {
           </div>
         </div>
       </div>
-      <StartResearchButton portfolioId={researchId} />
+      <StartResearchButton symbol={symbol} />
     </div>
   )
 }

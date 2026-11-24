@@ -1,18 +1,35 @@
-import { PiArrowRight } from "react-icons/pi"
+"use client"
 
-import { AppLink } from "@/components/AppLink/AppLink"
+import { PiArrowRight, PiCircleNotch } from "react-icons/pi"
+
+import { useStartStrategy } from "@/components/Brief/useStartStrategy"
 import { buttonVariants } from "@/components/Button/Button"
+import { briefFromPicks } from "@/lib/brief/fromPicks"
+import { underlyingTicker } from "@/lib/markets/stock"
 import { cn } from "@/lib/utils"
 
-export function StartResearchButton({ portfolioId, className }: { portfolioId: string; className?: string }) {
+// Starts a strategy built around one stock, from its page
+export function StartResearchButton({ symbol, className }: { symbol: string; className?: string }) {
+  const { start, busy } = useStartStrategy()
+
   return (
-    <AppLink
-      route="research"
-      slug={portfolioId}
-      className={cn(buttonVariants({ intent: "dark", size: "compact" }), "rounded-xl", className)}
+    <button
+      type="button"
+      disabled={busy}
+      aria-busy={busy}
+      onClick={() => start(briefFromPicks([underlyingTicker(symbol)]))}
+      className={cn(
+        buttonVariants({ intent: "dark", size: "compact" }),
+        "rounded-xl disabled:cursor-wait disabled:opacity-70",
+        className
+      )}
     >
       Start research
-      <PiArrowRight size={16} aria-hidden="true" />
-    </AppLink>
+      {busy ? (
+        <PiCircleNotch size={16} aria-hidden="true" className="animate-spin" />
+      ) : (
+        <PiArrowRight size={16} aria-hidden="true" />
+      )}
+    </button>
   )
 }

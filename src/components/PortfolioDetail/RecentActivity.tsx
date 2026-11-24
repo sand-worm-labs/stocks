@@ -39,7 +39,7 @@ export function RecentActivity({ portfolioId, activity, now }: RecentActivityPro
       )}
       <ul className="-mx-2 flex flex-col">
         {activity.slice(0, SHOWN).map(({ id, kind, title, detail, at, trade }) => {
-          const { icon, tone } = ACTIVITY_KIND[kind]
+          const { icon } = ACTIVITY_KIND[kind]
           return (
             <li key={id}>
               <AppLink
@@ -50,7 +50,7 @@ export function RecentActivity({ portfolioId, activity, now }: RecentActivityPro
                 {trade ? (
                   <StockAvatar symbol={trade.symbol} className="size-8" />
                 ) : (
-                  <IconTile icon={icon} tone={tone} className="size-8" />
+                  <IconTile icon={icon} className="size-8" />
                 )}
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-[13px] font-medium">{title}</span>

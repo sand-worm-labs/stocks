@@ -20,7 +20,8 @@ export const metadata: Metadata = { title: "Research" }
 const DONE_STEPS = 2
 
 export default async function ResearchPage({ params }: { params: Promise<{ id: string }> }) {
-  const [portfolio, report] = await Promise.all([getPortfolio((await params).id), getReport(1)])
+  const { id } = await params
+  const [portfolio, report] = await Promise.all([getPortfolio(id), getReport(1, id)])
   if (!portfolio) notFound()
 
   const script = await getResearchScript(portfolio, DONE_STEPS)

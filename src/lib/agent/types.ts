@@ -8,6 +8,8 @@ export type AgentAction = {
   slug?: string
   intent: "dark" | "outline" | "link"
   icon?: "edit"
+  // Beside a draft, the step this button takes on the draft's own page; anywhere else it is a link to `route`
+  flow?: "confirm" | "skip"
 }
 
 export type AgentStep = { label: string; state: "done" | "running" | "waiting"; note?: string }

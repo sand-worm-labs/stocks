@@ -2,31 +2,21 @@
 
 import { createColumnHelper } from "@tanstack/react-table"
 
+import { Address } from "@/components/Address/Address"
+import { Card } from "@/components/ui/card"
 import { DataTable } from "@/components/ui/data-table"
 import { TOKEN_TABLE_PAGE_SIZE } from "@/constants/token"
 import { formatDay, formatTime } from "@/lib/dates"
-import { shortenAddress } from "@/lib/format"
 import type { Transfer } from "@/lib/markets/transfers"
 
 const column = createColumnHelper<Transfer>()
-
-const explorer = (path: string) => `https://basescan.org/${path}`
-const link = "text-accent dark:text-primary font-body-mono hover:underline"
-
-function Explorer({ path, children }: { path: string; children: string }) {
-  return (
-    <a href={explorer(path)} target="_blank" rel="noopener noreferrer" className={link}>
-      {children}
-    </a>
-  )
-}
 
 export function TransfersTable({ transfers, symbol }: { transfers: Transfer[]; symbol: string }) {
   const columns = [
     column.accessor("hash", {
       header: "Transaction",
       enableSorting: false,
-      cell: ({ getValue }) => <Explorer path={`tx/${getValue()}`}>{shortenAddress(getValue())}</Explorer>,
+      cell: ({ getValue }) => <Address value={getValue()} kind="tx" />,
     }),
     column.accessor("at", {
       header: "When",
@@ -43,12 +33,12 @@ export function TransfersTable({ transfers, symbol }: { transfers: Transfer[]; s
     column.accessor("from", {
       header: "From",
       enableSorting: false,
-      cell: ({ getValue }) => <Explorer path={`address/${getValue()}`}>{shortenAddress(getValue())}</Explorer>,
+      cell: ({ getValue }) => <Address value={getValue()} />,
     }),
     column.accessor("to", {
       header: "To",
       enableSorting: false,
-      cell: ({ getValue }) => <Explorer path={`address/${getValue()}`}>{shortenAddress(getValue())}</Explorer>,
+      cell: ({ getValue }) => <Address value={getValue()} />,
     }),
     column.accessor("amount", {
       header: "Amount",
@@ -63,13 +53,15 @@ export function TransfersTable({ transfers, symbol }: { transfers: Transfer[]; s
   ]
 
   return (
-    <DataTable
-      data={transfers}
-      columns={columns}
-      getRowId={({ hash, from, to, amount }, i) => `${hash}-${from}-${to}-${amount}-${i}`}
-      initialSorting={[{ id: "at", desc: true }]}
-      pageSize={TOKEN_TABLE_PAGE_SIZE}
-      emptyMessage="No transfers in the last hour."
-    />
+    <Card className="overflow-hidden [&_[data-slot=table-container]]:rounded-none [&_[data-slot=table-container]]:border-0">
+      <DataTable
+        data={transfers}
+        columns={columns}
+        getRowId={({ hash, from, to, amount }, i) => `${hash}-${from}-${to}-${amount}-${i}`}
+        initialSorting={[{ id: "at", desc: true }]}
+        pageSize={TOKEN_TABLE_PAGE_SIZE}
+        emptyMessage="No transfers in the last hour."
+      />
+    </Card>
   )
 }

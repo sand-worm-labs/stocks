@@ -1,42 +1,60 @@
+import { SandwormLogo } from "@/components/SandwormLogo/SandwormLogo"
 import { env } from "env.mjs"
 
+import { AuraPanel } from "./AuraPanel"
 import { SandwormOption } from "./SandwormOption"
 import { WalletOptions } from "./WalletOptions"
 
+const LINKS = [
+  { name: "Home", href: env.NEXT_PUBLIC_LANDING_URL },
+  { name: "Documentation", href: env.NEXT_PUBLIC_DOCS_URL },
+]
+
+// The sign-in page, laid out as the main Sandworm app's is: the way in on one side, an aurora on the other. Home and Documentation
+// sit in the corner, where someone who isn't ready to sign in can still get out.
 export function SignIn() {
   return (
-    <main className="font-body flex flex-1 flex-col items-center justify-center px-4 py-12">
-      <div className="flex w-full max-w-sm flex-col items-center text-center">
-        <span className="font-body-mono bg-primary-tint-75 text-primary dark:bg-primary/20 mb-3 rounded-full px-3 py-0.5 text-sm">
-          Sandworm.Stocks
-        </span>
+    <div className="relative h-dvh overflow-hidden bg-white dark:bg-[#141412]">
+      <div className="grid h-full md:grid-cols-2">
+        <main className="font-body relative mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center p-6">
+          <nav aria-label="Site" className="text-ink-400 absolute top-6 right-6 flex gap-5 text-sm font-medium">
+            {LINKS.map(({ name, href }) => (
+              <a key={name} href={href} className="hover:text-ink-100 transition-colors">
+                {name}
+              </a>
+            ))}
+          </nav>
 
-        <h1 className="text-2xl font-medium xl:text-3xl">Sign in to Sandworm Stocks</h1>
-        <p className="text-ink-200 mt-1 text-sm font-medium">Your reports run in your Sandworm workspace</p>
+          <SandwormLogo size={40} />
+          <h1 className="mt-3 mb-6 text-center text-2xl font-medium xl:text-3xl">Sign in to Sandworm Stocks</h1>
 
-        <div className="mt-6 flex w-full flex-col gap-2">
-          <SandwormOption />
-          <WalletOptions />
-        </div>
+          <div className="flex w-full flex-col gap-2">
+            <SandwormOption />
+            <WalletOptions />
+          </div>
 
-        <a
-          href={`${env.NEXT_PUBLIC_WEB_APP_URL}/signup`}
-          className="text-accent dark:text-primary mt-3 self-start text-sm font-medium hover:underline"
-        >
-          Sign Up to Sandworm
-        </a>
-
-        <p className="text-ink-200 mt-3 text-sm font-medium">
-          Stock tokens are for eligible users outside the US. By continuing, you agree to our{" "}
-          <a href={`${env.NEXT_PUBLIC_LANDING_URL}/terms`} className="underline">
-            Terms
-          </a>{" "}
-          and{" "}
-          <a href={`${env.NEXT_PUBLIC_LANDING_URL}/privacy`} className="underline">
-            Privacy Policy
+          <a
+            href={`${env.NEXT_PUBLIC_WEB_APP_URL}/signup`}
+            className="text-accent dark:text-primary mt-4 self-start text-sm font-medium hover:underline"
+          >
+            Sign Up to Sandworm
           </a>
-        </p>
+
+          <p className="text-ink-400 absolute bottom-4 max-w-[19rem] text-center text-xs font-medium">
+            Stock tokens are for eligible users outside the US. By continuing, you agree to our{" "}
+            <a href={`${env.NEXT_PUBLIC_LANDING_URL}/terms`} className="underline">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href={`${env.NEXT_PUBLIC_LANDING_URL}/privacy`} className="underline">
+              Privacy Policy
+            </a>
+            .
+          </p>
+        </main>
+
+        <AuraPanel />
       </div>
-    </main>
+    </div>
   )
 }

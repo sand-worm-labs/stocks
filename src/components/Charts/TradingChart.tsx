@@ -15,7 +15,7 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts"
 import { useTheme } from "next-themes"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 
 import { BenchmarkPicker } from "@/components/Charts/BenchmarkPicker"
 import { ChartLoader } from "@/components/Charts/ChartLoader"
@@ -40,11 +40,85 @@ const MAX_COMPARED = 3
 const DEFAULT_COMPARED = "SPY"
 // The chart is wiped in from the left, over this long
 const REVEAL_MS = 1100
+// A fund's line draws itself in, or out, over this long; its chip opens or closes in a little less
+const FUND_MS = 520
+const CHIP_MS = 320
+const EASE = "cubic-bezier(0.22, 1, 0.36, 1)"
 const HEIGHT = 280
 const TOOLTIP_WIDTH = 224
 
 const isoOf = (seconds: Time) => new Date(Number(seconds) * 1000).toISOString()
 const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+
+// One comparison line on the chart. `progress` is how much of it is drawn, from none to all: it draws in from the left as it is
+// added and back out as it is taken off, and the chart's scale follows what is showing, so nothing jumps.
+type Fund = { series: ISeriesApi<"Line">; color: string; progress: number; wanted: boolean; frame?: number }
+
+type Slot = { id: string; color: string }
+// A chip on the row above the chart. It stays in place, closing, until its animation is done.
+type Chip = Slot & { open: boolean; immediate?: boolean }
+
+const withAlpha = (hex: string, alpha: number) => {
+  const n = Number.parseInt(hex.slice(1), 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha.toFixed(3)})`
+}
+
+// Draws as much of a fund's line as its progress says, and as faint as it says
+function drawFund(fund: Fund, values: number[] | undefined, times: UTCTimestamp[]) {
+  const shown = Math.round(fund.progress * times.length)
+  fund.series.setData(times.slice(0, shown).map((time, i) => ({ time, value: values?.[i] ?? 0 })))
+  fund.series.applyOptions({ color: withAlpha(fund.color, Math.min(1, fund.progress * 1.8)) })
+}
+
+const defaultPicked = (lines: BenchmarkLine[]): Slot[] =>
+  lines.some((line) => line.id === DEFAULT_COMPARED)
+    ? [{ id: DEFAULT_COMPARED, color: LINE_COLORS[0] ?? "#64748b" }]
+    : []
+
+// A chip's place on the row, which opens as it comes and closes as it goes, taking the room it was using with it, so the chips beside
+// it slide rather than jump
+function ChipSlot({
+  open,
+  immediate,
+  reduced,
+  children,
+}: {
+  open: boolean
+  immediate?: boolean
+  reduced: boolean
+  children: ReactNode
+}) {
+  const [arrived, setArrived] = useState(Boolean(immediate))
+
+  useEffect(() => {
+    if (arrived) return
+    // Two frames, so the closed state has been drawn before it is opened
+    let second = 0
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => setArrived(true))
+    })
+    return () => {
+      cancelAnimationFrame(first)
+      cancelAnimationFrame(second)
+    }
+  }, [arrived])
+
+  const shown = arrived && open
+  return (
+    <div
+      style={{
+        gridTemplateColumns: shown ? "1fr" : "0fr",
+        opacity: shown ? 1 : 0,
+        transition: reduced ? "none" : `grid-template-columns ${CHIP_MS}ms ${EASE}, opacity ${CHIP_MS}ms ease`,
+      }}
+      className="grid"
+    >
+      <div className="min-w-0 overflow-hidden">
+        <div className="pr-2">{children}</div>
+      </div>
+    </div>
+  )
+}
 
 type Tip = { x: number; y: number; width: number; title: string; rows: TooltipRow[]; footer?: string }
 
@@ -58,10 +132,9 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
   const reduced = usePrefersReducedMotion()
   const [frame, inView] = useInView<HTMLDivElement>()
   const canvas = useRef<HTMLDivElement>(null)
-  const [picked, setPicked] = useState<{ id: string; color: string }[]>(() =>
-    lines.some((line) => line.id === DEFAULT_COMPARED)
-      ? [{ id: DEFAULT_COMPARED, color: LINE_COLORS[0] ?? "#64748b" }]
-      : []
+  const [picked, setPicked] = useState<Slot[]>(() => defaultPicked(lines))
+  const [chips, setChips] = useState<Chip[]>(() =>
+    defaultPicked(lines).map((slot) => ({ ...slot, open: true, immediate: true }))
   )
   const [tip, setTip] = useState<Tip>()
   const [dot, setDot] = useState<{ x: number; y: number }>()
@@ -77,7 +150,9 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
 
   const chart = useRef<IChartApi>(undefined)
   const area = useRef<ISeriesApi<"Area">>(undefined)
-  const fundSeries = useRef(new Map<string, ISeriesApi<"Line">>())
+  const funds = useRef(new Map<string, Fund>())
+  // Set when the chart has just been made, so the funds already picked are drawn at once and only a change after it is animated
+  const fresh = useRef(true)
   // What the chart's callbacks should see, since they outlive a render
   const latest = useRef({ points, times, lines, name })
   latest.current = { points, times, lines, name }
@@ -88,12 +163,9 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
 
   // Every line on the chart, with all its points
   const paint = () => {
-    const { points: all, times: at, lines: funds } = latest.current
+    const { points: all, times: at, lines: known } = latest.current
     area.current?.setData(all.map((point, i) => ({ time: at[i] as UTCTimestamp, value: point.value })))
-    fundSeries.current.forEach((series, id) => {
-      const fund = funds.find((line) => line.id === id)
-      if (fund) series.setData(at.map((time, i) => ({ time, value: fund.values[i] ?? 0 })))
-    })
+    funds.current.forEach((fund, id) => drawFund(fund, known.find((line) => line.id === id)?.values, at))
   }
   const paintRef = useRef(paint)
   paintRef.current = paint
@@ -178,7 +250,8 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
     })
     chart.current = api
     area.current = portfolio
-    fundSeries.current = new Map()
+    funds.current = new Map()
+    fresh.current = true
     paintRef.current()
     api.timeScale().fitContent()
 
@@ -191,7 +264,8 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
         { label: latest.current.name, value: `${formatAmount(own.value)} USDC`, color: accent.line },
       ]
       let against: { name: string; value: number } | undefined
-      fundSeries.current.forEach((series, id) => {
+      funds.current.forEach(({ series, wanted }, id) => {
+        if (!wanted) return
         const datum = param.seriesData.get(series) as { value: number } | undefined
         const fund = latest.current.lines.find((line) => line.id === id)
         if (!datum || !fund) return
@@ -227,10 +301,11 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
       timers.forEach(clearTimeout)
       resize.disconnect()
       api.unsubscribeCrosshairMove(onMove)
+      funds.current.forEach(({ frame }) => frame && cancelAnimationFrame(frame))
       api.remove()
       chart.current = undefined
       area.current = undefined
-      fundSeries.current = new Map()
+      funds.current = new Map()
       setTip(undefined)
       setDot(undefined)
       setWiped(false)
@@ -238,17 +313,59 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
     }
   }, [inView, resolvedTheme, points.length, reduced])
 
-  // The funds on the chart: a dashed line each, added and taken off as the chips are switched
+  // Draws a fund's line in (`to` 1) or out (`to` 0), the scale following what is showing. Out, the line is taken off the chart when it has
+  // gone. `instant` does it at once: for the first drawing of a chart, and for anyone who has asked for less motion.
+  const slideFund = (id: string, to: 0 | 1, instant: boolean) => {
+    const api = chart.current
+    const fund = funds.current.get(id)
+    if (!api || !fund) return
+    if (fund.frame) cancelAnimationFrame(fund.frame)
+
+    const render = () =>
+      drawFund(fund, latest.current.lines.find((line) => line.id === id)?.values, latest.current.times)
+    const finish = () => {
+      fund.frame = undefined
+      if (to === 0 && funds.current.get(id) === fund) {
+        if (chart.current === api) api.removeSeries(fund.series)
+        funds.current.delete(id)
+      }
+      placeDotRef.current()
+    }
+
+    if (instant) {
+      fund.progress = to
+      render()
+      return finish()
+    }
+
+    const from = fund.progress
+    const started = performance.now()
+    const tick = (now: number) => {
+      const t = Math.min((now - started) / FUND_MS, 1)
+      fund.progress = from + (to - from) * (1 - (1 - t) ** 3)
+      render()
+      placeDotRef.current()
+      if (t < 1) fund.frame = requestAnimationFrame(tick)
+      else finish()
+    }
+    fund.frame = requestAnimationFrame(tick)
+  }
+
+  // The funds on the chart: each is drawn in when it is picked and out when it is taken off, and the ones that stay are left alone, so
+  // switching one never redraws the rest
   useEffect(() => {
     const api = chart.current
     if (!api || !inView) return
 
     const biggest = Math.max(...points.map(({ value }) => value))
-    const added = latest.current.lines
-      .filter(({ id }) => picked.some((slot) => slot.id === id))
-      .map(({ id }) => {
+    const instant = fresh.current || reduced
+    fresh.current = false
+
+    for (const { id, color } of picked) {
+      let fund = funds.current.get(id)
+      if (!fund) {
         const series = api.addSeries(LineSeries, {
-          color: colorOfRef.current(id),
+          color: withAlpha(color, instant ? 1 : 0),
           lineWidth: 2,
           lineStyle: LineStyle.Dashed,
           priceLineVisible: false,
@@ -256,20 +373,20 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
           crosshairMarkerRadius: 4,
           priceFormat: { type: "price", precision: biggest >= 1000 ? 0 : 2, minMove: biggest >= 1000 ? 1 : 0.01 },
         })
-        fundSeries.current.set(id, series)
-        return [id, series] as const
-      })
-    paintRef.current()
-    requestAnimationFrame(() => placeDotRef.current())
-
-    return () => {
-      // The chart may have been taken down first, with the series
-      if (chart.current !== api) return
-      for (const [id, series] of added) {
-        api.removeSeries(series)
-        fundSeries.current.delete(id)
+        fund = { series, color, progress: instant ? 1 : 0, wanted: true }
+        funds.current.set(id, fund)
       }
+      fund.wanted = true
+      fund.color = color
+      slideFund(id, 1, instant)
     }
+    funds.current.forEach((fund, id) => {
+      if (fund.wanted && !picked.some((slot) => slot.id === id)) {
+        fund.wanted = false
+        slideFund(id, 0, instant)
+      }
+    })
+    requestAnimationFrame(() => placeDotRef.current())
   }, [inView, resolvedTheme, points.length, reduced, picked])
 
   // A new price moves the lines where they are: the data is set again, and the chart is not made again
@@ -279,13 +396,35 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
     requestAnimationFrame(() => placeDotRef.current())
   }, [points, lines])
 
-  const toggle = (id: string) =>
-    setPicked((current) => {
-      if (current.some((slot) => slot.id === id)) return current.filter((slot) => slot.id !== id)
-      const kept = current.length >= MAX_COMPARED ? current.slice(1) : current
+  const toggle = (id: string) => {
+    let next: Slot[]
+    if (picked.some((slot) => slot.id === id)) next = picked.filter((slot) => slot.id !== id)
+    else {
+      const kept = picked.length >= MAX_COMPARED ? picked.slice(1) : picked
       const color = LINE_COLORS.find((free) => !kept.some((slot) => slot.color === free)) ?? LINE_COLORS[0] ?? "#64748b"
-      return [...kept, { id, color }]
+      next = [...kept, { id, color }]
+    }
+    const gone = picked.filter((slot) => !next.some((other) => other.id === slot.id))
+    const added = next.filter((slot) => !picked.some((other) => other.id === slot.id))
+
+    setPicked(next)
+    // A chip that goes closes where it is, and is taken off the row once it has; one that comes opens at the end
+    setChips((current) => {
+      const out = current.map((chip) => (gone.some((slot) => slot.id === chip.id) ? { ...chip, open: false } : chip))
+      for (const slot of added) {
+        const at = out.findIndex((chip) => chip.id === slot.id)
+        if (at >= 0) out[at] = { ...out[at]!, color: slot.color, open: true }
+        else out.push({ ...slot, open: false })
+      }
+      return out
     })
+    if (gone.length) {
+      setTimeout(
+        () => setChips((current) => current.filter((chip) => chip.open || !gone.some((slot) => slot.id === chip.id))),
+        CHIP_MS + 60
+      )
+    }
+  }
   const own = changeOver(points)
 
   return (
@@ -295,23 +434,25 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
           {name}
         </Pill>
         <span className="text-ink-400 text-xs">vs</span>
-        {picked.map(({ id, color }) => {
-          const line = lines.find((other) => other.id === id)
-          if (!line) return null
+        <div className="flex flex-wrap items-center">
+          {chips.map(({ id, color, open, immediate }) => {
+            const line = lines.find((other) => other.id === id)
+            if (!line) return null
 
-          return (
-            <Pill
-              key={id}
-              dot={color}
-              title={line.fund}
-              detail={formatPercent(line.change, { signed: true })}
-              onRemove={() => toggle(id)}
-              className="animate-fade-up"
-            >
-              {line.name}
-            </Pill>
-          )
-        })}
+            return (
+              <ChipSlot key={id} open={open} immediate={immediate} reduced={reduced}>
+                <Pill
+                  dot={color}
+                  title={line.fund}
+                  detail={formatPercent(line.change, { signed: true })}
+                  onRemove={() => toggle(id)}
+                >
+                  {line.name}
+                </Pill>
+              </ChipSlot>
+            )
+          })}
+        </div>
         <BenchmarkPicker lines={lines} picked={picked} max={MAX_COMPARED} onToggle={toggle} />
       </div>
 

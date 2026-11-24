@@ -3,7 +3,6 @@ import { SandwormLogo } from "@/components/SandwormLogo/SandwormLogo"
 import { AUTH_PROVIDERS } from "@/lib/auth/providers"
 import { cn } from "@/lib/utils"
 
-
 // Signing in with the main Sandworm app. Until that is connected (see `AUTH_PROVIDERS`) the button is here and says so, rather than
 // leading anywhere: it must never let someone into the app without signing in.
 export function SandwormOption() {

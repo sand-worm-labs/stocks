@@ -1,14 +1,15 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { PiMagnifyingGlass } from "react-icons/pi"
+import { PiCircleNotch, PiMagnifyingGlass } from "react-icons/pi"
 
-import { AppLink } from "@/components/AppLink/AppLink"
+import { useStartStrategy } from "@/components/Brief/useStartStrategy"
 import { buttonVariants } from "@/components/Button/Button"
 import { Card } from "@/components/ui/card"
 import { EmptyResults } from "@/components/ui/empty-results"
 import { Pill } from "@/components/ui/pill"
 import { SearchField } from "@/components/ui/search-field"
+import { briefFromPicks } from "@/lib/brief/fromPicks"
 import { filterPicker, pickedWith } from "@/lib/markets/picker"
 import type { Stock, StockCategory } from "@/lib/markets/types"
 import { cn } from "@/lib/utils"
@@ -21,8 +22,6 @@ type StockPickerProps = {
   categories: StockCategory[]
   // How many stocks can be bought, for the search box to say
   buyableCount: number
-  // The portfolio the pick becomes, whose rules come next
-  portfolioId: string
   initialCategoryIds: string[]
 }
 
@@ -34,13 +33,19 @@ const toggle = <T,>(set: Set<T>, item: T) => {
 
 // Where categories and single stocks are picked to build around. Search narrows both lists, a picked category brings
 // its stocks in, and what is picked is kept in view above them.
-export function StockPicker({ stocks, categories, buyableCount, portfolioId, initialCategoryIds }: StockPickerProps) {
+export function StockPicker({ stocks, categories, buyableCount, initialCategoryIds }: StockPickerProps) {
+  const { start, busy } = useStartStrategy()
   const [query, setQuery] = useState("")
   const [pickedCategories, setPickedCategories] = useState(() => new Set(initialCategoryIds))
   const [pickedStocks, setPickedStocks] = useState(() => new Set<string>())
 
   const view = useMemo(() => filterPicker(query, stocks, categories), [query, stocks, categories])
   const pickCount = pickedCategories.size + pickedStocks.size
+  // What was picked, by the names it is shown under
+  const pickedLabels = [
+    ...categories.filter(({ id }) => pickedCategories.has(id)).map(({ label }) => label),
+    ...[...pickedStocks].map((symbol) => stocks.find((stock) => stock.symbol === symbol)?.name ?? symbol),
+  ]
   const bySymbol = useMemo(() => new Map(stocks.map((stock) => [stock.symbol, stock])), [stocks])
 
   return (
@@ -153,9 +158,19 @@ export function StockPicker({ stocks, categories, buyableCount, portfolioId, ini
 
       <div className="flex justify-end">
         {pickCount > 0 ? (
-          <AppLink route="rules" slug={portfolioId} className={buttonVariants({ intent: "dark", size: "compact" })}>
+          <button
+            type="button"
+            disabled={busy}
+            aria-busy={busy}
+            onClick={() => start(briefFromPicks(pickedLabels))}
+            className={cn(
+              buttonVariants({ intent: "dark", size: "compact" }),
+              "gap-2 disabled:cursor-wait disabled:opacity-70"
+            )}
+          >
+            {busy && <PiCircleNotch aria-hidden="true" className="animate-spin" />}
             Continue
-          </AppLink>
+          </button>
         ) : (
           <button
             type="button"

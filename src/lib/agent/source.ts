@@ -42,7 +42,7 @@ export async function getRulesScript(
           {
             type: "actions",
             actions: [
-              { label: "Confirm & research", route: "research", slug: portfolio.id, intent: "link" },
+              { label: "Confirm & research", route: "research", slug: portfolio.id, intent: "link", flow: "confirm" },
               { label: "Edit", route: "rules", slug: portfolio.id, intent: "outline", icon: "edit" },
             ],
           },
@@ -67,7 +67,9 @@ export async function getResearchScript(portfolio: Portfolio, done: number): Pro
           { type: "steps", title: "Research", steps: researchSteps(done) },
           {
             type: "actions",
-            actions: [{ label: "Skip to the results", route: "report", slug: portfolio.id, intent: "outline" }],
+            actions: [
+              { label: "Skip to the results", route: "report", slug: portfolio.id, intent: "outline", flow: "skip" },
+            ],
           },
         ],
       },

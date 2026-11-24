@@ -8,6 +8,7 @@ import {
 } from "@/_mockdata/strategies"
 import type { Portfolio } from "@/lib/portfolios/types"
 import { pick, seedOf } from "@/lib/seed"
+import { getOwnStrategy } from "@/lib/strategies/source"
 
 import type { Strategy } from "./types"
 
@@ -18,6 +19,8 @@ export const isDesigned = (id: string) => id in HAND_MADE_STRATEGIES
 // portfolio, the sample.
 export async function getStrategy(portfolio?: Portfolio): Promise<Strategy> {
   if (!portfolio) return sampleStrategyMockData
+  const own = await getOwnStrategy(portfolio.id)
+  if (own) return own.strategy
   const designed = HAND_MADE_STRATEGIES[portfolio.id]
   if (designed) return designed
 

@@ -13,6 +13,8 @@ const IDLE_TIMEOUT_MS = 3000
 // For a browser without requestIdleCallback
 const IDLE_FALLBACK_MS = 1500
 
+const noWallet = async () => Promise.reject(new Error("Connect your wallet first"))
+
 const perform = (wallet: Published, intent: Intent) =>
   ({ signIn: wallet.openSignIn, linkWallet: wallet.linkWallet, profile: wallet.openProfile })[intent]()
 
@@ -84,6 +86,8 @@ export function DynamicProviders({ children }: { children: ReactNode }) {
     () => ({
       status: !environmentId ? "off" : live ? "ready" : isRequested ? "loading" : "idle",
       isSignedIn: live?.isSignedIn ?? false,
+      connecting: live?.connecting ?? false,
+      approve: live?.approve ?? { switchChain: noWallet, sign: noWallet },
       address: live?.address,
       network: live?.network,
       preload,

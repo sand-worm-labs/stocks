@@ -2,11 +2,12 @@
 
 import type { ReactNode } from "react"
 
+import { Address } from "@/components/Address/Address"
 import { Flash } from "@/components/Markets/Flash"
 import { useLiveMarketContext } from "@/components/Markets/LiveMarket"
 import { Money } from "@/components/Money/Money"
 import { Card } from "@/components/ui/card"
-import { formatPercent, shortenAddress } from "@/lib/format"
+import { formatPercent } from "@/lib/format"
 import type { TokenSupply } from "@/lib/markets/onchain"
 import { shareTicker } from "@/lib/markets/share"
 import type { BaseToken } from "@/lib/markets/tokens"
@@ -88,29 +89,10 @@ export function TokenOverview({ token, supply, ethUsd }: TokenOverviewProps) {
 
       <Section title="Other info">
         <Row label={supply ? `Token contract (with ${supply.decimals} decimals)` : "Token contract"}>
-          <a
-            href={`https://basescan.org/token/${address}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={address}
-            className={`${link} font-body-mono`}
-          >
-            {shortenAddress(address)}
-          </a>
+          <Address value={address} kind="token" />
         </Row>
         <Row label="Pool">
-          {pool ? (
-            <a
-              href={`https://dexscreener.com/base/${pool.pair}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={link}
-            >
-              {shortenAddress(pool.pair)} ↗
-            </a>
-          ) : (
-            "—"
-          )}
+          {pool ? <Address value={pool.pair} href={`https://dexscreener.com/base/${pool.pair}`} /> : "—"}
         </Row>
         <Row label="Listed on">
           <a

@@ -37,7 +37,12 @@ export function BenchmarkPicker({ lines, picked, max, onToggle }: BenchmarkPicke
         <PiPlus aria-hidden="true" size={12} />
         Compare
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[min(380px,calc(100vw-2rem))] p-0">
+      <PopoverContent
+        align="start"
+        // The button slides as chips come and go: follow it on every frame, so the box moves with it and never jumps
+        updatePositionStrategy="always"
+        className="w-[min(380px,calc(100vw-2rem))] p-0"
+      >
         <div className="p-3 pb-2">
           <SearchField
             value={query}

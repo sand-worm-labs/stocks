@@ -1,6 +1,6 @@
 "use client"
 
-import { EthereumWalletConnectors } from "@dynamic-labs/ethereum"
+import { EthereumWalletConnectors, isEthereumWallet } from "@dynamic-labs/ethereum"
 import {
   DynamicContextProvider,
   DynamicUserProfile,
@@ -10,7 +10,7 @@ import {
 } from "@dynamic-labs/sdk-react-core"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { APP_CHAINS } from "@/constants/chains"
@@ -18,7 +18,7 @@ import { ONBOARDING_PATH } from "@/constants/onboarding"
 import { DEFAULT_AFTER_SIGN_IN, SIGN_IN_PATH } from "@/lib/auth/config"
 import { env } from "env.mjs"
 
-import type { Published } from "./WalletContext"
+import type { ApproveWith, Published } from "./WalletContext"
 
 // The one file that imports Dynamic's SDK, which is large. It is fetched when a wallet is wanted (see DynamicProviders),
 // so a page doesn't carry it to be shown.
@@ -39,9 +39,16 @@ const safeNext = (next: string | null) => (next?.startsWith("/") && !next.starts
 
 type Publish = (value: Published | undefined) => void
 
+// The connected wallet, if it is one that can pay on Base. Anything else is told so in words, not with an error from the SDK.
+function ethereumWallet(wallet: ReturnType<typeof useDynamicContext>["primaryWallet"]) {
+  if (!wallet || !isEthereumWallet(wallet)) throw new Error("Connect a wallet that works on Base first")
+  return wallet
+}
+
 // Inside Dynamic, tells the rest of the app what it says. The app reads plain values, not Dynamic's hooks.
-function Bridge({ publish, resume }: { publish: Publish; resume: () => void }) {
-  const { user, primaryWallet, network, setShowAuthFlow, setShowDynamicUserProfile, handleLogOut } = useDynamicContext()
+function Bridge({ publish, resume, signingIn }: { publish: Publish; resume: () => void; signingIn: boolean }) {
+  const { user, primaryWallet, network, showAuthFlow, setShowAuthFlow, setShowDynamicUserProfile, handleLogOut } =
+    useDynamicContext()
   const { setShowLinkNewWalletModal } = useDynamicModals()
 
   // The actions are reached through a ref, so that they are always the latest and a change to one isn't a reason to
@@ -49,12 +56,31 @@ function Bridge({ publish, resume }: { publish: Publish; resume: () => void }) {
   const actions = useRef({ setShowAuthFlow, setShowDynamicUserProfile, setShowLinkNewWalletModal, handleLogOut })
   actions.current = { setShowAuthFlow, setShowDynamicUserProfile, setShowLinkNewWalletModal, handleLogOut }
 
+  // What approving uses, reached through a ref so it is always the wallet as it is now
+  const wallet = useRef(primaryWallet)
+  wallet.current = primaryWallet
+  const approve = useRef<ApproveWith>({
+    switchChain: async (chainId) => {
+      const current = ethereumWallet(wallet.current)
+      if (Number(await current.getNetwork()) !== chainId) await current.switchNetwork(chainId)
+    },
+    sign: async (message) => {
+      const current = ethereumWallet(wallet.current)
+      const client = await current.getWalletClient()
+      const address = current.address as `0x${string}`
+      return { address, signature: await client.signMessage({ account: address, message }) }
+    },
+  })
+
   const isSignedIn = Boolean(user)
   const address = primaryWallet?.address
+  const connecting = signingIn || showAuthFlow
 
   useEffect(() => {
     publish({
+      approve: approve.current,
       isSignedIn,
+      connecting,
       address,
       network,
       openSignIn: () => actions.current.setShowAuthFlow(true),
@@ -64,7 +90,7 @@ function Bridge({ publish, resume }: { publish: Publish; resume: () => void }) {
         await actions.current.handleLogOut()
       },
     })
-  }, [publish, isSignedIn, address, network])
+  }, [publish, isSignedIn, connecting, address, network])
 
   useEffect(() => () => publish(undefined), [publish])
 
@@ -89,6 +115,8 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
   const environmentId = env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID
   // A sign-in can be reported twice (when it happens, and when the sign-in page finds it already there); once is enough
   const starting = useRef(false)
+  // From Dynamic saying someone has signed in until the page has changed, or it has failed: the wallet button shows it
+  const [signingIn, setSigningIn] = useState(false)
 
   if (!environmentId) return null
 
@@ -96,14 +124,18 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
     const token = getMinAuthToken()
     if (!token || starting.current) return
     starting.current = true
+    setSigningIn(true)
 
     try {
-      await makeSession(token)
+      // Once the page is on its way somewhere else the button stays busy, so a second click can't start a second sign-in
+      const leaving = await makeSession(token).catch(() => false)
+      if (!leaving) setSigningIn(false)
     } finally {
       starting.current = false
     }
   }
 
+  // Makes the session; true when the sign-in page is being left for another page
   const makeSession = async (token: string) => {
     const response = await fetch("/api/auth/session", {
       method: "POST",
@@ -112,7 +144,7 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
     })
     if (!response.ok) {
       toast.error("We couldn't sign you in", { description: "Try again in a moment." })
-      return
+      return false
     }
 
     // On the sign-in page, on to where they were going, or for someone new, to the first run. Anywhere else, the page now
@@ -121,8 +153,11 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
       const { onboarded } = (await response.json()) as { onboarded: boolean }
       const next = safeNext(new URLSearchParams(window.location.search).get("next"))
       router.replace(onboarded ? (next ?? DEFAULT_AFTER_SIGN_IN) : ONBOARDING_PATH)
+      router.refresh()
+      return true
     }
     router.refresh()
+    return false
   }
 
   const endSession = async () => {
@@ -144,7 +179,7 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
         events: { onAuthSuccess: startSession, onLogout: endSession },
       }}
     >
-      <Bridge publish={publish} resume={startSession} />
+      <Bridge publish={publish} resume={startSession} signingIn={signingIn} />
     </DynamicContextProvider>
   )
 }

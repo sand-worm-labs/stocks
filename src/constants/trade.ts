@@ -1,3 +1,8 @@
+import { baseSepolia } from "viem/chains"
+
+// Where trading with a wallet happens, for now: Base Sepolia, on its test USDC. Moving to Base is changing this one line.
+export const TRADE_CHAIN = baseSepolia
+
 export const SWAP_FEE_RATE = 0.003
 export const NETWORK_FEE = 0.01
 export const SLIPPAGE_CHOICES = [0.001, 0.005, 0.01]

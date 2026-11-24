@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  formatAddress,
   formatAmount,
   formatCompactUsd,
   formatDecimal,
@@ -42,5 +43,16 @@ describe("format", () => {
 
   it("keeps the start and end of a wallet address", () => {
     expect(shortenAddress("0x7a3f1234567890abcdef1234567890abcdefc21e")).toBe("0x7a3f…c21e")
+  })
+})
+
+describe("formatAddress", () => {
+  const address = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+
+  it("shortens to the two ends, at three lengths", () => {
+    expect(formatAddress(address)).toBe("0x036C…CF7e")
+    expect(formatAddress(address, "short")).toBe("0x036C…CF7e")
+    expect(formatAddress(address, "long")).toBe("0x036CbD53…8f3dCF7e")
+    expect(formatAddress(address, "full")).toBe(address)
   })
 })

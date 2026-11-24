@@ -6,6 +6,7 @@ import {
 } from "@/_mockdata/rules"
 import type { Portfolio } from "@/lib/portfolios/types"
 import { pick, seedOf } from "@/lib/seed"
+import { getOwnStrategy } from "@/lib/strategies/source"
 
 import { ruleOf, type RuleSpec } from "./spec"
 import type { StrategyRow } from "./types"
@@ -45,6 +46,11 @@ function generatedProfile(portfolio: Portfolio) {
 }
 
 export async function getRules(portfolio: Portfolio) {
+  // One that was made here has the rules it was given
+  const own = await getOwnStrategy(portfolio.id)
+  if (own)
+    return { rules: own.rules.map((spec, i) => ruleOf(spec, i + 1)), strategy: own.summary, assumption: own.assumption }
+
   if (portfolio.status === "unbuildable") {
     return {
       rules: unmeetableRulesMockData,

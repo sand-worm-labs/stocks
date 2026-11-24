@@ -12,8 +12,6 @@ import {
   PiSlidersHorizontal,
 } from "react-icons/pi"
 
-import type { Tone } from "./tone"
-
 export const ACTIVITY_FILTERS = ["all", "trades", "agent", "alerts", "refusals"] as const
 
 export type ActivityFilter = (typeof ACTIVITY_FILTERS)[number]
@@ -49,19 +47,19 @@ export const ACTIVITY_EMPTY = {
   },
 } as const satisfies Record<ActivityFilter, { icon: IconType; title: string; hint: string }>
 
-type KindDefinition = { icon: IconType; tone: Tone; category: Exclude<ActivityFilter, "all"> }
+type KindDefinition = { icon: IconType; category: Exclude<ActivityFilter, "all"> }
 
 export const ACTIVITY_KIND = {
-  checked: { icon: PiShieldCheck, tone: "positive", category: "agent" },
-  locked: { icon: PiLockKey, tone: "positive", category: "agent" },
-  report: { icon: PiFileText, tone: "neutral", category: "agent" },
-  adapted: { icon: PiSlidersHorizontal, tone: "neutral", category: "agent" },
-  bought: { icon: PiHandCoins, tone: "info", category: "trades" },
-  sold: { icon: PiHandCoins, tone: "neutral", category: "trades" },
-  deposit: { icon: PiArrowLineDown, tone: "positive", category: "trades" },
-  refused: { icon: PiProhibit, tone: "negative", category: "refusals" },
-  alert: { icon: PiBell, tone: "warning", category: "alerts" },
-  gap: { icon: PiArrowsLeftRight, tone: "info", category: "alerts" },
+  checked: { icon: PiShieldCheck, category: "agent" },
+  locked: { icon: PiLockKey, category: "agent" },
+  report: { icon: PiFileText, category: "agent" },
+  adapted: { icon: PiSlidersHorizontal, category: "agent" },
+  bought: { icon: PiHandCoins, category: "trades" },
+  sold: { icon: PiHandCoins, category: "trades" },
+  deposit: { icon: PiArrowLineDown, category: "trades" },
+  refused: { icon: PiProhibit, category: "refusals" },
+  alert: { icon: PiBell, category: "alerts" },
+  gap: { icon: PiArrowsLeftRight, category: "alerts" },
 } as const satisfies Record<string, KindDefinition>
 
 export type ActivityKind = keyof typeof ACTIVITY_KIND

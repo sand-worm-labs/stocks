@@ -15,16 +15,18 @@ import { routeHref } from "@/config/routes"
 import { getPortfolio } from "@/lib/portfolios/source"
 import { getOrders, getReport } from "@/lib/report/source"
 import { getSession } from "@/lib/session/source"
+import { getOwnStrategy } from "@/lib/strategies/source"
 
 export const metadata: Metadata = { title: "Trade" }
 
 // Buying is a review over the report of the version being bought, so this is that report with the review already open.
 // Closing it goes back to the version.
 export default async function BuyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const [portfolio, report, orders, session] = await Promise.all([
-    getPortfolio((await params).id),
-    getReport(2),
-    getOrders(2),
+    getPortfolio(id),
+    getReport(2, id),
+    getOrders(2, id),
     getSession(),
   ])
   if (!portfolio) notFound()
@@ -42,6 +44,7 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
             report={report}
             portfolioId={portfolio.id}
             network={session.network}
+            demo={!(await getOwnStrategy(id))}
             startOpen={{ closeHref: routeHref("adapt", undefined, portfolio.id) ?? "/strategies" }}
           />
         </ReportActionBar>

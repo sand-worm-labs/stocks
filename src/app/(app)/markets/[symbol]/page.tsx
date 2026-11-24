@@ -1,13 +1,20 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
+
+import { PiBuildings, PiChartLine, PiCoins, PiDrop, PiFileCode } from "react-icons/pi"
+import { SiTradingview } from "react-icons/si"
 import { z } from "zod"
 
+import { Address } from "@/components/Address/Address"
 import { BackLink } from "@/components/BackLink/BackLink"
+import { BaseMark } from "@/components/BaseMark/BaseMark"
+import { TokenAvatar } from "@/components/Markets/TokenAvatar"
 import { TabSkeleton } from "@/components/Skeleton/TabSkeleton"
 import { ExposureCard } from "@/components/Stock/ExposureCard"
 import { KnowledgeCard } from "@/components/Stock/KnowledgeCard"
 import { RiskCard } from "@/components/Stock/RiskCard"
+import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { ActiveWallets } from "@/components/Token/ActiveWallets"
 import { FactList } from "@/components/Token/FactList"
 import { TokenAnalytics } from "@/components/Token/TokenAnalytics"
@@ -20,8 +27,6 @@ import { TokenTabs } from "@/components/Token/TokenTabs"
 import { TokenTrades } from "@/components/Token/TokenTrades"
 import { TransfersTable } from "@/components/Token/TransfersTable"
 import { DEFAULT_TOKEN_TAB, TOKEN_TABS } from "@/constants/token"
-import { getBriefDraft } from "@/lib/brief/source"
-import { shortenAddress } from "@/lib/format"
 import { getChartSymbol } from "@/lib/markets/chart-symbol"
 import { getEthPrice, getTokenContract, getTokenSupply } from "@/lib/markets/onchain"
 import { getAllPoolQuotes } from "@/lib/markets/pools"
@@ -56,16 +61,13 @@ export default async function TokenPage({ params, searchParams }: TokenPageProps
   const token = findToken(tokens, decodeURIComponent(symbol))
   if (!token) notFound()
 
-  const [{ portfolioId: researchId }, pools] = await Promise.all([
-    getBriefDraft(),
-    getAllPoolQuotes(tokens.map(({ address }) => address)),
-  ])
+  const pools = await getAllPoolQuotes(tokens.map(({ address }) => address))
   const pool = pools.find(({ address }) => address === token.address.toLowerCase())
 
   return (
     <div className="flex flex-col gap-6">
       <BackLink route="markets" />
-      <TokenHeader token={token} researchId={researchId} />
+      <TokenHeader token={token} />
       <TokenTabs tokenId={token.id} current={tab as (typeof TOKEN_TABS)[number]["id"]} />
 
       {/* A tab that reads the chain streams in after the header and tabs, so a click on one is answered at once */}
@@ -154,8 +156,10 @@ async function TransfersTab({ token, view, pair }: TabProps & { view: "holders" 
   )
 }
 
+const ICON = "text-ink-400"
+
 function InfoTab({ token, pair }: TabProps & { pair?: string }) {
-  const { id, issuer, company, symbol, address } = token
+  const { id, issuer, company, symbol, address, image } = token
   const ticker = shareTicker(token)
 
   return (
@@ -163,10 +167,32 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
       <FactList
         title="About"
         rows={[
-          { label: "Token", value: symbol },
-          { label: "Issuer", value: issuer },
-          { label: "Tracks", value: ticker ? `${company} (${ticker})` : company },
-          { label: "Chain", value: "Base" },
+          {
+            label: "Token",
+            value: symbol,
+            icon: <TokenAvatar image={image} symbol={symbol} className="size-5 text-[9px]" />,
+          },
+          { label: "Issuer", value: issuer, icon: <PiBuildings size={18} className={ICON} aria-hidden="true" /> },
+          {
+            label: "Tracks",
+            value: ticker ? `${company} (${ticker})` : company,
+            icon: <StockAvatar symbol={symbol} className="size-5" />,
+          },
+          { label: "Chain", value: "Base", icon: <BaseMark size={18} /> },
+          {
+            label: "Contract",
+            value: <Address value={address} kind="token" length="long" />,
+            icon: <PiFileCode size={18} className={ICON} aria-hidden="true" />,
+          },
+          ...(pair
+            ? [
+                {
+                  label: "Pool",
+                  value: <Address value={pair} length="long" href={`https://dexscreener.com/base/${pair}`} />,
+                  icon: <PiDrop size={18} className={ICON} aria-hidden="true" />,
+                },
+              ]
+            : []),
         ]}
       />
       <FactList
@@ -174,6 +200,7 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
         rows={[
           {
             label: "CoinGecko",
+            icon: <PiCoins size={18} className={ICON} aria-hidden="true" />,
             value: (
               <a href={`https://www.coingecko.com/en/coins/${id}`} {...external} className={link}>
                 Open ↗
@@ -182,6 +209,7 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
           },
           {
             label: "BaseScan",
+            icon: <BaseMark size={18} />,
             value: (
               <a href={`https://basescan.org/token/${address}`} {...external} className={link}>
                 Open ↗
@@ -192,6 +220,7 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
             ? [
                 {
                   label: "Pool chart",
+                  icon: <PiChartLine size={18} className={ICON} aria-hidden="true" />,
                   value: (
                     <a href={`https://dexscreener.com/base/${pair}`} {...external} className={link}>
                       Open ↗
@@ -204,6 +233,7 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
             ? [
                 {
                   label: "Share on TradingView",
+                  icon: <SiTradingview size={16} aria-hidden="true" />,
                   value: (
                     <a href={`https://www.tradingview.com/symbols/${ticker}/`} {...external} className={link}>
                       Open ↗
@@ -225,7 +255,11 @@ async function ContractTab({ token }: TabProps) {
     <FactList
       title="Contract"
       rows={[
-        { label: "Address", value: <span className="font-body-mono break-all">{token.address}</span> },
+        {
+          label: "Address",
+          icon: <PiFileCode size={18} className={ICON} aria-hidden="true" />,
+          value: <Address value={token.address} kind="token" length="full" />,
+        },
         { label: "Name", value: contract?.name ?? "—" },
         { label: "Symbol", value: contract?.symbol ?? "—" },
         { label: "Decimals", value: contract?.decimals ?? "—" },
@@ -235,9 +269,10 @@ async function ContractTab({ token }: TabProps) {
         },
         {
           label: "Source code",
+          icon: <BaseMark size={18} />,
           value: (
             <a href={`https://basescan.org/address/${token.address}#code`} {...external} className={link}>
-              {shortenAddress(token.address)} on BaseScan ↗
+              View on BaseScan ↗
             </a>
           ),
         },

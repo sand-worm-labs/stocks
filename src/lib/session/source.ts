@@ -2,6 +2,7 @@ import { cookies } from "next/headers"
 import { cache } from "react"
 
 import { sessionMockData } from "@/_mockdata/session"
+import { TRADING_MODE_COOKIE, TRADING_MODE_LABEL } from "@/constants/portfolio"
 import { REGION_COOKIE } from "@/constants/region"
 import { getSignedInUserId } from "@/lib/auth/session"
 import { readOnboarding } from "@/lib/onboarding/profile"
@@ -19,6 +20,15 @@ async function savedRegion() {
   }
 }
 
+// Paper trading, or their wallet: what they last chose in the trading mode menu
+async function savedMode(): Promise<keyof typeof TRADING_MODE_LABEL> {
+  try {
+    return (await cookies()).get(TRADING_MODE_COOKIE)?.value === "live" ? "live" : "paper"
+  } catch {
+    return "paper"
+  }
+}
+
 // Cached for the render, so the layout and the page share one read. Who is signed in and where they live come from cookies;
 // the rest of the profile is still the mock until accounts and settings are stored.
 export const getSession = cache(async (): Promise<Session> => {
@@ -28,6 +38,7 @@ export const getSession = cache(async (): Promise<Session> => {
     ...sessionMockData,
     user: { firstName: profile.name ?? sessionMockData.user.firstName },
     userId: await getSignedInUserId(),
+    network: { ...sessionMockData.network, mode: await savedMode() },
     region: (await savedRegion()) ?? sessionMockData.region,
     onboarded: done,
     welcomePending,

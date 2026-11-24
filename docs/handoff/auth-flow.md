@@ -31,3 +31,10 @@ Written 2026-11-24. The app behaves the way production will: nothing opens witho
 - A wallet sign-in was **not exercised end to end** in a browser here (it needs a real wallet). The redirects, the cookie checks and
   the session route were exercised against the running server with a signed cookie.
 - Signing out of Dynamic clears our cookie (`onLogout`). The session otherwise lasts 7 days.
+
+## The sign-in page (2026-11-24)
+
+Laid out as the main Sandworm app's is (`sandworm-web/apps/web/src/app/(onboarding)/layout.tsx`): the way in on the left, an aurora on the
+right (`AuraPanel`, assets in `public/img/abstract.webp` and `public/videos/aurora.*`, hidden on a phone). No site header and no Launch App
+button; Home and Documentation are in the top corner of the form side. The wallet button spins and cannot be pressed from the click until
+the page has changed (`Wallet.connecting`, published by `DynamicSdk`), and is free again if the wallet window is closed or the sign-in fails.

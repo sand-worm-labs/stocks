@@ -30,12 +30,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
           What should this strategy do?
         </h1>
         <BriefTabs current="brief" />
-        <BriefWorkspace
-          key={chosen?.id}
-          initialText={chosen?.brief ?? draft.text}
-          portfolioId={draft.portfolioId}
-          examples={draft.examples}
-        />
+        <BriefWorkspace key={chosen?.id} initialText={chosen?.brief ?? draft.text} examples={draft.examples} />
         <StockShortcuts stocks={stocks.filter(isBuyable).sort(byLiquidity).slice(0, 6)} total={summary.buyable} />
       </FlowLayout>
     </div>

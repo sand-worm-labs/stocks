@@ -4,7 +4,6 @@ import { BriefTabs } from "@/components/Brief/BriefTabs"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { StepProgress } from "@/components/Flow/StepProgress"
 import { StockPicker } from "@/components/StockPicker/StockPicker"
-import { getBriefDraft } from "@/lib/brief/source"
 import { getCategories, getMarketSummary, getStocks } from "@/lib/markets/source"
 
 export const metadata: Metadata = { title: "Stocks or a category" }
@@ -13,12 +12,7 @@ export const metadata: Metadata = { title: "Stocks or a category" }
 const PICKED_CATEGORY = "robotics"
 
 export default async function StockPickerPage() {
-  const [stocks, categories, summary, draft] = await Promise.all([
-    getStocks(),
-    getCategories(),
-    getMarketSummary(),
-    getBriefDraft(),
-  ])
+  const [stocks, categories, summary] = await Promise.all([getStocks(), getCategories(), getMarketSummary()])
 
   return (
     <div className="mx-auto w-full max-w-[820px]">
@@ -31,7 +25,6 @@ export default async function StockPickerPage() {
           stocks={stocks}
           categories={categories}
           buyableCount={summary.buyable}
-          portfolioId={draft.portfolioId}
           initialCategoryIds={[PICKED_CATEGORY]}
         />
       </FlowLayout>

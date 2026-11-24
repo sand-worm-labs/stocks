@@ -36,3 +36,4 @@ docs/reference/dashboard/private/
 # generated
 graph.svg
 *.tsbuildinfo
+.data/

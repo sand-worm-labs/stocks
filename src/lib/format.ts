@@ -34,3 +34,12 @@ export const pluralize = (count: number, noun: string) =>
   `${count} ${count === 1 ? noun : noun.replace(/([^aeiou])y$/, "$1ie") + "s"}`
 
 export const shortenAddress = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`
+
+// An address or transaction hash at one of three lengths: short (0x1234…abcd), long (0x12345678…abcdef12) or all of it
+export type AddressLength = "short" | "long" | "full"
+export const formatAddress = (address: string, length: AddressLength = "short") =>
+  length === "full"
+    ? address
+    : length === "long"
+      ? `${address.slice(0, 10)}…${address.slice(-8)}`
+      : shortenAddress(address)

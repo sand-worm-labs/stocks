@@ -20,7 +20,7 @@ export function ActivityFeed({ activity, now }: { activity: Activity[]; now: str
       <ul className="px-2 pb-2">
         {activity.map(({ id, kind, title, detail, at }) => (
           <li key={id} className="flex items-start gap-3 rounded-xl px-3 py-2.5">
-            <IconTile icon={ACTIVITY_KIND[kind].icon} tone={ACTIVITY_KIND[kind].tone} className="size-9" />
+            <IconTile icon={ACTIVITY_KIND[kind].icon} className="size-9" />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="font-medium">{title}</span>
               <span className="text-ink-400 text-sm">{detail}</span>

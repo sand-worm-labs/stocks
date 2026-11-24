@@ -12,6 +12,7 @@ import type { Portfolio } from "@/lib/portfolios/types"
 import { getOrders, getReport } from "@/lib/report/source"
 import { getRules } from "@/lib/rules/source"
 import { getSession } from "@/lib/session/source"
+import { getOwnStrategy } from "@/lib/strategies/source"
 
 import { ModelWorkspace } from "./ModelWorkspace"
 
@@ -21,12 +22,15 @@ const RESEARCH_DONE = 2
 // A model that is still a draft, as the one page it grows on: the data it needs, put together from the parts that
 // each step used to have a page for
 export async function DraftWorkspace({ portfolio }: { portfolio: Portfolio }) {
-  const [rulesData, report, orders, session] = await Promise.all([
+  const [rulesData, report, orders, session, own] = await Promise.all([
     getRules(portfolio),
-    getReport(1),
-    getOrders(1),
+    getReport(1, portfolio.id),
+    getOrders(1, portfolio.id),
     getSession(),
+    getOwnStrategy(portfolio.id),
   ])
+  // Made here, so what is confirmed and what is bought is kept; the made-up ones are only shown
+  const real = Boolean(own)
   const { rules } = rulesData
   // The agent for each point the page can be at: it has what to say about the rules, about the research, and about the report
   const [rulesScript, researchScript, reportScript] = await Promise.all([
@@ -37,6 +41,8 @@ export async function DraftWorkspace({ portfolio }: { portfolio: Portfolio }) {
 
   return (
     <ModelWorkspace
+      id={portfolio.id}
+      real={real}
       stage={portfolio.stage}
       agents={{
         rules: <AgentWorkspace script={rulesScript} />,
@@ -61,7 +67,15 @@ export async function DraftWorkspace({ portfolio }: { portfolio: Portfolio }) {
           <ReportColumn key="sections" report={report} portfolioId={portfolio.id} />
         </div>
       }
-      buy={<ReviewAndBuy orders={orders} report={report} portfolioId={portfolio.id} network={session.network} />}
+      buy={
+        <ReviewAndBuy
+          orders={orders}
+          report={report}
+          portfolioId={portfolio.id}
+          network={session.network}
+          demo={!real}
+        />
+      }
     />
   )
 }

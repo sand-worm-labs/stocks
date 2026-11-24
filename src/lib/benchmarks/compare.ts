@@ -1,3 +1,5 @@
+import type { PricePoint } from "@/lib/markets/history"
+import { fundValues } from "@/lib/portfolios/history"
 import { stretch, type ValuePoint } from "@/lib/portfolios/performance"
 
 import type { Benchmark, BenchmarkGroup } from "./types"
@@ -13,7 +15,22 @@ export type BenchmarkLine = {
   values: number[]
 }
 
-export function benchmarkLines(benchmarks: Benchmark[], points: ValuePoint[]): BenchmarkLine[] {
+// With `funds` (real prices over the same stretch, by ticker) each fund is drawn from them, and one with no prices is left out rather than
+// drawn from something made up. Without, the funds are the made-up weekly series, for the strategies that are only examples.
+export function benchmarkLines(
+  benchmarks: Benchmark[],
+  points: ValuePoint[],
+  funds?: Record<string, PricePoint[]>
+): BenchmarkLine[] {
+  if (funds) {
+    return benchmarks.flatMap(({ id, name, fund, group }) => {
+      const values = fundValues(points, funds[id] ?? [])
+      const first = values?.[0]
+      const last = values?.at(-1)
+      return values && first && last !== undefined ? [{ id, name, fund, group, change: last / first - 1, values }] : []
+    })
+  }
+
   const base = points[0]?.value ?? 0
 
   return benchmarks.map(({ id, name, fund, group, weekChange, series }) => {

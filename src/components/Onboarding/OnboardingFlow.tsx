@@ -12,6 +12,7 @@ import { InterestStep } from "./InterestStep"
 import { NameStep } from "./NameStep"
 import { OnboardingShell } from "./OnboardingShell"
 import { StarterStep } from "./StarterStep"
+import { StepStage } from "./StepStage"
 
 type OnboardingFlowProps = {
   initial: { name?: string; interests: string[] }
@@ -43,39 +44,45 @@ export function OnboardingFlow({ initial, region, chain, starters }: OnboardingF
       onSkip={() => finish()}
       skipping={pending}
     >
-      {step === 0 && (
-        <InterestStep
-          name={initial.name}
-          value={interests}
-          onChange={setInterests}
-          onContinue={() => {
-            startTransition(() => saveOnboarding({ interests }))
-            next()
-          }}
-        />
-      )}
-      {step === 1 && (
-        <NameStep
-          value={name}
-          onChange={setName}
-          pending={pending}
-          onContinue={() => {
-            startTransition(() => saveOnboarding({ name }))
-            next()
-          }}
-        />
-      )}
-      {step === 2 && <ChecksStep region={region} chain={chain} onContinue={next} />}
-      {step === 3 && (
-        <StarterStep
-          starters={offered}
-          selected={selected}
-          onSelect={setChosen}
-          pending={pending}
-          onContinue={() => finish({ starter: selected })}
-          onExplore={() => finish({ stocks: true })}
-        />
-      )}
+      <StepStage step={step}>
+        {(shown) => (
+          <>
+            {shown === 0 && (
+              <InterestStep
+                name={initial.name}
+                value={interests}
+                onChange={setInterests}
+                onContinue={() => {
+                  startTransition(() => saveOnboarding({ interests }))
+                  next()
+                }}
+              />
+            )}
+            {shown === 1 && (
+              <NameStep
+                value={name}
+                onChange={setName}
+                pending={pending}
+                onContinue={() => {
+                  startTransition(() => saveOnboarding({ name }))
+                  next()
+                }}
+              />
+            )}
+            {shown === 2 && <ChecksStep region={region} chain={chain} onContinue={next} />}
+            {shown === 3 && (
+              <StarterStep
+                starters={offered}
+                selected={selected}
+                onSelect={setChosen}
+                pending={pending}
+                onContinue={() => finish({ starter: selected })}
+                onExplore={() => finish({ stocks: true })}
+              />
+            )}
+          </>
+        )}
+      </StepStage>
     </OnboardingShell>
   )
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { changeOver, returnOnDeposit, totalValueOverWeek, valueOverWeek } from "./performance"
-import { isLive } from "./portfolio"
+import { isLive, portfolioValue } from "./portfolio"
 import { getPortfolios } from "./source"
 
 const NOW = "2026-11-20T12:00:00.000Z"
@@ -17,6 +17,26 @@ describe("totalValueOverWeek", () => {
     const both = totalValueOverWeek([live, { ...live, id: "copy" }], NOW)
     expect(both).toHaveLength(one.length)
     expect(both[0]?.value).toBeCloseTo((one[0]?.value ?? 0) * 2)
+  })
+})
+
+describe("totalValueOverWeek with real histories", () => {
+  const nowMs = new Date(NOW).getTime()
+  const history = [
+    { label: "a", time: Math.floor(nowMs / 1000) - 7200, value: 100 },
+    { label: "b", time: Math.floor(nowMs / 1000) - 3600, value: 110 },
+  ]
+
+  it("uses a portfolio's real history, ending at its live value and the clock", () => {
+    const total = totalValueOverWeek([live], NOW, { [live.id]: history })
+
+    expect(total[0]?.value).toBe(100)
+    expect(total.at(-1)?.time).toBe(Math.floor(nowMs / 1000))
+    expect(total.at(-1)?.value).toBeCloseTo(portfolioValue(live) ?? 0)
+  })
+
+  it("draws a portfolio with no history the old way", () => {
+    expect(totalValueOverWeek([live], NOW, {})).toEqual(totalValueOverWeek([live], NOW))
   })
 })
 

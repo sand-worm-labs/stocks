@@ -27,4 +27,17 @@ describe("benchmarkLines", () => {
   it("is nothing to draw without points", () => {
     expect(benchmarkLines([fund], [])[0]?.values).toEqual([])
   })
+
+  it("is drawn from the fund's real prices when they are given, held to where the portfolio started", () => {
+    const prices = [100, 110, 120].map((price, i) => ({ time: 1000 + i * 2, price }))
+    const [line] = benchmarkLines([fund], points, { SPY: prices })
+
+    expect(line?.values[0]).toBeCloseTo(100)
+    expect(line?.values.at(-1)).toBeCloseTo(120)
+    expect(line?.change).toBeCloseTo(0.2)
+  })
+
+  it("leaves out a fund with no real prices rather than drawing a made-up one", () => {
+    expect(benchmarkLines([fund], points, {})).toEqual([])
+  })
 })

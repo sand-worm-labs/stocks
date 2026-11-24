@@ -1,10 +1,10 @@
 import { formatDay, formatTime } from "@/lib/dates"
 
+import { sumLines, type ValuePoint, withLiveEnd } from "./history"
 import { isLive, portfolioValue } from "./portfolio"
 import type { Portfolio } from "./types"
 
-// `time` is in seconds, for a chart that draws on a clock
-export type ValuePoint = { label: string; time: number; value: number }
+export type { ValuePoint }
 
 // What has been put in: the cost of everything bought, and the cash waiting
 export const deposited = ({ holdings, cash }: Portfolio) => holdings.reduce((sum, { cost }) => sum + cost, cash)
@@ -58,9 +58,26 @@ export function profit(portfolio: Portfolio) {
   return (portfolioValue(portfolio) ?? invested) - invested
 }
 
-// Everything held in live portfolios added up over the same stretch
-export function totalValueOverWeek(portfolios: Portfolio[], now: string): ValuePoint[] {
-  const lines = portfolios.filter(isLive).map((portfolio) => valueOverWeek(portfolio, now))
+// Everything held in live portfolios added up. A portfolio made here has its real history, worked out from prices (`histories`, by id), and
+// is brought up to the live prices and the clock; one that has none is drawn the old way, over the week.
+export function totalValueOverWeek(
+  portfolios: Portfolio[],
+  now: string,
+  histories?: Record<string, ValuePoint[]>
+): ValuePoint[] {
+  const live = portfolios.filter(isLive)
+  if (histories && live.some(({ id }) => histories[id])) {
+    return sumLines(
+      live.map((portfolio) => {
+        const history = histories[portfolio.id]
+        return history
+          ? withLiveEnd(history, portfolioValue(portfolio) ?? 0, new Date(now).getTime())
+          : valueOverWeek(portfolio, now)
+      })
+    )
+  }
+
+  const lines = live.map((portfolio) => valueOverWeek(portfolio, now))
   const first = lines[0]
   if (!first) return []
   const length = Math.min(...lines.map(({ length }) => length))

@@ -4,9 +4,11 @@ import {
   AreaSeries,
   ColorType,
   createChart,
+  createSeriesMarkers,
   CrosshairMode,
   type IChartApi,
   type ISeriesApi,
+  type ISeriesMarkersPluginApi,
   LineSeries,
   LineStyle,
   type MouseEventParams,
@@ -21,11 +23,13 @@ import { BenchmarkPicker } from "@/components/Charts/BenchmarkPicker"
 import { ChartLoader } from "@/components/Charts/ChartLoader"
 import { ChartTooltip, type TooltipRow } from "@/components/Charts/ChartTooltip"
 import { Pill } from "@/components/ui/pill"
+import { SegmentedControl } from "@/components/ui/segmented-control"
 import { useInView } from "@/hooks/use-in-view"
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 import type { BenchmarkLine } from "@/lib/benchmarks/compare"
 import { formatDay, formatTime } from "@/lib/dates"
 import { formatAmount, formatPercent, formatSignedAmount } from "@/lib/format"
+import type { ChartEvent } from "@/lib/portfolios/chart"
 import { changeOver, type ValuePoint } from "@/lib/portfolios/performance"
 
 // The portfolio's own line: violet by day, white by night, where violet doesn't read
@@ -63,10 +67,38 @@ const withAlpha = (hex: string, alpha: number) => {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha.toFixed(3)})`
 }
 
+// What the chart shows: what the money is worth, or how far it has moved from where it started, in percent. The second is the fair way to
+// hold one line against another, and it is the same whatever money is added or taken out.
+type View = "value" | "return"
+const VIEWS = [
+  { value: "value", label: "Value" },
+  { value: "return", label: "Return" },
+] as const
+
+const plotted = (value: number, base: number, view: View) =>
+  view === "return" ? (value / (base || 1) - 1) * 100 : value
+
+const formatSignedPercentPoints = (value: number) => `${value > 0 ? "+" : ""}${value.toFixed(2)} points`
+
+const percent = (value: number) => `${value > 0 ? "+" : ""}${value.toFixed(Math.abs(value) < 10 ? 2 : 1)}%`
+
+// How prices on the scale and on a line are written, for each view
+function formats(view: View, biggest: number) {
+  if (view === "return") {
+    return { series: { type: "custom" as const, minMove: 0.01, formatter: percent }, axis: percent }
+  }
+  return {
+    series: { type: "price" as const, precision: biggest >= 1000 ? 0 : 2, minMove: biggest >= 1000 ? 1 : 0.01 },
+    axis: (price: number) => price.toLocaleString("en-US", { maximumFractionDigits: biggest >= 1000 ? 0 : 2 }),
+  }
+}
+
 // Draws as much of a fund's line as its progress says, and as faint as it says
-function drawFund(fund: Fund, values: number[] | undefined, times: UTCTimestamp[]) {
+function drawFund(fund: Fund, values: number[] | undefined, times: UTCTimestamp[], view: View, base: number) {
   const shown = Math.round(fund.progress * times.length)
-  fund.series.setData(times.slice(0, shown).map((time, i) => ({ time, value: values?.[i] ?? 0 })))
+  fund.series.setData(
+    times.slice(0, shown).map((time, i) => ({ time, value: plotted(values?.[i] ?? base, base, view) }))
+  )
   fund.series.applyOptions({ color: withAlpha(fund.color, Math.min(1, fund.progress * 1.8)) })
 }
 
@@ -123,11 +155,18 @@ function ChipSlot({
 type Tip = { x: number; y: number; width: number; title: string; rows: TooltipRow[]; footer?: string }
 
 // `name` is what the line is called: "Portfolio" for one, "My portfolios" for all of them together
-type TradingChartProps = { points: ValuePoint[]; lines: BenchmarkLine[]; label: string; name?: string }
+// `events` are what happened that the line marks, such as when a strategy was started
+type TradingChartProps = {
+  points: ValuePoint[]
+  lines: BenchmarkLine[]
+  label: string
+  name?: string
+  events?: ChartEvent[]
+}
 
 // The portfolio's value against any of the index funds and ETFs, drawn with TradingView's chart library. The funds are
 // picked from the chips above it, each held to the same start so the lines say who did better.
-export function TradingChart({ points, lines, label, name = "Strategy" }: TradingChartProps) {
+export function TradingChart({ points, lines, label, name = "Strategy", events = [] }: TradingChartProps) {
   const { resolvedTheme } = useTheme()
   const reduced = usePrefersReducedMotion()
   const [frame, inView] = useInView<HTMLDivElement>()
@@ -136,6 +175,7 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
   const [chips, setChips] = useState<Chip[]>(() =>
     defaultPicked(lines).map((slot) => ({ ...slot, open: true, immediate: true }))
   )
+  const [view, setView] = useState<View>("value")
   const [tip, setTip] = useState<Tip>()
   const [dot, setDot] = useState<{ x: number; y: number }>()
   // The chart is wiped in from the left once it is made, and the live dot comes when the line has got there
@@ -154,18 +194,48 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
   // Set when the chart has just been made, so the funds already picked are drawn at once and only a change after it is animated
   const fresh = useRef(true)
   // What the chart's callbacks should see, since they outlive a render
-  const latest = useRef({ points, times, lines, name })
-  latest.current = { points, times, lines, name }
+  const latest = useRef({ points, times, lines, name, view, events })
+  latest.current = { points, times, lines, name, view, events }
+  const markers = useRef<ISeriesMarkersPluginApi<Time>>(undefined)
+  const accentColor = useRef<string>(ACCENT.light.line)
+  // A line is drawn once there are two points to draw; more points arriving after that don't make the chart again
+  const ready = points.length >= 2
 
   const colorOf = (id: string) => picked.find((slot) => slot.id === id)?.color ?? LINE_COLORS[0] ?? "#64748b"
   const colorOfRef = useRef(colorOf)
   colorOfRef.current = colorOf
 
+  // Where what happened is marked on the line: on the point nearest it. One event says what it was; several are just dots.
+  const markersFor = () => {
+    const { times: at, events: happened } = latest.current
+    return happened
+      .flatMap(({ time }) => {
+        const nearest = at.reduce<UTCTimestamp | undefined>(
+          (best, one) => (best === undefined || Math.abs(one - time) < Math.abs(best - time) ? one : best),
+          undefined
+        )
+        return nearest === undefined ? [] : [nearest]
+      })
+      .sort((a, b) => a - b)
+      .map((time) => ({
+        time,
+        position: "belowBar" as const,
+        shape: "circle" as const,
+        color: accentColor.current,
+        size: 1,
+        text: happened.length === 1 ? "Started" : "",
+      }))
+  }
+
   // Every line on the chart, with all its points
   const paint = () => {
-    const { points: all, times: at, lines: known } = latest.current
-    area.current?.setData(all.map((point, i) => ({ time: at[i] as UTCTimestamp, value: point.value })))
-    funds.current.forEach((fund, id) => drawFund(fund, known.find((line) => line.id === id)?.values, at))
+    const { points: all, times: at, lines: known, view: shown } = latest.current
+    const base = all[0]?.value ?? 0
+    area.current?.setData(
+      all.map((point, i) => ({ time: at[i] as UTCTimestamp, value: plotted(point.value, base, shown) }))
+    )
+    funds.current.forEach((fund, id) => drawFund(fund, known.find((line) => line.id === id)?.values, at, shown, base))
+    markers.current?.setMarkers(markersFor())
   }
   const paintRef = useRef(paint)
   paintRef.current = paint
@@ -173,7 +243,8 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
   const placeDot = () => {
     const { points: all, times: at } = latest.current
     const x = chart.current?.timeScale().timeToCoordinate(at.at(-1) as UTCTimestamp)
-    const y = area.current?.priceToCoordinate(all.at(-1)?.value ?? 0)
+    const { view: shown } = latest.current
+    const y = area.current?.priceToCoordinate(plotted(all.at(-1)?.value ?? 0, all[0]?.value ?? 0, shown))
     // The same place again is no change, so it doesn't set the chart going round again
     setDot((current) =>
       x == null || y == null
@@ -189,11 +260,13 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
   // The chart itself: made when it first comes into view, and again if the theme or the points change
   useEffect(() => {
     const host = canvas.current
-    if (!host || !inView || points.length < 2) return
+    if (!host || !inView || !ready) return
 
     const dark = resolvedTheme === "dark"
     const accent = dark ? ACCENT.dark : ACCENT.light
+    accentColor.current = accent.line
     const biggest = Math.max(...points.map(({ value }) => value))
+    const shape = formats(latest.current.view, biggest)
     const api = createChart(host, {
       autoSize: true,
       handleScroll: false,
@@ -227,17 +300,10 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
         horzLine: { visible: false, labelVisible: false },
       },
       localization: {
-        priceFormatter: (price: number) =>
-          price.toLocaleString("en-US", { maximumFractionDigits: biggest >= 1000 ? 0 : 2 }),
+        priceFormatter: shape.axis,
         timeFormatter: (time: Time) => `${formatDay(isoOf(time))}, ${formatTime(isoOf(time))}`,
       },
     })
-    const priceFormat = {
-      type: "price" as const,
-      precision: biggest >= 1000 ? 0 : 2,
-      minMove: biggest >= 1000 ? 1 : 0.01,
-    }
-
     const portfolio = api.addSeries(AreaSeries, {
       lineColor: accent.line,
       lineWidth: 3,
@@ -246,10 +312,11 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerRadius: 5,
-      priceFormat,
+      priceFormat: shape.series,
     })
     chart.current = api
     area.current = portfolio
+    markers.current = createSeriesMarkers(portfolio, [])
     funds.current = new Map()
     fresh.current = true
     paintRef.current()
@@ -257,34 +324,38 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
 
     const onMove = (param: MouseEventParams<Time>) => {
       const index = param.time === undefined ? -1 : latest.current.times.indexOf(param.time as UTCTimestamp)
-      const own = area.current ? (param.seriesData.get(area.current) as { value: number } | undefined) : undefined
-      if (!param.point || index < 0 || !own) return setTip(undefined)
+      const point = latest.current.points[index]
+      if (!param.point || !point) return setTip(undefined)
 
-      const rows: TooltipRow[] = [
-        { label: latest.current.name, value: `${formatAmount(own.value)} USDC`, color: accent.line },
-      ]
+      // The words follow the view: what the money is worth, or how far it has moved. What is compared is the same either way.
+      const { view: shown, points: all } = latest.current
+      const base = all[0]?.value ?? 0
+      const say = (value: number) =>
+        shown === "return" ? percent(plotted(value, base, "return")) : `${formatAmount(value)} USDC`
+
+      const rows: TooltipRow[] = [{ label: latest.current.name, value: say(point.value), color: accent.line }]
       let against: { name: string; value: number } | undefined
-      funds.current.forEach(({ series, wanted }, id) => {
-        if (!wanted) return
-        const datum = param.seriesData.get(series) as { value: number } | undefined
+      funds.current.forEach(({ wanted }, id) => {
         const fund = latest.current.lines.find((line) => line.id === id)
-        if (!datum || !fund) return
-        rows.push({
-          label: fund.name,
-          value: `${formatAmount(datum.value)} USDC`,
-          color: colorOfRef.current(id),
-          dashed: true,
-        })
-        against ??= { name: fund.name, value: datum.value }
+        const value = fund?.values[index]
+        if (!wanted || !fund || value === undefined) return
+        rows.push({ label: fund.name, value: say(value), color: colorOfRef.current(id), dashed: true })
+        against ??= { name: fund.name, value }
       })
+
+      const gap = against
+        ? shown === "return"
+          ? `${formatSignedPercentPoints(plotted(point.value, base, "return") - plotted(against.value, base, "return"))} against ${against.name}`
+          : `${formatSignedAmount(point.value - against.value)} USDC against ${against.name}`
+        : undefined
 
       setTip({
         x: param.point.x,
         y: param.point.y,
         width: host.clientWidth,
-        title: latest.current.points[index]?.label ?? "",
+        title: point.label,
         rows,
-        footer: against ? `${formatSignedAmount(own.value - against.value)} USDC against ${against.name}` : undefined,
+        footer: gap,
       })
     }
     api.subscribeCrosshairMove(onMove)
@@ -305,13 +376,14 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
       api.remove()
       chart.current = undefined
       area.current = undefined
+      markers.current = undefined
       funds.current = new Map()
       setTip(undefined)
       setDot(undefined)
       setWiped(false)
       setLanded(false)
     }
-  }, [inView, resolvedTheme, points.length, reduced])
+  }, [inView, resolvedTheme, ready, reduced])
 
   // Draws a fund's line in (`to` 1) or out (`to` 0), the scale following what is showing. Out, the line is taken off the chart when it has
   // gone. `instant` does it at once: for the first drawing of a chart, and for anyone who has asked for less motion.
@@ -322,7 +394,13 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
     if (fund.frame) cancelAnimationFrame(fund.frame)
 
     const render = () =>
-      drawFund(fund, latest.current.lines.find((line) => line.id === id)?.values, latest.current.times)
+      drawFund(
+        fund,
+        latest.current.lines.find((line) => line.id === id)?.values,
+        latest.current.times,
+        latest.current.view,
+        latest.current.points[0]?.value ?? 0
+      )
     const finish = () => {
       fund.frame = undefined
       if (to === 0 && funds.current.get(id) === fund) {
@@ -358,6 +436,7 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
     if (!api || !inView) return
 
     const biggest = Math.max(...points.map(({ value }) => value))
+    const shape = formats(latest.current.view, biggest)
     const instant = fresh.current || reduced
     fresh.current = false
 
@@ -371,14 +450,16 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
           priceLineVisible: false,
           lastValueVisible: false,
           crosshairMarkerRadius: 4,
-          priceFormat: { type: "price", precision: biggest >= 1000 ? 0 : 2, minMove: biggest >= 1000 ? 1 : 0.01 },
+          priceFormat: shape.series,
         })
         fund = { series, color, progress: instant ? 1 : 0, wanted: true }
         funds.current.set(id, fund)
       }
+      // One already drawn in full is left as it is; only one coming in, or coming back, is drawn
+      const settled = fund.wanted && fund.progress === 1
       fund.wanted = true
       fund.color = color
-      slideFund(id, 1, instant)
+      if (!settled) slideFund(id, 1, instant)
     }
     funds.current.forEach((fund, id) => {
       if (fund.wanted && !picked.some((slot) => slot.id === id)) {
@@ -387,14 +468,28 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
       }
     })
     requestAnimationFrame(() => placeDotRef.current())
-  }, [inView, resolvedTheme, points.length, reduced, picked])
+  }, [inView, resolvedTheme, ready, reduced, picked])
 
-  // A new price moves the lines where they are: the data is set again, and the chart is not made again
+  // A new price, or the clock moving on, moves the lines: the data is set again and the chart made to fit it, and it is not made again
   useEffect(() => {
     if (!chart.current) return
     paintRef.current()
+    chart.current.timeScale().fitContent()
     requestAnimationFrame(() => placeDotRef.current())
-  }, [points, lines])
+  }, [points, lines, events])
+
+  // Value or return: the lines are drawn in the other terms, and the scale is written the other way
+  useEffect(() => {
+    const api = chart.current
+    if (!api) return
+    const shape = formats(view, Math.max(...latest.current.points.map(({ value }) => value)))
+    api.applyOptions({ localization: { priceFormatter: shape.axis } })
+    area.current?.applyOptions({ priceFormat: shape.series })
+    funds.current.forEach(({ series }) => series.applyOptions({ priceFormat: shape.series }))
+    paintRef.current()
+    api.timeScale().fitContent()
+    requestAnimationFrame(() => placeDotRef.current())
+  }, [view])
 
   const toggle = (id: string) => {
     let next: Slot[]
@@ -454,6 +549,9 @@ export function TradingChart({ points, lines, label, name = "Strategy" }: Tradin
           })}
         </div>
         <BenchmarkPicker lines={lines} picked={picked} max={MAX_COMPARED} onToggle={toggle} />
+        <div className="ml-auto">
+          <SegmentedControl label="What the chart shows" options={[...VIEWS]} value={view} onChange={setView} />
+        </div>
       </div>
 
       <div

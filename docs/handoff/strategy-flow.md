@@ -63,3 +63,11 @@ template's, and the report says so in a banner, in the verdict ("Example results
 - One edit at a time: the store is last write wins, which is fine for one person using one strategy.
 - The wallet approval has not been exercised with a real wallet here; the check was tested with real signatures and stand-in chain reads.
 - Nothing executes on the chain yet: trades from the person's wallet (swaps into the stock tokens) are the step after this, and will be signed by them.
+
+## The value chart (home and strategy page)
+
+- **What it shows:** what the strategy is worth over time, worked out from real prices (`lib/portfolios/history.ts`: units × price at each moment). Nothing is recorded or scheduled; it is a pure calculation, cached for 5 minutes per window (`lib/markets/history.ts`: day / week / month by age).
+- **Benchmarks** use real fund prices over the same window (`benchmarkLines(..., funds)`); a fund with no prices is left out, never faked. Strategies that are only examples keep the old made-up line.
+- **Controls:** `Value | Return` toggle on the chart. Return (%) is the fair way to compare against funds and ignores how much was put in. Tooltip shows value or return, plus the gap against the first compared fund.
+- **Markers:** `ChartEvent`s from `getChartData` (only "started" today). **Open:** Add funds / Sell are not persisted, so they can't be marked yet. Once a ledger exists, `valueHistory` should use it (units change at each event) and a time-weighted return replaces the plain one.
+- **Live edge:** the last point is the live-price value at the clock (`withLiveEnd`); `HomeSummaryLive` ticks every 30s. The chart is no longer rebuilt when a point is appended (`ready` dependency), only repainted.

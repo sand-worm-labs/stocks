@@ -57,14 +57,14 @@ const marketsSchema = z.array(
 const RATE_LIMIT_WAIT_MS = 20_000
 
 // With a key the calls count against its own allowance, not the shared one a deployed app is refused on
-const headers = () => ({
+export const coingeckoHeaders = () => ({
   accept: "application/json",
   ...(env.COINGECKO_API_KEY && { "x-cg-demo-api-key": env.COINGECKO_API_KEY }),
 })
 
 async function get<T>(path: string, schema: z.ZodType<T>, retry = true): Promise<T> {
   const response = await fetch(`${COINGECKO_URL}${path}`, {
-    headers: headers(),
+    headers: coingeckoHeaders(),
     cache: "no-store",
     signal: AbortSignal.timeout(30_000),
   })
@@ -152,7 +152,7 @@ async function getBaseAddresses(): Promise<Record<string, string>> {
   try {
     // Twenty thousand coins come back, so they are filtered as they are read, not checked one by one against a schema
     const response = await fetch(`${COINGECKO_URL}/coins/list?include_platform=true`, {
-      headers: headers(),
+      headers: coingeckoHeaders(),
       cache: "no-store",
       signal: AbortSignal.timeout(30_000),
     })

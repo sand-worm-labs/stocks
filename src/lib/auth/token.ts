@@ -33,3 +33,25 @@ export async function readSession(token: string | undefined) {
     return undefined
   }
 }
+
+// A minute's pass to open the chat connection. The chat server is a separate process that can't read the session cookie, so the
+// signed-in browser gets this from the app and shows it there. It names the person and can't be used for anything else.
+export const signChatTicket = (userId: string) =>
+  new SignJWT({})
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(userId)
+    .setIssuer(ISSUER)
+    .setAudience("chat")
+    .setIssuedAt()
+    .setExpirationTime("60s")
+    .sign(secret())
+
+export async function readChatTicket(ticket: string | null) {
+  if (!ticket) return undefined
+  try {
+    const { payload } = await jwtVerify(ticket, secret(), { issuer: ISSUER, audience: "chat", algorithms: ["HS256"] })
+    return payload.sub
+  } catch {
+    return undefined
+  }
+}

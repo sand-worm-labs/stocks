@@ -14,6 +14,7 @@ import { getCantMeetScript } from "@/lib/agent/source"
 import { getBenchmarks } from "@/lib/benchmarks/source"
 import { getMarketSummary, getStocks } from "@/lib/markets/source"
 import { getHeldAddresses } from "@/lib/portfolios/addresses"
+import { getChartData } from "@/lib/portfolios/chart"
 import { getPortfolio } from "@/lib/portfolios/source"
 import { maxWeightOf } from "@/lib/rules/readings"
 import { getRules } from "@/lib/rules/source"
@@ -54,10 +55,12 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
     getStrategy(portfolio),
   ])
 
+  const chart = await getChartData([portfolio], benchmarks).catch(() => undefined)
+
   return (
     <PortfolioShell portfolio={portfolio} current="overview">
       <PortfolioHeroLive portfolio={portfolio} addresses={addresses} />
-      <ValueCard portfolio={portfolio} benchmarks={benchmarks} now={session.now} />
+      <ValueCard portfolio={portfolio} benchmarks={benchmarks} now={session.now} chart={chart} />
       <HoldingsTable
         portfolio={portfolio}
         cap={maxWeightOf(rules) ?? 1}

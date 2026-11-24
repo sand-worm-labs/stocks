@@ -6,6 +6,7 @@ import { isBuyable } from "@/lib/markets/stock"
 import { getBaseTokens } from "@/lib/markets/tokens"
 import type { Stock } from "@/lib/markets/types"
 import { getStarters } from "@/lib/onboarding/source"
+import { getChartData } from "@/lib/portfolios/chart"
 import { exposureTo, heldSymbols, isLive, rankByValue } from "@/lib/portfolios/portfolio"
 import { getPortfolios } from "@/lib/portfolios/source"
 import type { Portfolio } from "@/lib/portfolios/types"
@@ -30,6 +31,8 @@ export async function getHome() {
     getBaseTokens().catch(() => []),
   ])
   const addressOf = new Map(tokens.map(({ symbol, address }) => [symbol, address]))
+  // The value over time, worked out from real prices; without it (the feed can't be reached) the chart is drawn the old way
+  const chart = await getChartData(portfolios, benchmarks).catch(() => undefined)
   const totalHeld = portfolios
     .filter(isLive)
     .reduce((sum, { holdings }) => sum + holdings.reduce((s, holding) => s + holding.value, 0), 0)
@@ -63,6 +66,7 @@ export async function getHome() {
         })
       ),
     portfolios,
+    chart,
     activity: portfolios.length ? activity.slice(0, 4) : [],
     // The biggest holdings first, as far as the side of the page has room for
     heldStocks: stocks

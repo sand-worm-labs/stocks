@@ -11,6 +11,8 @@ import type { Benchmark } from "@/lib/benchmarks/types"
 import { formatDay, formatTime } from "@/lib/dates"
 import type { AllocationSlice } from "@/lib/home/allocation"
 import type { Kpi } from "@/lib/home/types"
+import type { PricePoint } from "@/lib/markets/history"
+import type { ChartEvent } from "@/lib/portfolios/chart"
 import type { ValuePoint } from "@/lib/portfolios/performance"
 
 import { AllocationBar } from "./AllocationBar"
@@ -21,6 +23,10 @@ type HomeSummaryProps = {
   points: ValuePoint[]
   slices: AllocationSlice[]
   benchmarks: Benchmark[]
+  // Real prices of the funds over the same stretch, when the line is a real history; the funds are example series without
+  funds?: Record<string, PricePoint[]>
+  // What happened that the line marks
+  events?: ChartEvent[]
   now: string
   // The way to put more in, which depends on how many portfolios there are to put it in
   addFunds: ReactNode
@@ -34,7 +40,7 @@ const STATS = [
 ]
 
 // What everything you hold is worth, what you put in and what that has made, where the money sits, and how it compares
-export function HomeSummary({ kpis, points, slices, benchmarks, now, addFunds }: HomeSummaryProps) {
+export function HomeSummary({ kpis, points, slices, benchmarks, funds, events, now, addFunds }: HomeSummaryProps) {
   const total = kpis.find(({ id }) => id === "value")
   const profit = kpis.find(({ id }) => id === "profit")
   const put = kpis.find(({ id }) => id === "deposited")
@@ -91,7 +97,8 @@ export function HomeSummary({ kpis, points, slices, benchmarks, now, addFunds }:
         <AllocationBar slices={slices} />
         <TradingChart
           points={points}
-          lines={benchmarkLines(benchmarks, points)}
+          lines={benchmarkLines(benchmarks, points, funds)}
+          events={events}
           name="My strategies"
           label="The value of everything you hold over the last week, against index funds and ETFs"
         />

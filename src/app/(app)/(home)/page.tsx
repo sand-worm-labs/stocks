@@ -72,6 +72,7 @@ export default async function HomePage() {
               portfolios={home.portfolios}
               addresses={home.addresses}
               benchmarks={home.benchmarks}
+              chart={home.chart}
               now={now}
               addFunds={home.addFunds && <AddFundsDialog {...home.addFunds} />}
             />

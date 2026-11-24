@@ -1,144 +1,184 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { PiPaperPlaneTilt } from "react-icons/pi"
+import { PiChatCenteredText } from "react-icons/pi"
 
-import { buttonVariants } from "@/components/Button/Button"
+import { BaseMark } from "@/components/BaseMark/BaseMark"
 import { useLiveMarketContext } from "@/components/Markets/LiveMarket"
 import { Card } from "@/components/ui/card"
-import { formatUsd, shortenAddress } from "@/lib/format"
+import { Switch } from "@/components/ui/switch"
+import { type ChatStatus, useChatRoom } from "@/hooks/use-chat-room"
+import type { ChatMessage } from "@/lib/chat/protocol"
+import { formatTime } from "@/lib/dates"
+import { formatUsd } from "@/lib/format"
+import type { Swap } from "@/lib/markets/swaps"
 import { cn } from "@/lib/utils"
 
-type Message = { id: string; at: number; author: string; text: string; side?: "buy" | "sell" }
+import { ChatComposer } from "./ChatComposer"
 
-const STORAGE_KEY = (address: string) => `sandworm-stocks:chat:${address}`
-const MAX_LENGTH = 280
+type Item = { kind: "message"; at: number; message: ChatMessage } | { kind: "trade"; at: number; swap: Swap }
 
-const clock = (at: number) => new Date(at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+const ALERTS_KEY = "sandworm-stocks:chat:trade-alerts"
 
-function readMessages(address: string): Message[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY(address)) ?? "[]") as Message[]
-  } catch {
-    return []
-  }
+const clock = (at: number) => formatTime(new Date(at).toISOString())
+
+const STATUS_TEXT: Record<Exclude<ChatStatus, "live">, string> = {
+  connecting: "Connecting…",
+  offline: "Reconnecting…",
+  unavailable: "Chat isn't connected",
 }
 
-// A room for the token. What people write sits between the trades as they land on Base, so it is never an empty room.
+// A trade as it lands on Base, in the same bubble as what people say, on the left. A bar down its edge says which way it went, green for a
+// buy and red for a sell, and the Base mark and time sit above the first of a run of trades.
+function TradeBubble({ swap, first }: { swap: Swap; first: boolean }) {
+  return (
+    <li className="animate-slide-in flex flex-col items-start gap-1 pr-10">
+      {first && (
+        <span className="text-ink-400 flex items-center gap-1.5 px-1 text-xs">
+          <span role="img" aria-label="Trade on Base" className="flex">
+            <BaseMark size={14} />
+          </span>
+          <time dateTime={new Date(swap.at).toISOString()} className="tabular-nums">
+            {clock(swap.at)}
+          </time>
+        </span>
+      )}
+      <p className="border-hover-border dark:border-border-tertiary bg-block-surface relative w-fit max-w-full overflow-hidden rounded-2xl rounded-bl-sm border py-2.5 pr-4 pl-5 text-[13px] leading-relaxed">
+        <span
+          aria-hidden="true"
+          className={cn("absolute inset-y-0 left-0 w-1", swap.side === "buy" ? "bg-success" : "bg-error")}
+        />
+        {swap.side === "buy" ? "Bought" : "Sold"} {swap.usd === undefined ? "" : formatUsd(swap.usd)}
+        {swap.price === undefined ? "" : ` at ${formatUsd(swap.price)}`}
+      </p>
+    </li>
+  )
+}
+
+// What a person said. Your own are on the right in the bubble the agent chat gives what you write; everyone else's are on the left, in
+// the bubble it gives its answers. A name and time sit above the first of a run from one person.
+function Bubble({ message, mine, first }: { message: ChatMessage; mine: boolean; first: boolean }) {
+  return (
+    <li className={cn("animate-slide-in flex flex-col gap-1", mine ? "items-end pl-10" : "items-start pr-10")}>
+      {first && (
+        <span className="text-ink-400 flex items-center gap-2 px-1 text-xs">
+          <span className="text-ink-100 font-medium">{mine ? "You" : message.name}</span>
+          <time dateTime={new Date(message.at).toISOString()} className="tabular-nums">
+            {clock(message.at)}
+          </time>
+        </span>
+      )}
+      <p
+        className={cn(
+          "w-fit max-w-full px-4 py-2.5 text-[13px] leading-relaxed break-words whitespace-pre-wrap",
+          mine
+            ? "bg-hover-bg border-hover-border dark:border-border-tertiary rounded-2xl rounded-br-sm border dark:bg-white/5"
+            : "border-hover-border dark:border-border-tertiary bg-block-surface rounded-2xl rounded-bl-sm border"
+        )}
+      >
+        {message.text}
+      </p>
+    </li>
+  )
+}
+
+// A room for the token. What people write is passed on to everyone there as it is written, over a websocket, and the trades as they land
+// on Base can be shown between the messages or left out.
 export function TokenChat({ address, symbol }: { address: string; symbol: string }) {
   const { trades } = useLiveMarketContext()
-  const [written, setWritten] = useState<Message[]>([])
-  const [draft, setDraft] = useState("")
-  const end = useRef<HTMLDivElement>(null)
+  const { messages, online, meId, status, notice, say } = useChatRoom(address)
+  const [alerts, setAlerts] = useState(true)
+  const list = useRef<HTMLUListElement>(null)
+  // Whether the list is at the bottom, so a new line follows it down and doesn't pull someone away from what they are reading
+  const atBottom = useRef(true)
 
   useEffect(() => {
-    setWritten(readMessages(address))
-  }, [address])
+    setAlerts(localStorage.getItem(ALERTS_KEY) !== "off")
+  }, [])
 
-  const feed = useMemo(() => {
-    const own = trades
-      .filter(({ token }) => token === address.toLowerCase())
-      .map<Message>(({ at, side, usd, price }, i) => ({
-        id: `trade-${at}-${i}`,
-        at,
-        author: "Base",
-        side,
-        text: `${side === "buy" ? "Bought" : "Sold"} ${usd === undefined ? "" : formatUsd(usd)}${price === undefined ? "" : ` at ${formatUsd(price)}`}`,
-      }))
-
-    return [...written, ...own].sort((a, b) => a.at - b.at)
-  }, [trades, written, address])
+  const items = useMemo<Item[]>(() => {
+    const said = messages.map<Item>((message) => ({ kind: "message", at: message.at, message }))
+    const traded = alerts
+      ? trades
+          .filter(({ token }) => token === address.toLowerCase())
+          .map<Item>((swap) => ({ kind: "trade", at: swap.at, swap }))
+      : []
+    return [...said, ...traded].sort((a, b) => a.at - b.at)
+  }, [messages, trades, alerts, address])
 
   useEffect(() => {
-    end.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
-  }, [feed.length])
+    const element = list.current
+    if (!element || !atBottom.current) return
+    element.scrollTo({ top: element.scrollHeight, behavior: "smooth" })
+  }, [items.length])
 
-  const send = () => {
-    const text = draft.trim()
-    if (!text) return
-
-    const next = [...written, { id: `me-${Date.now()}`, at: Date.now(), author: "You", text }]
-    setWritten(next)
-    setDraft("")
-    try {
-      localStorage.setItem(STORAGE_KEY(address), JSON.stringify(next))
-    } catch {
-      // Without storage the message stays on the page until it is closed
-    }
+  const toggleAlerts = (on: boolean) => {
+    setAlerts(on)
+    localStorage.setItem(ALERTS_KEY, on ? "on" : "off")
   }
 
   return (
     <Card className="flex flex-col overflow-hidden">
-      <div className="border-border-secondary dark:border-border-tertiary flex items-baseline justify-between gap-3 border-b px-4 py-3 md:px-6">
-        <h2 className="text-lg font-medium">{symbol} chat</h2>
-        <span className="text-ink-400 text-xs">What you write stays in this browser until chat is connected</span>
+      <div className="border-border-secondary dark:border-border-tertiary flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b px-4 py-3 md:px-6">
+        <div>
+          <h2 className="flex items-center gap-x-1.5 text-base leading-6 font-medium">
+            <PiChatCenteredText size={18} aria-hidden="true" className="flex-none" />
+            {symbol} chat
+          </h2>
+          <p className="text-ink-400 flex items-center gap-1.5 text-[12.5px]">
+            <span
+              aria-hidden="true"
+              className={cn("size-1.5 rounded-full", status === "live" ? "bg-success" : "bg-ink-400/50")}
+            />
+            {status === "live" ? `${online} online` : STATUS_TEXT[status]}
+          </p>
+        </div>
+
+        <label className="flex cursor-pointer items-center gap-2.5 text-sm">
+          Trade alerts
+          <Switch checked={alerts} onCheckedChange={toggleAlerts} aria-label="Show trades in the chat" />
+        </label>
       </div>
 
       <ul
-        className="flex h-96 flex-col gap-3 overflow-y-auto px-4 py-4 md:px-6"
+        ref={list}
+        onScroll={({ currentTarget: { scrollTop, clientHeight, scrollHeight } }) => {
+          atBottom.current = scrollHeight - scrollTop - clientHeight < 80
+        }}
         aria-label="Messages"
         aria-live="polite"
+        className="flex h-96 flex-col gap-2 overflow-y-auto px-4 py-4 md:px-6"
       >
-        {feed.length === 0 && (
-          <li className="text-ink-400 text-sm">Nothing yet. Say something, or wait for the next trade.</li>
-        )}
-        {feed.map(({ id, at, author, text, side }) => (
-          <li
-            key={id}
-            className={cn(
-              "animate-slide-in flex flex-col gap-0.5 text-sm",
-              author === "You" ? "items-end" : "items-start"
-            )}
-          >
-            <span className="text-ink-400 flex items-center gap-2 text-xs">
-              {author === "Base" ? "Trade on Base" : author}
-              <span className="tabular-nums">{clock(at)}</span>
-            </span>
-            <span
-              className={cn(
-                "max-w-[85%] rounded-2xl px-3 py-2",
-                author === "You" && "bg-base-400 text-primary-foreground dark:bg-white dark:text-black",
-                author !== "You" && !side && "bg-inputBg dark:bg-white/10",
-                side === "buy" && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-                side === "sell" && "bg-red-500/10 text-red-700 dark:text-red-400"
-              )}
-            >
-              {text}
-            </span>
+        {items.length === 0 && (
+          <li className="text-ink-400 flex flex-1 flex-col items-center justify-center gap-1 text-center text-sm">
+            <span className="text-ink-100 font-medium">No messages yet</span>
+            <span>Say something about {symbol}.</span>
           </li>
-        ))}
-        <div ref={end} />
+        )}
+        {items.map((item, i) => {
+          const before = items[i - 1]
+          if (item.kind === "trade")
+            return <TradeBubble key={item.swap.id} swap={item.swap} first={before?.kind !== "trade"} />
+          const first = before?.kind !== "message" || before.message.userId !== item.message.userId
+          return (
+            <Bubble key={item.message.id} message={item.message} mine={item.message.userId === meId} first={first} />
+          )
+        })}
       </ul>
 
-      <form
-        className="border-border-secondary dark:border-border-tertiary flex items-center gap-2 border-t p-3"
-        onSubmit={(event) => {
-          event.preventDefault()
-          send()
-        }}
-      >
-        <input
-          value={draft}
-          maxLength={MAX_LENGTH}
-          onChange={(event) => setDraft(event.target.value)}
-          aria-label={`Message about ${symbol}`}
-          placeholder={`Say something about ${symbol}...`}
-          className="bg-inputBg placeholder:text-ink-400 focus:ring-primary h-10 min-w-0 flex-1 rounded-full px-4 text-sm outline-none focus:ring dark:bg-white/10"
+      <div className="border-border-secondary dark:border-border-tertiary border-t p-3">
+        <ChatComposer
+          symbol={symbol}
+          disabled={status !== "live"}
+          placeholder={status === "live" ? `Say something about ${symbol}...` : STATUS_TEXT[status]}
+          onSend={say}
         />
-        <button
-          type="submit"
-          disabled={!draft.trim()}
-          aria-label="Send"
-          className={buttonVariants({
-            intent: "dark",
-            size: "compact",
-            className: "min-h-0 rounded-full p-2.5 disabled:opacity-40",
-          })}
-        >
-          <PiPaperPlaneTilt size={18} />
-        </button>
-      </form>
-      <span className="sr-only">{shortenAddress(address)}</span>
+        {notice && (
+          <p role="status" className="text-error mt-1.5 text-xs">
+            {notice}
+          </p>
+        )}
+      </div>
     </Card>
   )
 }

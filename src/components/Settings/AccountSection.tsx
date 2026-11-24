@@ -4,6 +4,7 @@ import { buttonVariants } from "@/components/Button/Button"
 import { CountryFlag } from "@/components/CountryFlag/CountryFlag"
 import { RegionPicker } from "@/components/Region/RegionPicker"
 import { ReplayTourButton } from "@/components/Tour/ReplayTourButton"
+import { resetOnboarding } from "@/lib/onboarding/actions"
 import { countryName, isRegionSupported } from "@/lib/region/countries"
 
 import { SettingRow } from "./SettingRow"
@@ -41,6 +42,21 @@ export function AccountSection({ name, region }: { name: string; region: string 
       >
         <ReplayTourButton />
       </SettingRow>
+      {process.env.NODE_ENV !== "production" && (
+        <SettingRow
+          title="First run (development only)"
+          description="Shows the stepper, welcome window and tour again, as for a new account. Your account and strategies stay as they are."
+        >
+          <form action={resetOnboarding}>
+            <button
+              type="submit"
+              className={buttonVariants({ intent: "outline", size: "sm", className: "min-h-9 min-w-0 px-3" })}
+            >
+              Reset
+            </button>
+          </form>
+        </SettingRow>
+      )}
     </SettingsSection>
   )
 }

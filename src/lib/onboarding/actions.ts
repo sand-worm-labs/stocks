@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { ONBOARDING_COOKIES } from "@/constants/onboarding"
+import { ONBOARDING_COOKIES, ONBOARDING_PATH } from "@/constants/onboarding"
 
 import { getSignedInUserId } from "@/lib/auth/session"
 
@@ -44,4 +44,16 @@ export async function finishOnboarding(to?: { starter?: string; stocks?: boolean
 export async function dismissWelcome() {
   ;(await cookies()).set(ONBOARDING_COOKIES.welcome, "done", OPTIONS)
   revalidatePath("/", "layout")
+}
+
+// For working on the first run, which shows once: forget this browser has been through it, so the stepper, the welcome window and the
+// tour come again as they do for a new account. Only the browser's answers go; the account and its strategies are not touched.
+// Never in production: it refuses there however it was reached, so it can't be used by mistake on a real account.
+export async function resetOnboarding() {
+  if (process.env.NODE_ENV === "production") throw new Error("The first run can only be reset while developing")
+
+  const jar = await cookies()
+  for (const name of Object.values(ONBOARDING_COOKIES)) jar.delete(name)
+  revalidatePath("/", "layout")
+  redirect(ONBOARDING_PATH)
 }

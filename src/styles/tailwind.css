@@ -543,6 +543,24 @@ html[data-skeleton] .animate-grow-x {
   }
 }
 
+/* Fine horizontal lines over a picture, drifting slowly up. They are the page's own colour laid over the picture, two pixels of gap
+   in four, and the layer moves one period each time round by transform alone, which the browser does without the page's scripts. */
+@keyframes scanlines {
+  to {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+@utility scanlines {
+  background-image: repeating-linear-gradient(to bottom, transparent 0 2px, hsl(var(--page-surface) / 0.8) 2px 4px);
+  animation: scanlines 6s linear infinite;
+  will-change: transform;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 @utility animate-slide-in {
   animation: slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 

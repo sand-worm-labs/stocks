@@ -25,7 +25,7 @@ export function InterestStep({ name, value, onChange, onContinue }: InterestStep
   return (
     <div className="flex flex-col items-center gap-3">
       <StepHeading
-        eyebrow={name ? `Welcome, ${name} · Your account is open` : "Your account is open"}
+        eyebrow={name ? `Welcome, ${name}` : undefined}
         title="What do you want to invest in?"
         support="Pick as many as you like."
       />

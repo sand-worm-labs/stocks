@@ -8,6 +8,7 @@ import { SandwormLogo } from "@/components/SandwormLogo/SandwormLogo"
 import { STEPS } from "@/constants/onboarding"
 import { cn } from "@/lib/utils"
 
+import { AuroraBackdrop } from "./AuroraBackdrop"
 import { SignOutLink } from "./SignOutLink"
 
 type OnboardingShellProps = {
@@ -24,7 +25,8 @@ export function OnboardingShell({ step, onBack, onSkip, skipping, children }: On
   const router = useRouter()
 
   return (
-    <div className="bg-page-surface font-body flex min-h-dvh flex-col">
+    <div className="bg-page-surface font-body relative isolate flex min-h-dvh flex-col overflow-hidden">
+      <AuroraBackdrop />
       <header className="grid grid-cols-[1fr_auto_1fr] items-center px-4 py-5 md:px-8">
         <div>
           {step > 0 && (

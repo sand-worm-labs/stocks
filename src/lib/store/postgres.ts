@@ -21,18 +21,24 @@ function readDocument(data: unknown): Document {
   return (value ?? {}) as Document
 }
 
-const toRecord = (row: Record<string, unknown>): StrategyRecord => ({
-  ...readDocument(row.data),
-  id: row.id as string,
-  ownerId: row.owner_id as string,
-  name: row.name as string,
-  brief: row.brief as string,
-  status: row.status as StrategyRecord["status"],
-  stage: row.stage as StrategyRecord["stage"],
-  createdAt: iso(row.created_at) as string,
-  updatedAt: iso(row.updated_at) as string,
-  startedAt: iso(row.started_at),
-})
+// Rows saved before a field existed come back without it
+const toRecord = (row: Record<string, unknown>): StrategyRecord => {
+  const document = readDocument(row.data)
+
+  return {
+    ...document,
+    events: document.events ?? [],
+    id: row.id as string,
+    ownerId: row.owner_id as string,
+    name: row.name as string,
+    brief: row.brief as string,
+    status: row.status as StrategyRecord["status"],
+    stage: row.stage as StrategyRecord["stage"],
+    createdAt: iso(row.created_at) as string,
+    updatedAt: iso(row.updated_at) as string,
+    startedAt: iso(row.started_at),
+  }
+}
 
 // Whether the table has been made, for each way of asking. Kept outside the store so a store can be made afresh as often as is wanted
 // (which is how a change to this code takes effect without a restart) without making the table again each time.

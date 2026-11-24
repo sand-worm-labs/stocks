@@ -17,15 +17,18 @@ export async function getOwnerId() {
   return (await getSignedInUserId()) ?? (authRequired() ? undefined : "local")
 }
 
-// What this person has made
+// What this person has made. Research that has run its time is finished as it is read, so a strategy left researching is found ready when
+// its owner comes back, with no one watching in between.
 export const getOwnStrategies = cache(async () => {
   const ownerId = await getOwnerId()
-  return ownerId ? getStore().list(ownerId) : []
+  if (!ownerId) return []
+  const service = getStrategyService()
+  return Promise.all((await getStore().list(ownerId)).map((record) => service.settle(record)))
 })
 
 // One strategy of theirs, read once for the render however many parts of the page ask. Someone else's is not found.
 export const getOwnStrategy = cache(async (id: string) => {
   const ownerId = await getOwnerId()
   const record = await getStore().get(id)
-  return record && record.ownerId === ownerId ? record : undefined
+  return record && record.ownerId === ownerId ? getStrategyService().settle(record) : undefined
 })

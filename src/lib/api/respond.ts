@@ -17,7 +17,9 @@ export async function respond<S extends z.ZodType>(
   run: (ownerId: string, body: z.infer<S>) => Promise<unknown>,
   success = 200
 ) {
-  if (!isSameOrigin(request)) return json({ error: "This request didn't come from the app" }, 403)
+  // Only a request that changes something has to have come from this site's pages: reading what is yours cannot be done from another site
+  if (request.method !== "GET" && !isSameOrigin(request))
+    return json({ error: "This request didn't come from the app" }, 403)
 
   const ownerId = await getOwnerId()
   if (!ownerId) return json({ error: "Sign in first" }, 401)

@@ -21,6 +21,8 @@ export const env = createEnv({
     // The marketing site, which hosts the Terms and Privacy Policy.
     NEXT_PUBLIC_LANDING_URL: z.string().url().default("http://localhost:8080"),
     NEXT_PUBLIC_DOCS_URL: z.string().url().default("https://github.com/sand-worm-labs/sandworm-web"),
+    // The blog post that explains what Sandworm Stocks does in plain English, which the welcome's "Learn more" opens. Without it, the blog.
+    NEXT_PUBLIC_LEARN_MORE_URL: z.string().url().optional(),
     // From the Dynamic dashboard (Developer, SDK & API Keys). Without it, wallets and sign-in are switched off.
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID: z.string().uuid().optional(),
   },
@@ -32,6 +34,7 @@ export const env = createEnv({
     NEXT_PUBLIC_WEB_APP_URL: process.env.NEXT_PUBLIC_WEB_APP_URL,
     NEXT_PUBLIC_LANDING_URL: process.env.NEXT_PUBLIC_LANDING_URL,
     NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL,
+    NEXT_PUBLIC_LEARN_MORE_URL: process.env.NEXT_PUBLIC_LEARN_MORE_URL,
     NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID,
   },
 })

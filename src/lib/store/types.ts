@@ -9,6 +9,13 @@ import type { Strategy } from "@/lib/strategy/types"
 // wallet, `from`, on `chainId`: the money stays in that wallet, and is never sent to us.
 export type Funding = { mode: "paper" | "live"; amount: number; chainId?: number; from?: string }
 
+// Things that happened to a strategy, kept so its activity and its notifications are real
+export type StrategyEvent = { kind: "created" | "researching" | "ready" | "live"; at: string }
+
+// The research on a strategy, which runs for a while on the agent's side. `readyAt` is when the stand-in agent will be done; Sandworm's
+// will say when it is, and until it does there is none.
+export type ResearchRun = { startedAt: string; readyAt?: string }
+
 // A strategy a person made here, from the idea they typed to what they hold once it is trading. This is what is stored, and it is the
 // only shape the rest of the app asks the store for, so the store behind it (a file, Postgres, or the main app's API) can change
 // without anything else knowing.
@@ -35,6 +42,8 @@ export type StrategyRecord = {
   holdings: Holding[]
   cash: number
   funding?: Funding
+  research?: ResearchRun
+  events: StrategyEvent[]
   createdAt: string
   updatedAt: string
   startedAt?: string

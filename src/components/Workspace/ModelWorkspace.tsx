@@ -10,12 +10,14 @@ import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { StepProgress } from "@/components/Flow/StepProgress"
 import { Badge } from "@/components/ui/badge"
 import { type FlowStepId } from "@/constants/flow"
+import { RESEARCH_EVENT } from "@/constants/research"
 import { type Tone, TONE_DOT_CLASSNAME } from "@/constants/tone"
 import { confirmRules, errorMessage, finishResearch } from "@/lib/strategies/client"
 import { cn } from "@/lib/utils"
 
 import { DraftFlowProvider } from "./DraftFlow"
 import { EditableName } from "./EditableName"
+import { LeaveNotice } from "./LeaveNotice"
 import { ResearchProgress } from "./ResearchProgress"
 
 // Where a model is: its rules waiting to be confirmed, the agent at work, or results ready to read and trade from
@@ -32,6 +34,8 @@ const STEP: Record<Phase, FlowStepId> = { rules: "rules", researching: "research
 
 type ModelWorkspaceProps = {
   id: string
+  // When the research began and is due to end, for a strategy made here: so coming back to it shows where it really is
+  research?: { startedAt: string; readyAt?: string }
   // Made here, so it is kept: confirming and finishing are saved, and its name can be changed. The made-up ones are only shown.
   real: boolean
   // How far the draft has got, which is where the page opens
@@ -55,6 +59,7 @@ type ModelWorkspaceProps = {
 export function ModelWorkspace({
   id,
   real,
+  research: run,
   stage,
   agents,
   breadcrumb,
@@ -96,6 +101,8 @@ export function ModelWorkspace({
       if (real) {
         await confirmRules(id)
         router.refresh()
+        // So the page that watches for finished research starts looking now
+        window.dispatchEvent(new Event(RESEARCH_EVENT))
       }
       setPhase("researching")
     } catch (error) {
@@ -193,8 +200,14 @@ export function ModelWorkspace({
           </section>
 
           {phase !== "rules" && (
-            <div ref={research} className="animate-fade-up scroll-mt-[calc(var(--shell-top)+1rem)]">
-              <ResearchProgress running={phase === "researching"} onDone={finish} />
+            <div ref={research} className="animate-fade-up flex scroll-mt-[calc(var(--shell-top)+1rem)] flex-col gap-4">
+              <ResearchProgress
+                running={phase === "researching"}
+                startedAt={run?.startedAt}
+                readyAt={run?.readyAt}
+                onDone={finish}
+              />
+              {phase === "researching" && real && <LeaveNotice />}
             </div>
           )}
 

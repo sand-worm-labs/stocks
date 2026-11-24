@@ -43,6 +43,7 @@ export async function DraftWorkspace({ portfolio }: { portfolio: Portfolio }) {
     <ModelWorkspace
       id={portfolio.id}
       real={real}
+      research={own?.research}
       stage={portfolio.stage}
       agents={{
         rules: <AgentWorkspace script={rulesScript} />,

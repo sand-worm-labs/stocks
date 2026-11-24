@@ -2,10 +2,12 @@ import { MIN_BUY_AMOUNT, SWAP_FEE_RATE } from "@/constants/trade"
 import { analyzeBrief } from "@/lib/brief/analyze"
 import type { Market, Pipeline } from "@/lib/pipeline/types"
 import type { Holding } from "@/lib/portfolios/types"
-import { type Funding, type StrategyRecord, type StrategyStore } from "@/lib/store/types"
+import type { Funding, StrategyEvent, StrategyRecord, StrategyStore } from "@/lib/store/types"
 import { withFee } from "@/lib/trade/fee"
 
 export const NAME_MAX_LENGTH = 60
+// How long research takes the stand-in agent. Sandworm's takes minutes, so the page is built to be left and come back to.
+export const RESEARCH_MS = 45_000
 export const BRIEF_MAX_LENGTH = 2000
 
 // What went wrong, with the HTTP status the API answers with. The message is safe to show the person.
@@ -74,6 +76,19 @@ export function createStrategyService({
     return next
   }
 
+  // What has happened, with when
+  const happened = (record: StrategyRecord, kind: StrategyEvent["kind"]) => [
+    ...(record.events ?? []),
+    { kind, at: now().toISOString() },
+  ]
+
+  // Research that has run its time is done: the strategy is ready, and that is noted for its activity and notifications. This is the one
+  // place a run ends. The stand-in's ends when its time is up, found out whenever the strategy is next looked at; Sandworm's will end it
+  // when it reports back, by calling this.
+  const finish = (record: StrategyRecord) => save({ ...record, stage: "ready", events: happened(record, "ready") })
+
+  const isResearching = (record: StrategyRecord) => record.status === "draft" && record.stage === "researching"
+
   return {
     owned,
 
@@ -98,6 +113,7 @@ export function createStrategyService({
         stage: "rules",
         holdings: [],
         cash: 0,
+        events: [{ kind: "created", at: stamp }],
         createdAt: stamp,
         updatedAt: stamp,
         ...design,
@@ -117,16 +133,32 @@ export function createStrategyService({
       if (record.status !== "draft" || record.stage !== "rules")
         throw new StrategyError("Its rules are already confirmed", 409)
       const research = await pipeline.research(record, await market())
-      return save({ ...record, stage: "researching", report: research.report, orders: research.orders })
+      const startedAt = now()
+      return save({
+        ...record,
+        stage: "researching",
+        report: research.report,
+        orders: research.orders,
+        research: {
+          startedAt: startedAt.toISOString(),
+          readyAt: new Date(startedAt.getTime() + RESEARCH_MS).toISOString(),
+        },
+        events: happened(record, "researching"),
+      })
     },
 
+    // Ends the research now, rather than when its time is up: for the person who would rather not wait for the stand-in
     async finishResearch(ownerId: string, id: string) {
       const record = await owned(ownerId, id)
       if (record.stage === "ready") return record
-      if (record.status !== "draft" || record.stage !== "researching" || !record.report) {
-        throw new StrategyError("It isn't being researched", 409)
-      }
-      return save({ ...record, stage: "ready" })
+      if (!isResearching(record) || !record.report) throw new StrategyError("It isn't being researched", 409)
+      return finish(record)
+    },
+
+    // A strategy as it is now: research that has run its time is finished first
+    async settle(record: StrategyRecord) {
+      const due = record.research?.readyAt && Date.parse(record.research.readyAt) <= now().getTime()
+      return isResearching(record) && record.report && due ? finish(record) : record
     },
 
     // Trading begins, once whatever pays for it has been checked by the caller. `funding.amount` is what left the wallet.
@@ -143,6 +175,7 @@ export function createStrategyService({
         holdings,
         cash: 0,
         funding: { ...funding, amount: total },
+        events: happened(record, "live"),
         startedAt: now().toISOString(),
       })
     },

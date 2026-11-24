@@ -10,19 +10,22 @@ import { createLocalPipeline } from "@/lib/pipeline/local"
 import { FileStore } from "@/lib/store/file"
 
 import { toPortfolio } from "./portfolio"
-import { createStrategyService, fill, StrategyError, type StrategyService } from "./service"
+import { createStrategyService, fill, RESEARCH_MS, StrategyError, type StrategyService } from "./service"
 
 let service: StrategyService
 let store: FileStore
 let counter = 0
+let clock = new Date("2026-11-24T10:00:00.000Z")
+const later = (ms: number) => (clock = new Date(clock.getTime() + ms))
 
 beforeEach(async () => {
+  clock = new Date("2026-11-24T10:00:00.000Z")
   store = new FileStore(join(await mkdtemp(join(tmpdir(), "strategies-")), "s.json"))
   service = createStrategyService({
     store,
     pipeline: createLocalPipeline(reportMockData[1]),
     market: async () => market,
-    now: () => new Date("2026-11-24T10:00:00.000Z"),
+    now: () => clock,
     random: () => `t${++counter}`,
   })
 })
@@ -95,6 +98,65 @@ describe("the steps, in order", () => {
     const draft = await service.create("u1", BRIEF)
     await expect(service.finishResearch("u1", draft.id)).rejects.toMatchObject({ status: 409 })
     await expect(service.goLive("u1", draft.id, 100, { mode: "paper" })).rejects.toMatchObject({ status: 409 })
+  })
+})
+
+describe("research that runs for a while", () => {
+  const started = async () => {
+    const draft = await service.create("u1", BRIEF)
+    return service.confirmRules("u1", draft.id)
+  }
+
+  it("has a start and an end, and says what has happened so far", async () => {
+    const draft = await service.create("u1", BRIEF)
+    expect(draft.events.map(({ kind }) => kind)).toEqual(["created"])
+
+    const record = await service.confirmRules("u1", draft.id)
+    expect(record.research).toEqual({
+      startedAt: "2026-11-24T10:00:00.000Z",
+      readyAt: new Date(clock.getTime() + RESEARCH_MS).toISOString(),
+    })
+    expect(record.events.map(({ kind }) => kind)).toEqual(["created", "researching"])
+  })
+
+  it("is left as it is until its time is up", async () => {
+    const record = await started()
+    later(RESEARCH_MS - 1000)
+    expect(await service.settle(record)).toEqual(record)
+    expect((await store.get(record.id))?.stage).toBe("researching")
+  })
+
+  it("finishes by itself once its time is up, and notes it, even though nobody was watching", async () => {
+    const record = await started()
+    later(RESEARCH_MS)
+    const settled = await service.settle(record)
+    expect(settled.stage).toBe("ready")
+    expect(settled.events.at(-1)).toEqual({ kind: "ready", at: clock.toISOString() })
+    // kept: asking again finds it ready and notes nothing more
+    const again = await service.settle((await store.get(record.id))!)
+    expect(again.events.filter(({ kind }) => kind === "ready")).toHaveLength(1)
+  })
+
+  it("leaves a strategy that is not being researched alone", async () => {
+    const draft = await service.create("u1", BRIEF)
+    later(RESEARCH_MS * 2)
+    expect(await service.settle(draft)).toEqual(draft)
+  })
+
+  it("can be ended early by the person, noted once", async () => {
+    const record = await started()
+    const done = await service.finishResearch("u1", record.id)
+    expect(done.stage).toBe("ready")
+    expect(done.events.filter(({ kind }) => kind === "ready")).toHaveLength(1)
+    expect((await service.finishResearch("u1", record.id)).events.filter(({ kind }) => kind === "ready")).toHaveLength(
+      1
+    )
+  })
+
+  it("notes when it goes live", async () => {
+    const record = await ready()
+    const live = await service.goLive("u1", record.id, 400, { mode: "paper" })
+    expect(live.events.map(({ kind }) => kind)).toEqual(["created", "researching", "ready", "live"])
   })
 })
 

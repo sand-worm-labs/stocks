@@ -6,6 +6,9 @@ import {
   PiFileText,
   PiHandCoins,
   PiLockKey,
+  PiMagnifyingGlass,
+  PiPencilSimpleLine,
+  PiPlayCircle,
   PiProhibit,
   PiPulse,
   PiShieldCheck,
@@ -50,6 +53,11 @@ export const ACTIVITY_EMPTY = {
 type KindDefinition = { icon: IconType; category: Exclude<ActivityFilter, "all"> }
 
 export const ACTIVITY_KIND = {
+  // What happens as a strategy is made: drafted, researched, ready to read (an alert, so it reaches the bell), and started
+  drafted: { icon: PiPencilSimpleLine, category: "agent" },
+  researching: { icon: PiMagnifyingGlass, category: "agent" },
+  ready: { icon: PiFileText, category: "alerts" },
+  started: { icon: PiPlayCircle, category: "trades" },
   checked: { icon: PiShieldCheck, category: "agent" },
   locked: { icon: PiLockKey, category: "agent" },
   report: { icon: PiFileText, category: "agent" },

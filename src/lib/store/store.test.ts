@@ -23,6 +23,7 @@ const record = (id: string, ownerId = "u1", extra: Partial<StrategyRecord> = {})
   budget: 500,
   holdings: [],
   cash: 0,
+  events: [],
   createdAt: "2026-11-24T10:00:00.000Z",
   updatedAt: "2026-11-24T10:00:00.000Z",
   ...extra,

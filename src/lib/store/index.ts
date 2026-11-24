@@ -2,7 +2,6 @@ import postgres from "postgres"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
-
 import { FileStore } from "./file"
 import { PostgresStore, type Query } from "./postgres"
 import type { StrategyStore } from "./types"

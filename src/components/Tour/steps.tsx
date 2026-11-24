@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 
+import { env } from "env.mjs"
+
 // The tour, as data: a walk from the first idea to a live strategy, over the real screens. Each step says where it happens (`route`,
 // which the tour opens for the person) and what it points at (`target`, the name a `data-tour` attribute carries on that page).
 //
@@ -25,6 +27,8 @@ export type TourStep = {
   visual?: ReactNode
   // Wears the app's mark above the title, as the welcome does
   mark?: boolean
+  // A link for more, opened in another tab so the tour is still there when they come back
+  more?: { label: string; href: string }
   // The last step's way into the app
   action?: { label: string; href: string }
 }
@@ -40,7 +44,9 @@ export const TOUR_STEPS: TourStep[] = [
     chapter: 0,
     mark: true,
     title: "Welcome to Sandworm Stocks",
-    text: "A two-minute walk from your first idea to a live strategy, on the real screens. You can skip anytime.",
+    // A blank line is a new paragraph
+    text: "Sandworm Stocks is an automated investing platform that buys and sells stocks for you based on a plan you choose or create.\n\nTest different plans, pick one you like, invest your money, and let our AI handle the trades.",
+    more: { label: "Learn more", href: env.NEXT_PUBLIC_LEARN_MORE_URL ?? `${env.NEXT_PUBLIC_LANDING_URL}/blog` },
   },
   {
     id: "start",

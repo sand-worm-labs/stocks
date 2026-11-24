@@ -53,7 +53,7 @@ export default async function AdaptPage({ params }: { params: Promise<{ id: stri
                 report={report}
                 portfolioId={portfolio.id}
                 network={session.network}
-            demo={!(await getOwnStrategy(id))}
+                demo={!(await getOwnStrategy(id))}
               />
               <AppLink
                 route="report"

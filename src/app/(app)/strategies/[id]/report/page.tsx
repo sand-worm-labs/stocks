@@ -48,7 +48,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             Refine
           </AppLink>
           {portfolio.status !== "live" && (
-            <ReviewAndBuy orders={orders} report={report} portfolioId={portfolio.id} network={session.network} demo={!own} />
+            <ReviewAndBuy
+              orders={orders}
+              report={report}
+              portfolioId={portfolio.id}
+              network={session.network}
+              demo={!own}
+            />
           )}
         </ReportActionBar>
         <ReportHeader report={report} eyebrow={`Strategy results · ${portfolio.name}`} />

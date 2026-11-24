@@ -333,9 +333,21 @@ function TourView({
                 <h2 id="tour-title" className="text-ink-100 text-[19px] leading-6 font-normal tracking-tight">
                   {step.title}
                 </h2>
-                <p id="tour-text" className="text-ink-400 mt-1.5 text-[15px] leading-6">
-                  {step.text}
-                </p>
+                <div id="tour-text" className="text-ink-400 mt-1.5 flex flex-col gap-3 text-[15px] leading-6">
+                  {step.text.split("\n\n").map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                  {step.more && (
+                    <a
+                      href={step.more.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent dark:text-primary w-fit font-medium hover:underline"
+                    >
+                      {step.more.label} ↗
+                    </a>
+                  )}
+                </div>
                 {step.visual}
               </div>
 

@@ -5,13 +5,10 @@ import {
   unmeetableRulesMockData,
 } from "@/_mockdata/rules"
 import type { Portfolio } from "@/lib/portfolios/types"
+import { pick, seedOf } from "@/lib/seed"
 
 import { ruleOf, type RuleSpec } from "./spec"
 import type { StrategyRow } from "./types"
-
-// A small number from an id, so the same strategy always gets the same rules but its neighbours get different ones
-const seedOf = (id: string) => [...id].reduce((sum, char, i) => (sum + char.charCodeAt(0) * (i + 3)) % 2_147_483_647, 7)
-const pick = <T>(options: readonly T[], seed: number, shift: number) => options[(seed >>> shift) % options.length] as T
 
 // The rules of a strategy that wasn't made by hand: the budget covers what it holds, and the rest varies from one to the
 // next, so a long list of strategies isn't a long list of the same four rules.

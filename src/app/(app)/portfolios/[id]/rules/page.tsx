@@ -26,7 +26,7 @@ export default async function RulesPage({ params }: { params: Promise<{ id: stri
       getStocks(),
       getActivity(portfolio.id),
       getSession(),
-      getStrategy(),
+      getStrategy(portfolio),
     ])
 
     const doc: ModelDoc = { strategy, rules: rules.rules.flatMap((rule) => specOf(rule) ?? []) }

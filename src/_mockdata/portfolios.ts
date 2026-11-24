@@ -23,7 +23,7 @@ const REFERENCE_PRICES: Record<string, number> = {
   NFLXc: 57.14,
   BCOINc: 106.62,
 }
-const STOCK_POOL = Object.keys(REFERENCE_PRICES)
+export const STOCK_POOL = Object.keys(REFERENCE_PRICES)
 
 // What was spent on a stock, and how far its price has gone since: from those, the price it was bought at and how many
 // units that bought. Its value is its units at today's price, which the portfolio source marks again from the market.

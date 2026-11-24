@@ -1,7 +1,7 @@
 import { type RouteId, ROUTES } from "@/config/routes"
 
 // The tab a page belongs to: the one whose path is the longest start of the page's path, so a portfolio's report
-// is under Portfolios, and /portfolios/new is under "New".
+// is under Portfolios, and /strategies/new is under "New".
 export function currentTab(tabs: RouteId[], pathname: string) {
   return tabs
     .filter((route) => {

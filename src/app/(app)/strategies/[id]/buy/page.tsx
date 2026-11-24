@@ -42,7 +42,7 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
             report={report}
             portfolioId={portfolio.id}
             network={session.network}
-            startOpen={{ closeHref: routeHref("adapt", undefined, portfolio.id) ?? "/portfolios" }}
+            startOpen={{ closeHref: routeHref("adapt", undefined, portfolio.id) ?? "/strategies" }}
           />
         </ReportActionBar>
         <ReportHeader report={report} eyebrow={`Strategy results · ${portfolio.name}`} />

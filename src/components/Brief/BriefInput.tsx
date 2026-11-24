@@ -27,7 +27,7 @@ type BriefInputProps = {
 // Where the brief is written. Continuing sits in the box itself, beside the trading mode.
 export function BriefInput({ value, onChange, canContinue, portfolioId, actionLabel }: BriefInputProps) {
   const router = useRouter()
-  const next = routeHref("rules", undefined, portfolioId) ?? "/portfolios"
+  const next = routeHref("rules", undefined, portfolioId) ?? "/strategies"
 
   return (
     <PromptBox

@@ -30,9 +30,9 @@ export async function finishOnboarding(to?: { starter?: string; stocks?: boolean
   if (!jar.get(ONBOARDING_COOKIES.welcome)) jar.set(ONBOARDING_COOKIES.welcome, "pending", OPTIONS)
   revalidatePath("/", "layout")
 
-  if (to?.stocks) redirect("/portfolios/new/stocks")
+  if (to?.stocks) redirect("/strategies/new/stocks")
   const starter = await getStarter(to?.starter)
-  redirect(starter ? `/portfolios/new/brief?starter=${starter.id}` : "/")
+  redirect(starter ? `/strategies/new/brief?starter=${starter.id}` : "/")
 }
 
 export async function dismissWelcome() {

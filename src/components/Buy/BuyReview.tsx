@@ -69,7 +69,7 @@ export function BuyReview({ orders: planned, report, portfolioId, network, onBou
       description: `${network.mode === "paper" ? "Paper" : "Live"} · ${network.chain}. Your strategy is live.`,
       action: portfolioHref ? { label: "View strategy", onClick: () => router.push(portfolioHref) } : undefined,
     })
-    router.push(routeHref("portfolios") ?? "/portfolios")
+    router.push(routeHref("portfolios") ?? "/strategies")
   }
 
   return (

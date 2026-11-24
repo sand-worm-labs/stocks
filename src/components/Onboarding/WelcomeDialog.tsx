@@ -93,7 +93,7 @@ export function WelcomeDialog({ initiallyOpen }: { initiallyOpen: boolean }) {
             type="button"
             onClick={() => {
               close()
-              router.push("/portfolios/new/brief")
+              router.push("/strategies/new/brief")
             }}
             className={cn(buttonVariants({ intent: "dark", size: "compact" }), "h-11 w-full text-[15px] font-normal")}
           >

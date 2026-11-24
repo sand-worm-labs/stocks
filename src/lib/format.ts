@@ -30,6 +30,7 @@ export const formatCompactUsd = (value: number) => compactUsd.format(value)
 export const formatPercent = (value: number, { signed = false } = {}) =>
   (signed ? signedPercent : percent).format(value)
 
-export const pluralize = (count: number, noun: string) => `${count} ${count === 1 ? noun : noun.replace(/([^aeiou])y$/, "$1ie") + "s"}`
+export const pluralize = (count: number, noun: string) =>
+  `${count} ${count === 1 ? noun : noun.replace(/([^aeiou])y$/, "$1ie") + "s"}`
 
 export const shortenAddress = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`

@@ -14,7 +14,7 @@ export function StarterPortfolios({ starters }: { starters: Starter[] }) {
             key={starter.id}
             starter={starter}
             index={index}
-            href={routeHref("brief", { starter: starter.id }) ?? "/portfolios/new"}
+            href={routeHref("brief", { starter: starter.id }) ?? "/strategies/new"}
           />
         ))}
       </div>

@@ -21,6 +21,11 @@ const config: NextConfig = {
       fullUrl: true,
     },
   },
+  // The strategies used to live under /portfolios: old links and bookmarks go to where they are now
+  redirects: async () => [
+    { source: "/portfolios", destination: "/strategies", permanent: true },
+    { source: "/portfolios/:path*", destination: "/strategies/:path*", permanent: true },
+  ],
   rewrites: async () => [
     { source: "/healthz", destination: "/api/health" },
     { source: "/api/healthz", destination: "/api/health" },

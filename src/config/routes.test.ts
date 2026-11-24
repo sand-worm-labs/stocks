@@ -10,7 +10,7 @@ describe("routeHref", () => {
   })
 
   it("links the pages of one portfolio", () => {
-    expect(routeHref("portfolio", undefined, "robotics-20")).toBe("/portfolios/robotics-20")
-    expect(routeHref("report", undefined, "robotics-20")).toBe("/portfolios/robotics-20/report")
+    expect(routeHref("portfolio", undefined, "robotics-20")).toBe("/strategies/robotics-20")
+    expect(routeHref("report", undefined, "robotics-20")).toBe("/strategies/robotics-20/report")
   })
 })

@@ -2,23 +2,23 @@ type RouteDefinition = {
   path: string
   label: string
   isBuilt: boolean
-  // A fixed page under a slug: /portfolios/<id>/<suffix>
+  // A fixed page under a slug: /strategies/<id>/<suffix>
   suffix?: string
 }
 
 export const ROUTES = {
   home: { path: "/", label: "Home", isBuilt: true },
-  portfolios: { path: "/portfolios", label: "Strategies", isBuilt: true },
-  portfolio: { path: "/portfolios", label: "Strategy", isBuilt: true },
-  newPortfolio: { path: "/portfolios/new", label: "New strategy", isBuilt: true },
-  brief: { path: "/portfolios/new/brief", label: "Idea", isBuilt: true },
-  stockPicker: { path: "/portfolios/new/stocks", label: "Stocks or a category", isBuilt: true },
-  rules: { path: "/portfolios", suffix: "rules", label: "Rules", isBuilt: true },
-  research: { path: "/portfolios", suffix: "research", label: "Research", isBuilt: true },
-  report: { path: "/portfolios", suffix: "report", label: "Results", isBuilt: true },
-  adapt: { path: "/portfolios", suffix: "adapt", label: "Refine", isBuilt: true },
-  buy: { path: "/portfolios", suffix: "buy", label: "Trade", isBuilt: true },
-  portfolioActivity: { path: "/portfolios", suffix: "activity", label: "Activity", isBuilt: true },
+  portfolios: { path: "/strategies", label: "Strategies", isBuilt: true },
+  portfolio: { path: "/strategies", label: "Strategy", isBuilt: true },
+  newPortfolio: { path: "/strategies/new", label: "New strategy", isBuilt: true },
+  brief: { path: "/strategies/new/brief", label: "Idea", isBuilt: true },
+  stockPicker: { path: "/strategies/new/stocks", label: "Stocks or a category", isBuilt: true },
+  rules: { path: "/strategies", suffix: "rules", label: "Rules", isBuilt: true },
+  research: { path: "/strategies", suffix: "research", label: "Research", isBuilt: true },
+  report: { path: "/strategies", suffix: "report", label: "Results", isBuilt: true },
+  adapt: { path: "/strategies", suffix: "adapt", label: "Refine", isBuilt: true },
+  buy: { path: "/strategies", suffix: "buy", label: "Trade", isBuilt: true },
+  portfolioActivity: { path: "/strategies", suffix: "activity", label: "Activity", isBuilt: true },
   markets: { path: "/markets", label: "Markets", isBuilt: true },
   marketSummary: { path: "/markets/summary", label: "Summary", isBuilt: true },
   stock: { path: "/markets", label: "Stock", isBuilt: true },

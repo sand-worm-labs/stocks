@@ -46,5 +46,5 @@ export default async function RulesPage({ params }: { params: Promise<{ id: stri
   }
 
   // A draft's rules are the first part of the one page it grows on
-  redirect(routeHref("portfolio", undefined, portfolio.id) ?? "/portfolios")
+  redirect(routeHref("portfolio", undefined, portfolio.id) ?? "/strategies")
 }

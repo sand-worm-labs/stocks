@@ -10,7 +10,7 @@ import ActivityPage from "./activity/page"
 import MarketsPage from "./markets/(list)/page"
 import StockPage from "./markets/[symbol]/page"
 import MarketSummaryPage from "./markets/summary/page"
-import PortfoliosPage from "./portfolios/(list)/page"
+import PortfoliosPage from "./strategies/(list)/page"
 import SettingsPage from "./settings/page"
 
 const token = (symbol: string, company: string, rank: number) => ({

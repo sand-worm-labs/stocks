@@ -1,9 +1,8 @@
 # Database schema: first design
 
-Drafted 2026-11-24. **Decided:** Stocks has its own Postgres (not the main app's), accounts come from the main Sandworm app, and the tool is Drizzle.
-**Built:** the schema in `src/db/schema.ts`, the first migration `drizzle/0000_init.sql`, `pnpm db:generate` / `pnpm db:migrate`, and tests that run the
-migration on PGlite. **Also built:** the Postgres store on these tables (`src/lib/store/postgres.ts`, `ledger.ts`), tested against the same contract as the file store. **Not built yet:** the move of onboarding/settings/notifications/chat off cookies and memory.
-The SQL below is the design; the schema file is the source of truth.
+Drafted 2026-11-24. **Decided:** Stocks has its own Postgres (not the main app's) and accounts come from the main Sandworm app. **Update 2026-11-25:** Drizzle is gone. The web app has no
+database; the tables live in the API (`app/api`, TypeORM migrations in `app/api/src/infrastructure/database/migrations`, the first one a copy of what Drizzle made).
+This file is the design the API's entities follow. **Not built yet:** moving strategies, ledger and the rest from the web app's file store into the API.
 
 ## Where we are
 
@@ -238,6 +237,5 @@ Still open:
 
 ## Working with it
 
-- Change `src/db/schema.ts`, run `pnpm db:generate`, commit the new file in `drizzle/`, run `pnpm db:migrate` on the database.
-- Set `DATABASE_URL` to the new Postgres (Neon). The old `strategies` table the file/Postgres store made (id, owner_id, data...) has the same name:
-  use a fresh database, or drop that table first.
+- Change an entity in `app/api/src/features/<name>/entities`, generate a TypeORM migration, commit it; the API applies migrations when it boots.
+- Locally, `docker compose up -d` starts the database and the API. `docker compose down -v` empties it.

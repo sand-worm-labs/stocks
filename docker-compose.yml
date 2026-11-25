@@ -1,5 +1,5 @@
-# A database of its own for working locally: `docker compose up -d db`, then DATABASE_URL=postgresql://stocks:stocks@localhost:5433/stocks
-# `docker compose down -v` throws it away; the next `pnpm dev` makes the tables again from drizzle/ (it migrates before it starts).
+# Everything the backend needs, locally: `docker compose up -d` starts the database and the API.
+# `docker compose down -v` throws both away; the next `up` makes the tables again (the API migrates when it starts).
 services:
   db:
     image: postgres:16-alpine
@@ -14,6 +14,23 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U stocks"]
       interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./app/api
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://stocks:stocks@db:5432/stocks
+      # The key the Next app sends. For working locally only: set a long random one anywhere else.
+      STOCKS_API_KEY: local-development-key
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 5s
       timeout: 3s
       retries: 20
 

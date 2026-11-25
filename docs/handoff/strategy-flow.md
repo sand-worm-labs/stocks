@@ -22,11 +22,11 @@ The step bar (Idea, Rules, Research, Results, Trade) shows on every one of these
 
 | What                    | Where                                                    | To replace it                                                                                                                                                                                                                                                                                   |
 | ----------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Storage                 | `src/lib/store` (`getStore`)                             | A file by default, Postgres when `DATABASE_URL` is set: the tables in `src/db/schema.ts` (design: `docs/design/database-schema.md`), made by `pnpm db:migrate`. A strategy is spread over them and put back together as one record by `postgres.ts`; what it holds is its ledger (`ledger.ts`). |
-| The agent               | `src/lib/pipeline` (`getPipeline`)                       | Write a `Pipeline` (`design`, `research`) that calls Sandworm and return it from `source.ts`.                                                                                                                                                                                                   |
-| Rules of the flow       | `src/lib/strategies/service.ts`                          | Owner checks, allowed steps, filling the plan. Tested; independent of storage and the agent.                                                                                                                                                                                                    |
-| Browser to API          | `src/lib/strategies/client.ts`, `src/app/api/strategies` | Point the client at another API; the routes are thin.                                                                                                                                                                                                                                           |
-| Approving from a wallet | `src/lib/trade/authorize.ts`, `BuyReview`                | The server checks the signature and the balance on the chain; the browser's word is never taken.                                                                                                                                                                                                |
+| Storage                 | `app/web/src/lib/store` (`getStore`)                             | A file (`.data/strategies.json`). The web app has no database; strategies move to the API's tables (design: `docs/design/database-schema.md`) later. What a strategy holds is its ledger (`ledger.ts`). |
+| The agent               | `app/web/src/lib/pipeline` (`getPipeline`)                       | Write a `Pipeline` (`design`, `research`) that calls Sandworm and return it from `source.ts`.                                                                                                                                                                                                   |
+| Rules of the flow       | `app/web/src/lib/strategies/service.ts`                          | Owner checks, allowed steps, filling the plan. Tested; independent of storage and the agent.                                                                                                                                                                                                    |
+| Browser to API          | `app/web/src/lib/strategies/client.ts`, `app/web/src/app/api/strategies` | Point the client at another API; the routes are thin.                                                                                                                                                                                                                                           |
+| Approving from a wallet | `app/web/src/lib/trade/authorize.ts`, `BuyReview`                | The server checks the signature and the balance on the chain; the browser's word is never taken.                                                                                                                                                                                                |
 
 The pages read through `lib/<area>/source.ts`: a strategy made here comes first, and the made-up ones fill out the rest (their number is the
 "demo data" setting).
@@ -37,7 +37,7 @@ It reads the idea with the app's own parser, picks stocks from the market (a nam
 rules (budget, most in one stock, liquidity, ask first, a stop on the whole strategy at the loss limit), a strategy (strongest few by six
 months, steadier ones larger, rebalance on drift), and orders at today's prices. **It runs no backtest.** The report's figures are the
 template's, and the report says so in a banner, in the verdict ("Example results") and in the trade dialog. A real backtest on
-`src/lib/strategy/backtest.ts` and real prices is the natural next step.
+`app/web/src/lib/strategy/backtest.ts` and real prices is the natural next step.
 
 ## Security
 
@@ -52,8 +52,7 @@ template's, and the report says so in a banner, in the verdict ("Example results
 
 ## To switch on
 
-- `DATABASE_URL`: a Postgres (Neon works). Without it strategies live in `.data/strategies.json` locally and in a temp folder on Vercel, which
-  is lost. The tables are made and kept up to date by `pnpm db:migrate`, which `pnpm dev` and `pnpm start` run first (an old `strategies` table from before the migrations is renamed `strategies_legacy`, not deleted); `GET /api/health` is a 503 while a migration is missing. Locally, `docker compose up -d db` gives a throwaway Postgres (`DATABASE_URL=postgresql://stocks:stocks@localhost:5433/stocks`); `docker compose down -v` empties it. Owners must be account ids (uuids), which Dynamic's and the main app's are; with sign-in switched off the one local person has `LOCAL_USER_ID`.
+- Strategies live in `.data/strategies.json` locally and in a temp folder on Vercel, which is lost, until they move to the API.
 - Test USDC: https://faucet.circle.com (Base Sepolia).
 
 ## Known gaps

@@ -17,10 +17,7 @@ Written 2026-11-24. The app behaves the way production will: nothing opens witho
 
 There is one way in: **connect a wallet** (Dynamic: a wallet, or an email that comes with one). Needs `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID`
 and `AUTH_SECRET`. "Continue with Sandworm" was removed. The browser posts Dynamic's token to `/api/auth/session`, which checks it
-against Dynamic's public keys, then **creates the account the first time** (`ensureAccount`): a `profiles` row keyed by Dynamic's user id
-(a uuid) and a `wallets` row for each address Dynamic verified in the token (never what the browser says; only addresses, never a key).
-Every later sign-in leaves what exists alone. Without `DATABASE_URL` there is nothing to create and it does nothing. If the database
-can't make the account (for instance `pnpm db:migrate` has not been run) the sign-in fails with a 503, not a half-made account.
+against Dynamic's public keys, then makes the session cookie. Stocks keeps no account of its own: the account is the Sandworm one (below), and the web app has no database.
 
 **The Sandworm account.** With `SANDWORM_API_URL` set (the main app's API, with its `/api`), the session route first sends Dynamic's token to
 the main app's `POST /auth/dynamic/login` (`apps/api/src/features/auth/dynamic`, no password). It checks the token itself, finds or creates

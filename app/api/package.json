@@ -1,0 +1,64 @@
+{
+  "name": "@sandworm/stocks-api",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "description": "The API behind Sandworm Stocks: NestJS and TypeORM, with a database of its own",
+  "scripts": {
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "test": "jest",
+    "migration:run": "typeorm migration:run -d dist/database/data-source.js",
+    "migration:show": "typeorm migration:show -d dist/database/data-source.js",
+    "migration:revert": "typeorm migration:revert -d dist/database/data-source.js"
+  },
+  "dependencies": {
+    "@fastify/compress": "^9.3.0",
+    "@fastify/cookie": "^11.1.5",
+    "@fastify/helmet": "^13.2.0",
+    "@fastify/rate-limit": "^11.3.0",
+    "@nestjs/common": "^11.1.18",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.18",
+    "@nestjs/platform-fastify": "^11.2.12",
+    "@nestjs/swagger": "^11.4.8",
+    "@nestjs/terminus": "^11.1.1",
+    "@nestjs/typeorm": "^11.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "fastify": "^5.12.8",
+    "nestjs-pino": "^4.6.1",
+    "pg": "^8.16.3",
+    "pino-http": "^11.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3.31"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@nestjs/cli": "^11.0.10",
+    "@nestjs/schematics": "^11.0.8",
+    "@nestjs/testing": "^11.1.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.7.2",
+    "eslint": "^10.15.0",
+    "jest": "^30.2.0",
+    "pino-pretty": "^13.2.0",
+    "prettier": "^3.10.1",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.74.0"
+  },
+  "jest": {
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1"
+    },
+    "testEnvironment": "node"
+  }
+}

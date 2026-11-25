@@ -4,6 +4,9 @@ import { changeOver, returnOnDeposit, totalValueOverWeek, valueOverWeek } from "
 import { isLive, portfolioValue } from "./portfolio"
 import { getPortfolios } from "./source"
 
+// These tests are about the made-up strategies, which a person only gets when they ask for them in Settings
+vi.mock("@/lib/demo/source", () => ({ getModelCount: async () => 40 }))
+
 const NOW = "2026-11-20T12:00:00.000Z"
 const live = (await getPortfolios()).find(isLive)!
 

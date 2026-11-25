@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -23,6 +24,7 @@ import { DEFAULT_SLIPPAGE, MIN_SELL_AMOUNT, QUICK_FRACTIONS, SELL_PRICE_IMPACT }
 import { formatAmount, formatPercent, pluralize } from "@/lib/format"
 import { readAmount } from "@/lib/portfolios/amount"
 import { quoteSale } from "@/lib/portfolios/sell"
+import { errorMessage, sellStrategy } from "@/lib/strategies/client"
 import { cn } from "@/lib/utils"
 import type { Portfolio } from "@/types/portfolios"
 import type { Session } from "@/types/session"
@@ -36,6 +38,7 @@ type SellDialogProps = {
 }
 
 export function SellDialog({ portfolio, symbol: fixed, pickable, className, mode }: SellDialogProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [picked, setPicked] = useState(pickable ? portfolio.holdings[0]?.symbol : fixed)
   const symbol = picked
@@ -54,6 +57,26 @@ export function SellDialog({ portfolio, symbol: fixed, pickable, className, mode
   const symbols = symbol ? [symbol] : portfolio.holdings.map((h) => h.symbol)
   const quote = quoteSale(portfolio, symbols, share)
   if (!quote) return null
+
+  const said = everything
+    ? `Sold everything for ${formatAmount(quote.receive)} USDC`
+    : `Sold ${share === 1 ? "all" : formatPercent(share)} of ${symbol} for ${formatAmount(quote.receive)} USDC`
+
+  // A strategy of the person's own really sells, at today's price, and the page is read again to show it. A made-up one only says what
+  // would happen.
+  const confirm = async () => {
+    if (!portfolio.own) return void toast.success(said, { description: "The USDC is back in your strategy as cash." })
+    try {
+      const { received } = await sellStrategy(portfolio.id, share, symbol ? [symbol] : undefined)
+      toast.success(everything ? `Sold everything for ${formatAmount(received)} USDC` : `Sold ${symbol} for ${formatAmount(received)} USDC`, {
+        description: "The USDC is back in your strategy as cash.",
+      })
+      setOpen(false)
+      router.refresh()
+    } catch (error) {
+      toast.error("Couldn't sell", { description: errorMessage(error) })
+    }
+  }
 
   const rows = [
     { label: "Price impact", value: `${(SELL_PRICE_IMPACT * 100).toFixed(2)}%` },
@@ -162,23 +185,17 @@ export function SellDialog({ portfolio, symbol: fixed, pickable, className, mode
 
         <div className="flex justify-end gap-2">
           <DialogClose className={buttonVariants({ intent: "outline", size: "compact" })}>Cancel</DialogClose>
-          <DialogClose
+          <button
+            type="button"
             disabled={!everything && reading.amount === undefined}
-            onClick={() =>
-              toast.success(
-                everything
-                  ? `Sold everything for ${formatAmount(quote.receive)} USDC`
-                  : `Sold ${share === 1 ? "all" : formatPercent(share)} of ${symbol} for ${formatAmount(quote.receive)} USDC`,
-                { description: "The USDC is back in your strategy as cash." }
-              )
-            }
+            onClick={confirm}
             className={cn(
               buttonVariants({ intent: everything ? "danger" : "dark", size: "compact" }),
               "disabled:pointer-events-none disabled:opacity-40"
             )}
           >
             Sell for {formatAmount(quote.receive)} USDC
-          </DialogClose>
+          </button>
         </div>
       </DialogContent>
     </Dialog>

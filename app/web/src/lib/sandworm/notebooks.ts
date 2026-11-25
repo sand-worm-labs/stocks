@@ -118,6 +118,18 @@ alpha = (mean(r_p) - beta * mean(r_b)) * 252
 sharpe = mean(r_p) * 252 / vol if vol else 0.0
 last = min(252, n - 1)
 idx = every_week(values)
+month_end = {}
+for i, d in enumerate(dates):
+    month_end[d[:7]] = i
+months = sorted(month_end)
+monthly_r = [values[month_end[months[k]]] / values[month_end[months[k - 1]]] - 1 for k in range(1, len(months))]
+positive = sum(1 for x in monthly_r if x > 0) / len(monthly_r) if monthly_r else 0.0
+rolling = sorted(values[t] / values[t - 252] - 1 for t in range(252, n))
+
+def pick(xs, share):
+    return round(xs[min(len(xs) - 1, int(share * len(xs)))], 4)
+
+year = {"bad": pick(rolling, 0.05), "typical": pick(rolling, 0.5), "good": pick(rolling, 0.95)} if rolling else None
 result = {
     "kind": "backtest",
     "years": round(years, 1),
@@ -130,6 +142,9 @@ result = {
     "alpha": round(alpha, 4),
     "recent": {"strategy": round(values[-1] / values[-1 - last] - 1, 4), "bench": round(bench[-1] / bench[-1 - last] - 1, 4)},
     "stops": stops,
+    "volatility": round(vol, 4),
+    "positiveMonths": round(positive, 3),
+    "year": year,
 }
 print("${RESULT_MARKER}" + json.dumps(result))
 `
@@ -155,6 +170,7 @@ result = {
     "worstMonth": {"label": worst[0], "value": round(worst[1], 4)},
     "stops": stops,
     "risk": [{"symbol": s, "weight": round(w[s], 4), "riskShare": round(contribution[s], 4)} for s in syms],
+    "alone": [{"symbol": s, "cagr": round((closes[s][-1] / closes[s][0]) ** (1 / years) - 1, 4), "maxDrawdown": round(min(drawdowns(closes[s])), 4)} for s in syms],
 }
 print("${RESULT_MARKER}" + json.dumps(result))
 `

@@ -8,6 +8,9 @@ import { evaluate, symbolsOf } from "./evaluate"
 import { parseStrategy } from "./schema"
 import { getStrategy } from "./source"
 
+// These tests are about the made-up strategies, which a person only gets when they ask for them in Settings
+vi.mock("@/lib/demo/source", () => ({ getModelCount: async () => 40 }))
+
 const hold: Strategy = { name: "Hold", schedule: "daily", root: { type: "asset", symbol: "AAA" } }
 const fall = [...Array(5).fill(100), 90, 80, 70, 80, 90, 100, 100, 100]
 

@@ -1,6 +1,7 @@
 import type { IconType } from "react-icons"
 import {
   PiArrowLineDown,
+  PiArrowLineUp,
   PiArrowsLeftRight,
   PiBell,
   PiFileText,
@@ -18,6 +19,9 @@ import {
 export const ACTIVITY_FILTERS = ["all", "trades", "agent", "alerts", "refusals"] as const
 
 export type ActivityFilter = (typeof ACTIVITY_FILTERS)[number]
+
+// Refusals aren't shown until the agent can refuse something: a filter that is always empty reads as broken
+export const SHOWN_ACTIVITY_FILTERS = ACTIVITY_FILTERS.filter((filter) => filter !== "refusals")
 
 export const DEFAULT_ACTIVITY_FILTER: ActivityFilter = "all"
 
@@ -63,6 +67,7 @@ export const ACTIVITY_KIND = {
   bought: { icon: PiHandCoins, category: "trades" },
   sold: { icon: PiHandCoins, category: "trades" },
   deposit: { icon: PiArrowLineDown, category: "trades" },
+  withdrew: { icon: PiArrowLineUp, category: "trades" },
   refused: { icon: PiProhibit, category: "refusals" },
   alert: { icon: PiBell, category: "alerts" },
   gap: { icon: PiArrowsLeftRight, category: "alerts" },

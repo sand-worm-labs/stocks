@@ -1,10 +1,10 @@
 import type { DraftStage, PortfolioStatus } from "@/constants/portfolio"
+import type { ResearchResult } from "@/lib/research/result"
 import type { RuleSpec } from "@/lib/rules/spec"
+import type { AgentStep } from "@/types/agent"
 import type { Holding } from "@/types/portfolios"
 import type { Order, Report } from "@/types/report"
 import type { StrategyRow } from "@/types/rules"
-import type { ResearchResult } from "@/lib/research/result"
-import type { AgentStep } from "@/types/agent"
 import type { Strategy } from "@/types/strategy"
 
 // How a strategy was started. Paper trading moves nothing. With a wallet, the person approved it to trade up to `amount` USDC from their own
@@ -34,6 +34,19 @@ export type ResearchRun = {
   progress?: AgentStep[]
 }
 
+// One line of what happened to a strategy's cash and stocks. A buy or sell names the stock and the units (negative for a sale). `usdc` is the
+// effect on the strategy's cash, fee included: what is spent is negative. The ledger is only ever added to; what is held, and the cash, are
+// what it comes to.
+export type LedgerLine = {
+  kind: "deposit" | "withdraw" | "buy" | "sell" | "fee"
+  symbol?: string
+  units?: number
+  price?: number
+  usdc: number
+  fee?: number
+  at: string
+}
+
 export type StrategyRecord = {
   id: string
   // Who made it, by the id they signed in with. Everything that reads or changes a strategy checks this first.
@@ -51,6 +64,7 @@ export type StrategyRecord = {
   orders?: Order[]
   holdings: Holding[]
   cash: number
+  ledger?: LedgerLine[]
   funding?: Funding
   research?: ResearchRun
   events: StrategyEvent[]

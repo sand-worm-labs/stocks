@@ -7,6 +7,7 @@ export const SOURCE_MARKS: Record<string, SourceMark> = {
   "nasdaq.com": { letter: "N", background: "#0E1C36" },
   "sec.gov": { letter: "S", background: "#0B2A5B" },
   Sandworm: { letter: "§", background: "#A308F0" },
+  "Yahoo Finance": { letter: "Y", background: "#6001D2" },
 }
 
 export const NEUTRAL_SOURCE_MARK: SourceMark = { letter: "", background: "#6C757D" }

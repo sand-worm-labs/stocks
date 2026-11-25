@@ -45,6 +45,25 @@ The person's Sandworm login comes from the cookies its Dynamic login sets, which
 (AES-GCM, key from `AUTH_SECRET`) in the `sw_sandworm` cookie, and an access token that has run out is renewed from the refresh token
 (`getSandwormToken`). With no login (signed in before this existed) confirming is refused with "sign out and in again", before the rules lock.
 
+**The report is shaped by the brief** (`lib/research/report-spec.ts`). The person's words (and their rules) are read for what they care about:
+growth, protection, a steady ride, beating the market, spreading the money. That ranks nine candidate numbers and the top four lead the report,
+each with an (i) saying what it means; a person who "would panic at −20%" sees the worst drop first, one who wants to beat the market sees how far
+ahead. The same spec is handed to agents as `report.instructions` in the Stocks MCP (`get_strategy`), which is the prompt extension that makes a
+researcher's notebooks print what the report needs. The page (`ResearchResultView`) shows: answer, four numbers, a calculator ("try it with your
+own money": a sum and a start date, scaled from the backtest's own line, plus a bad/typical/good year), what the numbers say, growth and fall
+charts, where the risk sits, whether it can be bought, why each stock, sources with icons, and links to the notebooks.
+
+**The report as a document** (`ReportDocument`): a cover (name, the person's own words, date, period tested, money, report id), numbered sections,
+and a footer with the small print. A live strategy's Results tab shows it inside the strategy's own frame (header, tabs) like its other pages; before
+trading it sits in the flow with the step bar. *Download PDF* is the browser's save-as-PDF with print styles that keep only the report (screen-only
+parts, such as the calculator, are left out and replaced by a static line). *Share* makes a signed link, `/share/<token>`, that opens the report with no
+sign-in, read-only, for 30 days (stateless: it can't be revoked before it ends). Both are in `components/Report` and `app/share`.
+
+**Money moves are real on paper** (`lib/trade/ledger.ts`): Add funds, Remove funds and Sell on a paper-trading strategy write ledger lines (the ledger is
+only ever added to; holdings and cash are what it comes to) at the server's own prices, with the swap fee. The API keeps the lines (`ledger` on the record;
+lines past those kept are appended). Activity's trades, bought and fees come from the ledger. A strategy trading from a wallet refuses these until
+on-chain trades exist.
+
 What the test does not do: model a token drifting from its share or a pool's depth; use anything but the plan's static weights (it does not
 re-run the strategy tree); say anything about the future. The summary says so.
 

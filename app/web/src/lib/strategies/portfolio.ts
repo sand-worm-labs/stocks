@@ -8,6 +8,7 @@ export function toPortfolio(record: StrategyRecord): Portfolio {
   const value = record.holdings.reduce((sum, { value }) => sum + value, 0) + record.cash
   return {
     id: record.id,
+    own: true,
     name: record.name,
     brief: record.brief,
     status: record.status,

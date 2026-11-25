@@ -1,12 +1,12 @@
 import { z } from "zod"
 
-import { ACTIVITY_FILTERS, ACTIVITY_KIND, type ActivityFilter, DEFAULT_ACTIVITY_FILTER } from "@/constants/activity"
+import { ACTIVITY_FILTERS, ACTIVITY_KIND, type ActivityFilter, DEFAULT_ACTIVITY_FILTER, SHOWN_ACTIVITY_FILTERS } from "@/constants/activity"
 import { formatDayLabel } from "@/lib/dates"
 
 import type { Activity } from "@/types/activity"
 
 export const parseActivityFilter = (value: unknown): ActivityFilter =>
-  z.enum(ACTIVITY_FILTERS).catch(DEFAULT_ACTIVITY_FILTER).parse(value)
+  z.enum(SHOWN_ACTIVITY_FILTERS as [ActivityFilter, ...ActivityFilter[]]).catch(DEFAULT_ACTIVITY_FILTER).parse(value)
 
 export const filterActivity = (activity: Activity[], filter: ActivityFilter) =>
   filter === "all" ? activity : activity.filter(({ kind }) => ACTIVITY_KIND[kind].category === filter)

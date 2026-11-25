@@ -114,6 +114,7 @@ export class StrategiesService {
         orders: run?.orders ?? undefined,
         holdings,
         cash,
+        ledger: entries.map(({ at, ...line }) => ({ ...line, at: iso(at) })),
         funding: row.mode
           ? {
               mode: row.mode === 'wallet' ? 'live' : 'paper',
@@ -214,16 +215,27 @@ async function saveResearch(tx: EntityManager, record: StrategyRecord) {
     });
 }
 
-// The first time a strategy is live, its starting cash and stocks are written to the ledger; after that the ledger only grows
+// The first time a strategy is live, its starting cash and stocks are written to the ledger. After that the ledger only grows: lines the
+// record has past those already kept are added, and none already kept is ever changed.
 async function openLedger(tx: EntityManager, record: StrategyRecord) {
   if (record.status !== 'live' || !record.funding) return;
-  if (await tx.existsBy(LedgerEntry, { strategyId: record.id })) return;
 
-  const at = new Date(record.startedAt ?? record.updatedAt);
-  const lines = openingLines(record.holdings, record.funding.amount, at);
+  const kept = await tx.countBy(LedgerEntry, { strategyId: record.id });
+  if (kept === 0) {
+    const at = new Date(record.startedAt ?? record.updatedAt);
+    const lines = openingLines(record.holdings, record.funding.amount, at);
+    await tx.insert(
+      LedgerEntry,
+      lines.map((line) => ({ ...line, strategyId: record.id })),
+    );
+    return;
+  }
+
+  const fresh = (record.ledger ?? []).slice(kept);
+  if (fresh.length === 0) return;
   await tx.insert(
     LedgerEntry,
-    lines.map((line) => ({ ...line, strategyId: record.id })),
+    fresh.map(({ at, ...line }) => ({ ...line, at: new Date(at), strategyId: record.id })),
   );
 }
 

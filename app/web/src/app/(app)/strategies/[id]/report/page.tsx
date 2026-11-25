@@ -9,10 +9,12 @@ import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { PortfolioBreadcrumb } from "@/components/Flow/PortfolioBreadcrumb"
 import { ReportColumn } from "@/components/Flow/ReportColumn"
 import { StepProgress } from "@/components/Flow/StepProgress"
+import { PortfolioShell } from "@/components/PortfolioDetail/PortfolioShell"
 import { MetricTiles } from "@/components/Report/MetricTiles"
 import { ReportActionBar } from "@/components/Report/ReportActionBar"
+import { ReportActions } from "@/components/Report/ReportActions"
+import { ReportDocument } from "@/components/Report/ReportDocument"
 import { ReportHeader } from "@/components/Report/ReportHeader"
-import { ResearchResultView } from "@/components/Report/ResearchResultView"
 import { getReportScript, getResultScript } from "@/lib/agent/source"
 import { getPortfolio } from "@/lib/portfolios/source"
 import { getOrders, getReport } from "@/lib/report/source"
@@ -40,6 +42,26 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const result = own?.research?.result
   const script = result ? await getResultScript(portfolio, result) : await getReportScript(portfolio)
 
+  const document = result && own && (
+    <ReportDocument
+      id={own.id}
+      name={own.name}
+      brief={own.brief}
+      result={result}
+      amount={own.budget}
+      preparedAt={own.events.find(({ kind }) => kind === "ready")?.at ?? own.updatedAt}
+      actions={<ReportActions strategyId={own.id} name={own.name} />}
+    />
+  )
+
+  // Once it is trading, the report is one of the strategy's own pages, in the same frame as the others
+  if (document && own?.status === "live")
+    return (
+      <PortfolioShell portfolio={portfolio} current="report">
+        {document}
+      </PortfolioShell>
+    )
+
   return (
     <div className="flex flex-col gap-4">
       <PortfolioBreadcrumb name={portfolio.name} />
@@ -63,9 +85,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             />
           )}
         </ReportActionBar>
-        {result ? (
-          <ResearchResultView result={result} eyebrow={`Strategy results · ${portfolio.name}`} />
-        ) : (
+        {document ?? (
           <>
             <ReportHeader report={report} eyebrow={`Strategy results · ${portfolio.name}`} />
             <MetricTiles metrics={report.metrics} />

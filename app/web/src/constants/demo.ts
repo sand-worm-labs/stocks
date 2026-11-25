@@ -1,5 +1,6 @@
 export const DEMO_MODELS_COOKIE = "sw_models"
-export const DEFAULT_DEMO_MODELS = 40
+// Made-up strategies and activity are for trying the app out, so a person sees only their own unless they ask for them in Settings
+export const DEFAULT_DEMO_MODELS = 0
 export const MAX_DEMO_MODELS = 1000
 
 export const DEMO_MODEL_CHOICES = [

@@ -2,16 +2,23 @@ import { cache } from "react"
 
 import { authRequired, LOCAL_USER_ID } from "@/lib/auth/config"
 import { getSignedInUserId } from "@/lib/auth/session"
+import { getStocks } from "@/lib/markets/source"
 import { getMarket, getPipeline } from "@/lib/pipeline/source"
 import { getProducer } from "@/lib/research/source"
 import { getStore } from "@/lib/store"
 
 import { createStrategyService } from "./service"
 
+// Today's price of each stock on offer, by symbol
+async function getPrices() {
+  const stocks = await getStocks()
+  return Object.fromEntries(stocks.flatMap(({ symbol, price }) => (price ? [[symbol, price]] : [])))
+}
+
 // The service the pages and the API use, joined to the real store and the agent. Swapping either happens in their own `source` and
 // `getStore`, never here.
 export const getStrategyService = () =>
-  createStrategyService({ store: getStore(), pipeline: getPipeline(), producer: getProducer(), market: getMarket })
+  createStrategyService({ store: getStore(), pipeline: getPipeline(), producer: getProducer(), prices: getPrices, market: getMarket })
 
 // Who is acting. Nobody signed in, with sign-in required, is nobody; with it switched off for local work, everyone is one local person.
 export async function getOwnerId() {

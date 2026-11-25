@@ -240,6 +240,8 @@ describe("research that is waited on", () => {
     checks: [],
     holdings: [],
     steps: [],
+    selection: [],
+    sources: [],
     notebooks: [{ title: "Performance", url: "https://app.sandwormlab.xyz/workspace/w/documents/d/notebook/edit" }],
     notes: [],
     isExample: true,
@@ -362,5 +364,71 @@ describe("research that is waited on", () => {
     await agent.confirmRules("u1", a.id)
     expect((await agent.waitingForResearch("u1")).map(({ id }) => id)).toEqual([a.id])
     expect(await agent.waitingForResearch("u2")).toEqual([])
+  })
+})
+
+describe("moving a live strategy's money", () => {
+  const prices = async () => ({ NVDAc: 100, TSLAc: 200, AMZNc: 50, GOOGLc: 150, AAPLc: 120, MSFTc: 300 })
+  const trading = async () => {
+    const money = createStrategyService({
+      store,
+      pipeline: createLocalPipeline(reportMockData[1]),
+      prices,
+      market: async () => market,
+      now: () => clock,
+      random: () => `m${++counter}`,
+    })
+    const draft = await money.create("u1", BRIEF)
+    await money.confirmRules("u1", draft.id)
+    await money.finishResearch("u1", draft.id)
+    const live = await money.goLive("u1", draft.id, 400, { mode: "paper" })
+    return { money, id: draft.id, live }
+  }
+
+  it("records what was put in and what it bought, and the strategy holds more and keeps the fee", async () => {
+    const { money, id, live } = await trading()
+    const before = live.holdings.reduce((sum, { units }) => sum + units, 0)
+    later(60_000)
+    const { record, lines } = await money.addFunds("u1", id, 100)
+
+    expect(lines[0]).toMatchObject({ kind: "deposit", usdc: 100 })
+    expect(lines.slice(1).every(({ kind }) => kind === "buy")).toBe(true)
+    expect(record.holdings.reduce((sum, { units }) => sum + units, 0)).toBeGreaterThan(before)
+    expect(record.cash).toBeGreaterThanOrEqual(0)
+    expect((await store.get(id))?.ledger?.length).toBe(lines.length + live.holdings.length + 1)
+  })
+
+  it("sells at today's price, takes the fee off, and puts the money back as cash", async () => {
+    const { money, id, live } = await trading()
+    const [first] = live.holdings
+    const { record, lines } = await money.sell("u1", id, { symbols: [first!.symbol], share: 0.5 })
+
+    expect(lines).toHaveLength(1)
+    expect(lines[0]).toMatchObject({ kind: "sell", symbol: first!.symbol })
+    expect(record.cash).toBeGreaterThan(0)
+    expect(record.holdings.find(({ symbol }) => symbol === first!.symbol)?.units).toBeCloseTo(first!.units / 2, 5)
+  })
+
+  it("takes out only cash, and says so when there isn't enough", async () => {
+    const { money, id } = await trading()
+    await expect(money.removeFunds("u1", id, 50)).rejects.toMatchObject({ status: 400 })
+    await money.sell("u1", id, { share: 1 })
+    const { record } = await money.removeFunds("u1", id, 10)
+    expect(record.holdings).toEqual([])
+    expect(record.cash).toBeGreaterThan(0)
+  })
+
+  it("moves nothing for a strategy that isn't trading, isn't the person's, or trades from a wallet", async () => {
+    const { money, id } = await trading()
+    await expect(money.addFunds("u2", id, 10)).rejects.toMatchObject({ status: 404 })
+
+    const draft = await money.create("u1", BRIEF)
+    await expect(money.addFunds("u1", draft.id, 10)).rejects.toMatchObject({ status: 409 })
+
+    const wallet = await money.create("u1", BRIEF)
+    await money.confirmRules("u1", wallet.id)
+    await money.finishResearch("u1", wallet.id)
+    await money.goLive("u1", wallet.id, 400, { mode: "live", from: "0xabc", chainId: 84532 })
+    await expect(money.sell("u1", wallet.id, { share: 1 })).rejects.toThrow(/wallet/)
   })
 })

@@ -56,7 +56,7 @@ function Receipt({ trade }: { trade: TradeReceipt }) {
         <div className="flex gap-1.5">
           <dt>Receipt</dt>
           <dd>
-            <Address value={tx} kind="tx" href={explorerTxUrl(tx)} icon={<BaseMark size={12} />} />
+            {tx ? <Address value={tx} kind="tx" href={explorerTxUrl(tx)} icon={<BaseMark size={12} />} /> : "Paper trade, no transaction"}
           </dd>
         </div>
       </dl>

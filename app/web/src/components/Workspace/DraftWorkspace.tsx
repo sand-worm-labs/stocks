@@ -3,8 +3,9 @@ import { ReviewAndBuy } from "@/components/Buy/ReviewAndBuy"
 import { PortfolioBreadcrumb } from "@/components/Flow/PortfolioBreadcrumb"
 import { ReportColumn } from "@/components/Flow/ReportColumn"
 import { MetricTiles } from "@/components/Report/MetricTiles"
+import { ReportActions } from "@/components/Report/ReportActions"
+import { ReportDocument } from "@/components/Report/ReportDocument"
 import { ReportHeader } from "@/components/Report/ReportHeader"
-import { ResearchResultView } from "@/components/Report/ResearchResultView"
 import { VerdictPill } from "@/components/Report/VerdictPill"
 import { RulesList } from "@/components/Rules/RulesList"
 import { Card } from "@/components/ui/card"
@@ -59,8 +60,16 @@ export async function DraftWorkspace({ portfolio }: { portfolio: Portfolio }) {
       plan={report.plan}
       verdict={result?.verdict ? <span className="text-sm font-medium">{result.verdict.label}</span> : <VerdictPill verdict={report.verdict} />}
       report={
-        result ? (
-          <ResearchResultView result={result} eyebrow={`Strategy results · ${portfolio.name}`} />
+        result && own ? (
+          <ReportDocument
+            id={own.id}
+            name={own.name}
+            brief={own.brief}
+            result={result}
+            amount={own.budget}
+            preparedAt={own.events.find(({ kind }) => kind === "ready")?.at ?? own.updatedAt}
+            actions={<ReportActions strategyId={own.id} name={own.name} />}
+          />
         ) : (
           // One element, not a fragment: a fragment of several children comes across to the client as a list with no keys
           <div className="contents">

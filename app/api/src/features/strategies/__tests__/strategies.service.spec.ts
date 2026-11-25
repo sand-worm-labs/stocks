@@ -66,7 +66,7 @@ const url = process.env.TEST_DATABASE_URL;
   it('keeps what is saved, whole, and gives it back by id', async () => {
     const saved = record('a', ME, { startedAt: '2026-11-24T11:00:00.000Z' });
     await strategies.save(saved);
-    expect(await strategies.get('a')).toEqual(saved);
+    expect(await strategies.get('a')).toEqual({ ...saved, ledger: [] });
     expect(await strategies.get('missing')).toBeUndefined();
   });
 
@@ -88,6 +88,26 @@ const url = process.env.TEST_DATABASE_URL;
   it('gives back a strategy that is trading: its stocks, what was paid in, and its research', async () => {
     const saved = live('a');
     await strategies.save(saved);
-    expect(await strategies.get('a')).toEqual(saved);
+    const read = await strategies.get('a');
+    expect(read).toMatchObject(saved);
+    expect(read?.ledger?.map(({ kind }) => kind)).toEqual(['deposit', 'buy']);
+  });
+
+  it('adds to the ledger what a record has past what is kept, and holdings and cash follow', async () => {
+    await strategies.save(live('a'));
+    const kept = (await strategies.get('a'))!;
+    const more = [
+      ...(kept.ledger ?? []),
+      { kind: 'deposit' as const, usdc: 100, at: '2026-11-25T10:00:00.000Z' },
+      { kind: 'sell' as const, symbol: 'NVDAc', units: -1, price: 120, usdc: 119.64, fee: 0.36, at: '2026-11-25T11:00:00.000Z' },
+    ];
+    await strategies.save({ ...kept, ledger: more });
+    // Saving the same thing again adds nothing
+    await strategies.save({ ...kept, ledger: more });
+
+    const after = await strategies.get('a');
+    expect(after?.ledger).toHaveLength(4);
+    expect(after?.holdings).toMatchObject([{ symbol: 'NVDAc', units: 1 }]);
+    expect(after?.cash).toBeCloseTo(219.64, 2);
   });
 });

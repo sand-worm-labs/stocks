@@ -53,3 +53,26 @@ export async function readChatTicket(ticket: string | null) {
     return undefined
   }
 }
+
+// A link to one strategy's report that anyone holding it can open, with no sign-in. It names only the strategy and when it stops working,
+// and is signed, so it can't be made for another strategy or kept alive past its end.
+const SHARE_DAYS = 30
+
+export const signReportShare = (strategyId: string) =>
+  new SignJWT({})
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(strategyId)
+    .setIssuer(ISSUER)
+    .setAudience("report-share")
+    .setIssuedAt()
+    .setExpirationTime(`${SHARE_DAYS}d`)
+    .sign(secret())
+
+export async function readReportShare(token: string) {
+  try {
+    const { payload } = await jwtVerify(token, secret(), { issuer: ISSUER, audience: "report-share", algorithms: ["HS256"] })
+    return payload.sub
+  } catch {
+    return undefined
+  }
+}

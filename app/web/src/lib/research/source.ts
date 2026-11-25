@@ -2,12 +2,6 @@ import { getStocks } from "@/lib/markets/source"
 import { createSandwormProducer } from "@/lib/sandworm/producer"
 import type { Producer } from "@/lib/strategies/service"
 
-// The tokens of companies that aren't listed yet: there is no share price history for them
-async function unlisted() {
-  const stocks = await getStocks()
-  return new Set(stocks.filter(({ preIpo }) => preIpo).map(({ symbol }) => symbol))
-}
-
 // Who does the research, chosen by `RESEARCH_PRODUCER`:
 //   "sandworm"  Stocks builds and runs notebooks on Sandworm as the person who is signed in. The default whenever `SANDWORM_API_URL` is set.
 //   "agent"     an agent from outside (Claude) is waited on: it reads the request from the Stocks MCP, builds notebooks on Sandworm, and submits
@@ -16,7 +10,7 @@ async function unlisted() {
 export function getProducer(): Producer | undefined {
   const baseUrl = process.env.SANDWORM_API_URL
   const chosen = process.env.RESEARCH_PRODUCER || (baseUrl ? "sandworm" : "standin")
-  if (chosen === "sandworm" && baseUrl) return createSandwormProducer({ baseUrl, unlisted })
+  if (chosen === "sandworm" && baseUrl) return createSandwormProducer({ baseUrl, market: getStocks })
   if (chosen === "agent") return {}
   return undefined
 }

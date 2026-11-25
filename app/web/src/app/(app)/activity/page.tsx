@@ -5,7 +5,7 @@ import { AlertsFilterLabel } from "@/components/Activity/AlertsFilterLabel"
 import { AlertsView } from "@/components/Activity/AlertsView"
 import { FilterPills } from "@/components/FilterPills/FilterPills"
 import { PageHeader } from "@/components/PageHeader/PageHeader"
-import { ACTIVITY_FILTER_LABEL, ACTIVITY_FILTERS } from "@/constants/activity"
+import { ACTIVITY_FILTER_LABEL, SHOWN_ACTIVITY_FILTERS } from "@/constants/activity"
 import { filterActivity, parseActivityFilter } from "@/lib/activity/filter"
 import { getActivity } from "@/lib/activity/source"
 import { getPortfolios } from "@/lib/portfolios/source"
@@ -26,14 +26,14 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
       <PageHeader
         icon="activity"
         title="Activity"
-        description={<>Trades, refusals, alerts and everything the agent did</>}
+        description={<>Trades, alerts and everything the agent did</>}
       />
       <FilterPills
         label="Filter activity"
         route="activity"
         param="filter"
         active={filter}
-        options={ACTIVITY_FILTERS.map((value) => ({
+        options={SHOWN_ACTIVITY_FILTERS.map((value) => ({
           value,
           label: value === "alerts" ? <AlertsFilterLabel /> : ACTIVITY_FILTER_LABEL[value],
         }))}

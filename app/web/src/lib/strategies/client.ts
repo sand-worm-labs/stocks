@@ -29,6 +29,11 @@ export const renameStrategy = (id: string, name: string) =>
   call<{ name: string }>(`/api/strategies/${id}`, "PATCH", { name })
 export const confirmRules = (id: string) => call<{ stage: string }>(`/api/strategies/${id}/confirm`, "POST")
 export const retryResearch = (id: string) => call<{ stage: string }>(`/api/strategies/${id}/retry`, "POST")
+export const moveFunds = (id: string, direction: "add" | "remove", amount: number) =>
+  call<{ cash: number; bought: number }>(`/api/strategies/${id}/funds`, "POST", { direction, amount })
+export const sellStrategy = (id: string, share: number, symbols?: string[]) =>
+  call<{ cash: number; received: number }>(`/api/strategies/${id}/sell`, "POST", { share, symbols })
+export const shareReport = (id: string) => call<{ url: string }>(`/api/strategies/${id}/share`, "POST")
 export const finishResearch = (id: string) => call<{ stage: string; error?: string; progress?: AgentStep[] }>(`/api/strategies/${id}/ready`, "POST")
 export const tradeStrategy = (id: string, request: TradeRequest) =>
   call<{ id: string }>(`/api/strategies/${id}/trade`, "POST", request)

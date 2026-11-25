@@ -9,6 +9,9 @@ import { getPortfolio } from "@/lib/portfolios/source"
 
 import { CHAPTERS, TOUR_STEPS } from "./steps"
 
+// These tests are about the made-up strategies, which a person only gets when they ask for them in Settings
+vi.mock("@/lib/demo/source", () => ({ getModelCount: async () => 40 }))
+
 const SRC = join(process.cwd(), "src")
 const walk = (dir: string): string[] =>
   readdirSync(dir).flatMap((name) => {

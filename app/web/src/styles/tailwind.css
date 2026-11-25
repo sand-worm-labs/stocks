@@ -655,3 +655,37 @@ nav {
   -webkit-user-select: none;
   user-select: none;
 }
+
+
+/* A report saved as PDF: only the report, on white, with each card kept whole across pages */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  .report-print,
+  .report-print * {
+    visibility: visible !important;
+  }
+  .report-print {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+  .report-print [data-slot="card"],
+  .report-print figure,
+  .report-print li,
+  .report-print tr {
+    break-inside: avoid;
+  }
+  body {
+    background: #fff !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

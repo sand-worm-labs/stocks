@@ -28,10 +28,10 @@ describe("getPortfolios", () => {
     expect(await withCount("200")).toHaveLength(200)
   })
 
-  it("makes forty when nothing was picked or the pick is nonsense", async () => {
-    expect(await withCount(undefined)).toHaveLength(40)
-    expect(await withCount("many")).toHaveLength(40)
-    expect(await withCount("5000")).toHaveLength(40)
+  it("makes none when nothing was picked or the pick is nonsense, so a person sees only their own", async () => {
+    expect(await withCount(undefined)).toHaveLength(0)
+    expect(await withCount("many")).toHaveLength(0)
+    expect(await withCount("5000")).toHaveLength(0)
   })
 
   it("gives every portfolio its own id, however many there are", async () => {

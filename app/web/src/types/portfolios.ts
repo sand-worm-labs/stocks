@@ -12,6 +12,8 @@ export type Portfolio = {
   stage?: DraftStage
   createdAt: string
   holdings: Holding[]
+  // Made by this person here, so its money can really be moved; the others are made-up
+  own?: boolean
   cash: number
   startedAt?: string
   // Fractions: 0.008 is +0.8%

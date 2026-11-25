@@ -3,12 +3,16 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { z } from "zod"
 
+import { kpisFor, prioritiesOf, reportInstructions } from "@/lib/research/report-spec"
 import { researchResultSchema } from "@/lib/research/result"
 import { StrategyError, type StrategyService } from "@/lib/strategies/service"
 import type { StrategyRecord } from "@/types/store"
 
 // What an agent from outside is shown of a strategy: what it asked for and the rules it was turned into. Nothing about money or wallets.
-const brief = ({ id, name, brief, budget, assumption, summary, rules, strategy, stage }: StrategyRecord) => ({
+const brief = ({ id, name, brief, budget, assumption, summary, rules, strategy, stage }: StrategyRecord) => {
+  const priorities = prioritiesOf(brief, rules)
+  const kpis = kpisFor(priorities)
+  return {
   id,
   name,
   stage,
@@ -18,7 +22,10 @@ const brief = ({ id, name, brief, budget, assumption, summary, rules, strategy, 
   summary,
   rules,
   strategy,
-})
+  // How the report should come out for this person, which is what to build the notebooks to
+  report: { priorities, kpis, instructions: reportInstructions(priorities, kpis) },
+  }
+}
 
 const answer = (value: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }] })
 

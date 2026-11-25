@@ -19,12 +19,15 @@ export const researchResultSchema = z.object({
   summary: text(1200),
   // The one-word answer to "edge or gambling", with how sure it is
   verdict: z.object({ tone, label: text(60) }).optional(),
-  metrics: z.array(z.object({ label: text(40), value: text(40), note: text(120).optional() })).max(8),
+  // `help` is what the little (i) beside a number says: what it means, in words a first-time investor can use
+  metrics: z.array(z.object({ label: text(40), value: text(40), note: text(120).optional(), help: text(500).optional() })).max(8),
   // Lines over time, each drawn from a notebook. `mark` is a level worth seeing, such as the loss the person said they'd panic at.
   charts: z
     .array(
       z.object({
         title: text(100),
+        // What the chart is, so the page can build on it: the growth line is what the calculator plays with
+        kind: z.enum(["growth", "drop"]).optional(),
         format: z.enum(["multiple", "percent", "currency"]).default("multiple"),
         series: z.array(z.object({ name: text(30), points: pointsOf })).min(1).max(3),
         mark: z.object({ label: text(40), value: z.number().finite() }).optional(),
@@ -40,6 +43,19 @@ export const researchResultSchema = z.object({
   holdings: z.array(z.object({ symbol: text(20), weight: z.number().min(0).max(1), riskShare: z.number().min(0).max(1) })).max(12).default([]),
   // What was done, in order, each with the notebook it was done in when there is one
   steps: z.array(z.object({ label: text(40), url: z.string().url().max(500).optional() })).max(10).default([]),
+  // How a year went across every 12-month stretch of the test: the one 1 in 20 fell short of, the middle, and the one 1 in 20 beat
+  yearRange: z.object({ bad: z.number(), typical: z.number(), good: z.number() }).optional(),
+  // Can it be bought: how deep each token's pool is, and how much one order would move the price
+  tradability: z
+    .object({
+      stocks: z.array(z.object({ symbol: text(20), liquidity: z.number().min(0), impact: z.number().min(0) })).max(12),
+      text: text(300),
+    })
+    .optional(),
+  // Why each stock is in, with what it did on its own over the test
+  selection: z.array(z.object({ symbol: text(20), name: text(60).optional(), text: text(300) })).max(12).default([]),
+  // Where the facts came from
+  sources: z.array(z.object({ name: text(40), title: text(120), url: z.string().url().max(500).optional(), note: text(80).optional() })).max(8).default([]),
   notes: z.array(text(300)).max(8).default([]),
   notebooks: z.array(notebookLinkSchema).min(1).max(8),
   // Where the numbers came from, and as of when

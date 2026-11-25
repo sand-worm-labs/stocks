@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -29,6 +30,7 @@ import {
 import { formatAmount, formatPercent, pluralize } from "@/lib/format"
 import { readAmount } from "@/lib/portfolios/amount"
 import { splitDeposit } from "@/lib/portfolios/deposit"
+import { errorMessage, moveFunds } from "@/lib/strategies/client"
 import { cn } from "@/lib/utils"
 import type { Portfolio } from "@/types/portfolios"
 import type { FundsDirection } from "@/types/ui"
@@ -36,6 +38,7 @@ import type { FundsDirection } from "@/types/ui"
 type AddFundsDialogProps = { portfolios: Portfolio[]; cap: number }
 
 export function AddFundsDialog({ portfolios, cap }: AddFundsDialogProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [direction, setDirection] = useState<FundsDirection>("add")
   const [text, setText] = useState(DEFAULT_ADD_FUNDS.toFixed(2))
@@ -56,6 +59,23 @@ export function AddFundsDialog({ portfolios, cap }: AddFundsDialogProps) {
   })
   const amount = reading.amount ?? 0
   const { buys, invested, cash, fees } = splitDeposit(portfolio, adding ? amount : 0, cap)
+  // A strategy of the person's own really moves its money, and the page is read again to show it. A made-up one only says what would happen.
+  const confirm = async () => {
+    const summary = {
+      title: `${adding ? "Added" : "Removed"} ${formatAmount(amount)} USDC`,
+      description: !adding ? "Taken out of the strategy's cash." : invested > 0 ? `Bought ${pluralize(buys.length, "stock")} with it.` : "Kept as cash.",
+    }
+    if (!portfolio.own) return void toast.success(summary.title, { description: summary.description })
+    try {
+      await moveFunds(portfolio.id, adding ? "add" : "remove", amount)
+      toast.success(summary.title, { description: summary.description })
+      setOpen(false)
+      router.refresh()
+    } catch (error) {
+      toast.error(`Couldn't ${adding ? "add" : "remove"} the funds`, { description: errorMessage(error) })
+    }
+  }
+
   const change = (next: FundsDirection) => {
     setDirection(next)
     setText((next === "add" ? DEFAULT_ADD_FUNDS : Math.min(DEFAULT_ADD_FUNDS, portfolio.cash)).toFixed(2))
@@ -193,24 +213,17 @@ export function AddFundsDialog({ portfolios, cap }: AddFundsDialogProps) {
 
         <div className="flex justify-end gap-2">
           <DialogClose className={buttonVariants({ intent: "outline", size: "compact" })}>Cancel</DialogClose>
-          <DialogClose
+          <button
+            type="button"
             disabled={reading.amount === undefined}
-            onClick={() =>
-              toast.success(`${adding ? "Added" : "Removed"} ${formatAmount(amount)} USDC`, {
-                description: !adding
-                  ? "Sent back to your wallet."
-                  : invested > 0
-                    ? `Bought ${pluralize(buys.length, "stock")} with it.`
-                    : "Kept as cash.",
-              })
-            }
+            onClick={confirm}
             className={cn(
               buttonVariants({ intent: "dark", size: "compact" }),
               "disabled:pointer-events-none disabled:opacity-40"
             )}
           >
             {adding ? "Add" : "Remove"} {formatAmount(amount)} USDC
-          </DialogClose>
+          </button>
         </div>
       </DialogContent>
     </Dialog>

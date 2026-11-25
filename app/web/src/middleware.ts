@@ -5,6 +5,8 @@ import { authRequired, DEFAULT_AFTER_SIGN_IN, SESSION_COOKIE, SIGN_IN_PATH } fro
 import { readSession } from "@/lib/auth/token"
 import { onboardedMarker } from "@/lib/onboarding/profile-marker"
 
+const SHARE_PATH = "/share/"
+
 const safeNext = (next: string | null) => (next?.startsWith("/") && !next.startsWith("//") ? next : undefined)
 
 // The way into the app, in this order, for every page but the sign-in page:
@@ -17,6 +19,7 @@ export async function middleware(request: NextRequest) {
   if (!authRequired()) return NextResponse.next()
 
   const { pathname, search } = request.nextUrl
+  if (pathname.startsWith(SHARE_PATH)) return NextResponse.next()
   const userId = await readSession(request.cookies.get(SESSION_COOKIE)?.value).catch(() => undefined)
   const onSignIn = pathname === SIGN_IN_PATH
 

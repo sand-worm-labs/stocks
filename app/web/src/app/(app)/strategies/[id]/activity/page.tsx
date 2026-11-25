@@ -7,7 +7,7 @@ import { PortfolioShell } from "@/components/PortfolioDetail/PortfolioShell"
 import { Card } from "@/components/ui/card"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
 import { routeHref } from "@/config/routes"
-import { ACTIVITY_FILTER_LABEL, ACTIVITY_FILTERS } from "@/constants/activity"
+import { ACTIVITY_FILTER_LABEL, SHOWN_ACTIVITY_FILTERS } from "@/constants/activity"
 import { activityCounts, filterActivity, parseActivityFilter, tradeTotals } from "@/lib/activity/filter"
 import { getActivity } from "@/lib/activity/source"
 import { formatAmount } from "@/lib/format"
@@ -32,12 +32,11 @@ export default async function PortfolioActivityPage({ params, searchParams }: Po
     { label: "Trades", value: String(totals.count) },
     { label: "Bought", value: formatAmount(totals.spent), usdc: true },
     { label: "Fees", value: formatAmount(totals.fees), usdc: true },
-    { label: "Refused", value: String(totals.refused) },
   ]
 
   return (
     <PortfolioShell portfolio={portfolio} current="activity">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {stats.map(({ label, value, usdc }, i) => (
           <Card
             key={label}
@@ -58,10 +57,10 @@ export default async function PortfolioActivityPage({ params, searchParams }: Po
         slug={id}
         param="filter"
         active={filter}
-        options={ACTIVITY_FILTERS.map((value) => ({
+        options={SHOWN_ACTIVITY_FILTERS.map((value) => ({
           value,
           label:
-            value === "alerts" || value === "refusals"
+            value === "alerts"
               ? `${ACTIVITY_FILTER_LABEL[value]} · ${counts[value]}`
               : ACTIVITY_FILTER_LABEL[value],
         }))}

@@ -1,12 +1,15 @@
 import { MIN_BUY_AMOUNT, SWAP_FEE_RATE } from "@/constants/trade"
 import { analyzeBrief } from "@/lib/brief/analyze"
+import { splitDeposit } from "@/lib/portfolios/deposit"
 import { ResearchFailure } from "@/lib/research/failure"
 import { isSandwormLink, type ResearchResult, researchResultSchema } from "@/lib/research/result"
 import { withFee } from "@/lib/trade/fee"
+import { depositLines, LedgerError, ledgerOf, positionsOf, saleLines, withdrawLine, withLines } from "@/lib/trade/ledger"
 import type { AgentStep } from "@/types/agent"
 import type { Market, Pipeline } from "@/types/pipeline"
 import type { Holding } from "@/types/portfolios"
 import type { Funding, StrategyEvent, StrategyRecord, StrategyStore } from "@/types/store"
+import { toPortfolio } from "./portfolio"
 
 export const NAME_MAX_LENGTH = 60
 export const RESEARCH_MS = 45_000
@@ -65,6 +68,8 @@ type Dependencies = {
   store: StrategyStore
   pipeline: Pipeline
   producer?: Producer
+  // Today's price of each stock, by symbol. Money is moved at these, not at what the browser shows.
+  prices?: () => Promise<Record<string, number>>
   // Read when the agent needs to see the market, so the service doesn't fetch it for steps that don't
   market: () => Promise<Market>
   now?: () => Date
@@ -78,6 +83,7 @@ export function createStrategyService({
   store,
   pipeline,
   producer,
+  prices = async () => ({}),
   market,
   now = () => new Date(),
   random = () => Math.random().toString(36).slice(2, 6),
@@ -120,9 +126,68 @@ export function createStrategyService({
     return finish({ ...record, research: { ...record.research, result: parsed.data, error: undefined } })
   }
 
+  // A live strategy that trades on paper, whose money this app can move. One that trades from a wallet has trades signed on the chain,
+  // which come later, so nothing is recorded for it here.
+  async function paperStrategy(ownerId: string, id: string) {
+    const record = await owned(ownerId, id)
+    if (record.status !== "live") throw new StrategyError("It isn't trading yet", 409)
+    if (record.funding?.mode !== "paper")
+      throw new StrategyError("This strategy trades from your wallet, and trades from it aren't available yet", 409)
+    return record
+  }
+
+  // Applies a change to the ledger, turning what's wrong with it into something to tell the person
+  async function moveMoney(record: StrategyRecord, lines: (priceOf: (symbol: string) => number | undefined) => ReturnType<typeof saleLines>) {
+    const quotes = await prices()
+    const held = new Map(record.holdings.map(({ symbol, entryPrice }) => [symbol, entryPrice]))
+    // Today's price, or what was paid when there is no price to be had, so a stock that has dropped out of the feed can still be sold
+    const priceOf = (symbol: string) => quotes[symbol] ?? held.get(symbol)
+    try {
+      const next = withLines(record, lines(priceOf))
+      return { saved: await save(next), lines: next.ledger!.slice(ledgerOf(record).length) }
+    } catch (error) {
+      if (error instanceof LedgerError) throw new StrategyError(error.message, 400)
+      throw error
+    }
+  }
+
+  const capOf = ({ rules }: StrategyRecord) => rules.find((rule) => rule.type === "max-weight")?.limit ?? 1
+
   return {
     owned,
     completeResearch,
+
+    // Money put in, and bought into stocks that have room under the rules' cap. What can't be placed stays as cash.
+    async addFunds(ownerId: string, id: string, amount: number) {
+      const record = await paperStrategy(ownerId, id)
+      const quotes = await prices()
+      const current = ledgerOf(record)
+      const { holdings } = positionsOf(current)
+      // Worth what the stocks are worth now, which is what the cap is measured against
+      const valued = toPortfolio({
+        ...record,
+        holdings: holdings.map((holding) => ({ ...holding, value: holding.units * (quotes[holding.symbol] ?? holding.entryPrice) })),
+        cash: positionsOf(current).cash,
+      })
+      const { buys } = splitDeposit(valued, amount, capOf(record))
+      const { saved, lines } = await moveMoney(record, (priceOf) => depositLines(record, amount, buys, priceOf, now().toISOString()))
+      return { record: saved, lines }
+    },
+
+    async removeFunds(ownerId: string, id: string, amount: number) {
+      const record = await paperStrategy(ownerId, id)
+      const { saved, lines } = await moveMoney(record, () => [withdrawLine(record, amount, now().toISOString())])
+      return { record: saved, lines }
+    },
+
+    // A share of one stock, or of all of them when none is named, sold at today's price
+    async sell(ownerId: string, id: string, { symbols, share }: { symbols?: string[]; share: number }) {
+      const record = await paperStrategy(ownerId, id)
+      const held = positionsOf(ledgerOf(record)).holdings.map(({ symbol }) => symbol)
+      const chosen = symbols?.length ? symbols : held
+      const { saved, lines } = await moveMoney(record, (priceOf) => saleLines(record, chosen, share, priceOf, now().toISOString()))
+      return { record: saved, lines }
+    },
 
     async create(ownerId: string, brief: string) {
       const text = brief.trim()

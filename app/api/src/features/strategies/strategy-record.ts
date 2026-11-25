@@ -1,4 +1,5 @@
 import { Json } from '@/common/types/json';
+import type { LedgerLine } from './ledger';
 
 // A strategy as the Next app holds it, and as it is sent here to be kept: one document, spread over the tables when it is saved.
 export type Holding = {
@@ -26,6 +27,8 @@ export type StrategyRecord = {
   report?: Json;
   orders?: Json[];
   holdings: Holding[];
+  // Everything that happened to the strategy's money, oldest first; only ever added to
+  ledger?: { kind: LedgerLine['kind']; symbol?: string; units?: number; price?: number; usdc: number; fee?: number; at: string }[];
   cash: number;
   funding?: {
     mode: 'paper' | 'live';

@@ -28,6 +28,12 @@ const token = (symbol: string, company: string, rank: number) => ({
   series: [1, 2, 3],
 })
 
+// These screens are drawn from the made-up data, which is what a person gets when they ask for it in Settings
+vi.mock("@/lib/demo/source", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/demo/source")>()),
+  getModelCount: async () => 40,
+}))
+
 vi.mock("next/font/local", () => ({ default: () => ({ className: "font-test" }) }))
 
 vi.mock("@/lib/markets/tokens", async (importOriginal) => ({
@@ -134,14 +140,15 @@ describe("app screens", () => {
     ).rejects.toThrow()
   })
 
-  it("renders the activity grouped by day, and only refusals when asked", async () => {
+  it("renders the activity grouped by day, with no refusals filter until the agent can refuse something", async () => {
     const all = await render(ActivityPage({ searchParams: Promise.resolve({}) }))
-    const refusals = await render(ActivityPage({ searchParams: Promise.resolve({ filter: "refusals" }) }))
+    const asked = await render(ActivityPage({ searchParams: Promise.resolve({ filter: "refusals" }) }))
 
     expect(all).toContain("Yesterday")
     expect(all).toContain("Bought NVDAc")
-    expect(refusals).toContain("Refused a trade")
-    expect(refusals).not.toContain("Bought NVDAc")
+    expect(all).not.toContain("Refusals")
+    // Asking for it anyway shows everything rather than an empty list
+    expect(asked).toContain("Bought NVDAc")
   })
 
   it("renders every settings section", async () => {

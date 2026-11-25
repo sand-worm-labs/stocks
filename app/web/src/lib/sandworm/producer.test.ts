@@ -83,7 +83,7 @@ describe("what the strategy asks for", () => {
     const { inputs, skipped } = await inputsFor(
       withToken,
       async (tickers) => (asked.push(tickers), getPrices(tickers)),
-      new Set(["ANTc"])
+      [{ symbol: "ANTc", name: "Anthropic", preIpo: true, liquidity: 500_000 }]
     )
     expect(asked).toEqual([["NVDA", "TSLA"]])
     expect(skipped).toEqual(["ANTc"])
@@ -95,7 +95,7 @@ describe("what the strategy asks for", () => {
     const producer = createSandwormProducer({
       baseUrl: "https://x/api",
       getPrices,
-      unlisted: async () => new Set(["ANTc"]),
+      market: async () => [{ symbol: "ANTc", name: "Anthropic", preIpo: true, liquidity: 500_000 }],
       client: () => fakeSandworm({ n1: line(backtest) + line(growth), n2: line(risk) + line(drawdown) }),
     })
     const result = await producer.run!(withToken, { sandwormToken: "t" })
@@ -104,7 +104,7 @@ describe("what the strategy asks for", () => {
 
   it("refuses a strategy with nothing to test", async () => {
     await expect(inputsFor({ ...record, orders: [] } as StrategyRecord, getPrices)).rejects.toBeInstanceOf(SandwormError)
-    await expect(inputsFor(record, getPrices, new Set(["NVDAc", "TSLAc"]))).rejects.toThrow(/none of this strategy's stocks are listed/i)
+    await expect(inputsFor(record, getPrices, [{ symbol: "NVDAc", name: "n", preIpo: true }, { symbol: "TSLAc", name: "t", preIpo: true }])).rejects.toThrow(/none of this strategy's stocks are listed/i)
   })
 })
 
@@ -119,6 +119,8 @@ describe.skipIf(!hasPython)("the notebooks' own test, run in python", () => {
     // Both stocks rise faster than the benchmark here, so the strategy beats it, and it never falls far from a peak
     expect(backtest!.cagr as number).toBeGreaterThan(backtest!.benchCagr as number)
     expect(backtest!.beta as number).toBeGreaterThan(0)
+    expect(backtest!.positiveMonths as number).toBeGreaterThan(0.5)
+    expect((backtest!.year as { bad: number; good: number }).bad).toBeLessThanOrEqual((backtest!.year as { good: number }).good)
     expect(growth).toMatchObject({ kind: "growth" })
     expect((growth!.strategy as number[])[0]).toBe(1)
     expect((growth!.idx as number[]).at(-1)).toBe(399)
@@ -158,12 +160,14 @@ const line = (value: unknown) => `${RESULT_MARKER}${JSON.stringify(value)}\n`
 const backtest = {
   kind: "backtest", years: 3, from: "2023-11-27", to: "2026-11-24", cagr: 0.2, benchCagr: 0.166, sharpe: 0.8, beta: 0.9, alpha: 0.03,
   recent: { strategy: -0.057, bench: 0.091 }, stops: 2,
+  volatility: 0.31, positiveMonths: 0.62, year: { bad: -0.18, typical: 0.14, good: 0.52 },
 }
 const growth = { kind: "growth", idx: [0, 399], strategy: [1, 1.1], bench: [1, 1.05] }
 const drawdown = { kind: "drawdown", idx: [0, 399], strategy: [0, -3], bench: [0, -1] }
 const risk = {
   kind: "risk", maxDrawdown: -0.237, benchMaxDrawdown: -0.19, worstMonth: { label: "2026-11", value: -0.113 }, stops: 2,
   risk: [{ symbol: "NVDA", weight: 0.4, riskShare: 0.6 }, { symbol: "TSLA", weight: 0.4, riskShare: 0.4 }],
+  alone: [{ symbol: "NVDA", cagr: 0.35, maxDrawdown: -0.37 }, { symbol: "TSLA", cagr: 0.12, maxDrawdown: -0.5 }],
 }
 
 describe("the Sandworm producer", () => {
@@ -177,11 +181,49 @@ describe("the Sandworm producer", () => {
     expect(result.isExample).toBe(false)
     expect(result.notebooks.map(({ title }) => title)).toEqual(["Backtest", "Risk"])
     expect(result.steps.find(({ label }) => label === "Backtest")?.url).toBe(result.notebooks[0]?.url)
-    expect(result.metrics[0]).toEqual({ label: "Return a year", value: "+20.0%", note: "S&P 500 +16.6%" })
+    expect(result.metrics).toContainEqual(expect.objectContaining({ label: "Return a year", value: "+20.0%", note: "S&P 500 +16.6%" }))
     // The fall past what they'd panic at is said, not hidden
     expect(result.verdict).toEqual({ tone: "warn", label: "Ahead, but past your limit" })
     expect(result.checks.some(({ tone, text }) => tone === "bad" && text.includes("past the −20%"))).toBe(true)
     expect(result.charts[1]?.mark?.value).toBe(-20)
+  })
+
+  it("leads with the numbers the person's words point to, each with what it means", async () => {
+    const run = (brief: string) =>
+      createSandwormProducer({
+        baseUrl: "https://x/api",
+        getPrices,
+        client: () => fakeSandworm({ n1: line(backtest) + line(growth), n2: line(risk) + line(drawdown) }),
+      }).run!({ ...record, brief } as StrategyRecord, { sandwormToken: "t" })
+
+    const worried = await run("Grow 500 USDC. I'd panic at -20%")
+    expect(worried.metrics).toHaveLength(4)
+    expect(worried.metrics.slice(0, 2).map(({ label }) => label)).toEqual(["Worst drop", "Return a year"])
+
+    const beating = await run("I want to beat the S&P 500 with robotics")
+    expect(beating.metrics.map(({ label }) => label)).toContain("Against the S&P 500")
+    expect(beating.metrics.map(({ label }) => label)).not.toEqual(worried.metrics.map(({ label }) => label))
+
+    for (const { help } of [...worried.metrics, ...beating.metrics]) expect(help?.length).toBeGreaterThan(40)
+  })
+
+  it("says whether each token can be bought, why each stock is in, and where the facts came from", async () => {
+    const result = await createSandwormProducer({
+      baseUrl: "https://x/api",
+      getPrices,
+      market: async () => [
+        { symbol: "NVDAc", name: "NVIDIA Corporation", liquidity: 656_780 },
+        { symbol: "TSLAc", name: "Tesla, Inc.", liquidity: 198_530 },
+      ],
+      client: () => fakeSandworm({ n1: line(backtest) + line(growth), n2: line(risk) + line(drawdown) }),
+    }).run!(record, { sandwormToken: "t" })
+
+    expect(result.tradability?.stocks.map(({ symbol, liquidity }) => [symbol, liquidity])).toEqual([["NVDAc", 656_780], ["TSLAc", 198_530]])
+    expect(result.tradability?.text).toMatch(/\$199K or more/)
+    expect(result.selection[0]).toMatchObject({ symbol: "NVDAc", name: "NVIDIA Corporation" })
+    expect(result.selection[0]?.text).toMatch(/\+35\.0% a year.*−37%/)
+    expect(result.sources.map(({ name }) => name)).toEqual(["Yahoo Finance", "Sandworm", "base.org"])
+    expect(result.charts.map(({ kind }) => kind)).toEqual(["growth", "drop"])
   })
 
   it("calls a gap too small to matter a match, not a win", async () => {

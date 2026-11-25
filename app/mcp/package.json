@@ -1,0 +1,24 @@
+{
+  "name": "@sandworm/stocks-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "description": "The Stocks MCP server: everything the Sandworm Stocks app lets a person do, for an agent such as Claude to do for them. It calls the app's own API.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "tsx": "^4.20.6",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

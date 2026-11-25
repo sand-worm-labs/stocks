@@ -1,7 +1,8 @@
 import { z } from "zod"
 
 // What research hands back, whoever did it (Sandworm's agent, an agent driving Sandworm from outside, or the stand-in). It is small on
-// purpose: a verdict, a few numbers, one chart and the notebooks where the work can be opened. The full analysis lives in those notebooks.
+// purpose: a verdict, a few numbers, a couple of charts and the one notebook where the work can be opened. The full analysis lives in that
+// notebook: a strategy is researched in one.
 // Everything is bounded because some of what arrives is written by a model.
 const text = (max: number) => z.string().trim().min(1).max(max)
 
@@ -31,8 +32,6 @@ export const researchResultSchema = z.object({
         format: z.enum(["multiple", "percent", "currency"]).default("multiple"),
         series: z.array(z.object({ name: text(30), points: pointsOf })).min(1).max(3),
         mark: z.object({ label: text(40), value: z.number().finite() }).optional(),
-        // The title of the notebook this is drawn in, so the page can link to it
-        notebook: text(100).optional(),
       })
     )
     .max(3)
@@ -57,7 +56,8 @@ export const researchResultSchema = z.object({
   // Where the facts came from
   sources: z.array(z.object({ name: text(40), title: text(120), url: z.string().url().max(500).optional(), note: text(80).optional() })).max(8).default([]),
   notes: z.array(text(300)).max(8).default([]),
-  notebooks: z.array(notebookLinkSchema).min(1).max(8),
+  // The one notebook all the research is in, with its summary at the top
+  notebook: notebookLinkSchema,
   // Where the numbers came from, and as of when
   dataNote: text(200).optional(),
   // True when the numbers are made up for a test, so the page can say so
@@ -65,6 +65,29 @@ export const researchResultSchema = z.object({
 })
 
 export type ResearchResult = z.infer<typeof researchResultSchema>
+
+// The fields the schema fills in when it is missing. A result is checked once, as it arrives, and kept as JSON: one kept before a field
+// was added has no such field, and the schema is not run on it again. `completeResult` is what is read back through.
+const DEFAULTS = {
+  charts: [],
+  checks: [],
+  holdings: [],
+  steps: [],
+  selection: [],
+  sources: [],
+  notes: [],
+  isExample: false,
+} satisfies Partial<ResearchResult>
+
+// A result kept before a strategy had one notebook has a list of them, and its first is the one that held the research
+type Stored = Omit<ResearchResult, "notebook"> & { notebook?: NotebookLink; notebooks?: NotebookLink[] }
+
+export function completeResult(stored: Stored): ResearchResult {
+  const { notebooks, ...rest } = stored
+  // Every result that was kept had at least one, so there is one to find
+  const notebook = (stored.notebook ?? notebooks?.[0]) as NotebookLink
+  return { ...DEFAULTS, ...rest, notebook }
+}
 export type NotebookLink = z.infer<typeof notebookLinkSchema>
 
 export const SANDWORM_WEB_URL = () => (process.env.SANDWORM_WEB_URL ?? "https://app.sandwormlab.xyz").replace(/\/$/, "")

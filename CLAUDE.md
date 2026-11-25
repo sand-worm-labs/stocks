@@ -1,6 +1,6 @@
 # Conventions for Sandworm Stocks
 
-Two apps in `app/`: `app/web` is the Next.js front end, `app/api` is the NestJS API with the database. `docker compose up` (from here) runs the database and the API.
+Three apps in `app/`: `app/web` is the Next.js front end, `app/api` is the NestJS API with the database, `app/mcp` is the MCP server for agents. `docker compose up` (from here) runs the database and the API.
 
 Code here is written to be read. The same rules everywhere, so any file reads like any other.
 
@@ -15,3 +15,5 @@ Code here is written to be read. The same rules everywhere, so any file reads li
 - **Small functions, one job.** A function that does two things is two functions. A file that needs a table of contents is too long.
 - **Types are checked.** `tsc --noEmit`, `eslint` and `vitest run` pass before a commit. No `any`; a cast needs a reason beside it.
 - **The database is changed only by a migration**, and only the API (`app/api`) has one: TypeORM migrations in `app/api/src/infrastructure/database/migrations`, run when the API boots. The web app (`app/web`) has no database.
+- **Whatever a person can do in the app, an agent can do through `app/mcp`.** The MCP server only calls the web app's own API routes (with the agent's token, which `respond` accepts), so a new
+  action is a new route first, then a tool in `app/mcp/src/tools`, listed in `app/mcp/src/parity.ts`. `app/mcp`'s `parity.test.ts` fails when a route has no tool.

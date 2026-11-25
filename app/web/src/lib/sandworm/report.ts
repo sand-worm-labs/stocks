@@ -38,7 +38,7 @@ export type Findings = { backtest: Backtest; risk: Risk; growth: Series; drawdow
 
 // What Stocks knows that the notebooks don't: where they are, what the person asked for, and what each token is
 export type ReportContext = {
-  links: { title: string; url: string }[]
+  notebook: { title: string; url: string }
   dates: string[]
   panic: number
   maxShare?: number
@@ -138,8 +138,7 @@ function tiles({ backtest, risk }: Findings): Partial<Record<KpiId, Metric>> {
 // numbers and from what the person asked for, so each claim can be checked against the notebook it came from.
 export function toResult(findings: Findings, context: ReportContext): ResearchResult {
   const { backtest, risk, growth, drawdown } = findings
-  const { links, dates, panic, maxShare, priorities, skipped, stocks, prices, asOf } = context
-  const [backtestLink, riskLink] = links
+  const { notebook, dates, panic, maxShare, priorities, skipped, stocks, prices, asOf } = context
 
   // A gap under a point a year is noise over three years of prices, so it is called a match and not a win
   const margin = backtest.cagr - backtest.benchCagr
@@ -234,7 +233,6 @@ export function toResult(findings: Findings, context: ReportContext): ResearchRe
           { name: "This strategy", points: asSeries(dates, growth, growth.strategy) },
           { name: "S&P 500", points: asSeries(dates, growth, growth.bench) },
         ],
-        notebook: backtestLink?.title,
       },
       {
         title: "Fall from the highest value",
@@ -245,7 +243,6 @@ export function toResult(findings: Findings, context: ReportContext): ResearchRe
           { name: "S&P 500", points: asSeries(dates, drawdown, drawdown.bench) },
         ],
         mark: { label: `You'd panic at −${Math.round(panic * 100)}%`, value: -panic * 100 },
-        notebook: riskLink?.title,
       },
     ],
     checks,
@@ -253,8 +250,8 @@ export function toResult(findings: Findings, context: ReportContext): ResearchRe
     steps: [
       { label: "Read the idea" },
       { label: "Get prices" },
-      { label: "Backtest", url: backtestLink?.url },
-      { label: "Risk check", url: riskLink?.url },
+      { label: "Backtest", url: notebook.url },
+      { label: "Risk check", url: notebook.url },
       { label: "Results" },
     ],
     ...(backtest.year && { yearRange: backtest.year }),
@@ -262,11 +259,11 @@ export function toResult(findings: Findings, context: ReportContext): ResearchRe
     selection,
     sources: [
       { name: "Yahoo Finance", title: `Daily closing prices to ${asOf}`, url: "https://finance.yahoo.com", note: "the shares each token follows, and the S&P 500 (SPY)" },
-      { name: "Sandworm", title: "Backtest and risk notebooks", url: backtestLink?.url, note: "every number can be re-run" },
+      { name: "Sandworm", title: "The backtest and risk notebook", url: notebook.url, note: "every number can be re-run" },
       { name: "base.org", title: "Token pools and liquidity on Base", url: "https://base.org", note: "what can be bought, and how deeply" },
     ],
     notes: [],
-    notebooks: links,
+    notebook,
     dataNote: prices,
     isExample: false,
   }

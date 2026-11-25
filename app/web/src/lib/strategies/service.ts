@@ -51,6 +51,8 @@ export function fill(record: Pick<StrategyRecord, "orders">, amount: number) {
 // their workspace; it is never stored.
 export type ProduceContext = {
   sandwormToken?: string
+  // An agent from outside is doing the research itself and will hand it back, so there is no Sandworm login of the person's to need
+  submittedByAgent?: boolean
   // Told by the producer as it goes, so the person can watch the run and open each notebook when it exists
   progress?: (steps: AgentStep[]) => Promise<void>
 }
@@ -121,8 +123,7 @@ export function createStrategyService({
       throw new StrategyError("It isn't waiting for research", 409)
     const parsed = researchResultSchema.safeParse(result)
     if (!parsed.success) throw new StrategyError("The research result is missing something or has something wrong in it", 422)
-    if (!parsed.data.notebooks.every(({ url }) => isSandwormLink(url)))
-      throw new StrategyError("A notebook link has to lead to Sandworm", 422)
+    if (!isSandwormLink(parsed.data.notebook.url)) throw new StrategyError("The notebook link has to lead to Sandworm", 422)
     return finish({ ...record, research: { ...record.research, result: parsed.data, error: undefined } })
   }
 
@@ -149,6 +150,12 @@ export function createStrategyService({
       if (error instanceof LedgerError) throw new StrategyError(error.message, 400)
       throw error
     }
+  }
+
+  // Research that has run its time is finished as it is read
+  const settle = async (record: StrategyRecord) => {
+    const due = record.research?.readyAt && Date.parse(record.research.readyAt) <= now().getTime()
+    return isResearching(record) && record.report && due ? finish(record) : record
   }
 
   const capOf = ({ rules }: StrategyRecord) => rules.find((rule) => rule.type === "max-weight")?.limit ?? 1
@@ -226,7 +233,7 @@ export function createStrategyService({
     async confirmRules(ownerId: string, id: string, context: ProduceContext = {}) {
       const record = await owned(ownerId, id)
       // Refused before the rules are locked, so signing in again and confirming works, rather than a locked strategy with no research
-      if (producer?.needsSandworm && !context.sandwormToken)
+      if (producer?.needsSandworm && !context.sandwormToken && !context.submittedByAgent)
         throw new StrategyError("Sign out and sign in again to connect your Sandworm account, then confirm", 401)
       if (record.status !== "draft" || record.stage !== "rules")
         throw new StrategyError("Its rules are already confirmed", 409)
@@ -285,7 +292,7 @@ export function createStrategyService({
     // can't be doubled.
     async retryResearch(ownerId: string, id: string, context: ProduceContext = {}) {
       const record = await owned(ownerId, id)
-      if (producer?.needsSandworm && !context.sandwormToken)
+      if (producer?.needsSandworm && !context.sandwormToken && !context.submittedByAgent)
         throw new StrategyError("Sign out and sign in again to connect your Sandworm account, then try again", 401)
       if (!isResearching(record) || record.research?.mode !== "waiting" || !record.research.error)
         throw new StrategyError("There is no stopped research to try again", 409)
@@ -298,9 +305,11 @@ export function createStrategyService({
       return records.filter((record) => isResearching(record) && record.research?.mode === "waiting" && !record.research.result)
     },
 
-    async settle(record: StrategyRecord) {
-      const due = record.research?.readyAt && Date.parse(record.research.readyAt) <= now().getTime()
-      return isResearching(record) && record.report && due ? finish(record) : record
+    settle,
+
+    // Everything this person has made, newest first, each brought up to date
+    async list(ownerId: string) {
+      return Promise.all((await store.list(ownerId)).map(settle))
     },
 
     async goLive(ownerId: string, id: string, spend: number, funding: Omit<Funding, "amount">) {

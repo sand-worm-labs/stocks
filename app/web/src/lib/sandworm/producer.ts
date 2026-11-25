@@ -7,7 +7,7 @@ import type { Stock } from "@/types/markets"
 import type { StrategyRecord } from "@/types/store"
 
 import { createSandwormClient, type RunCell, type SandwormClient, SandwormError } from "./client"
-import { type NotebookPlan, researchNotebooks, RESULT_MARKER } from "./notebooks"
+import { type NotebookPlan, researchNotebook, RESULT_MARKER } from "./notebooks"
 import { type Backtest, type Risk, type Series, SLIPPAGE, toResult } from "./report"
 
 const DEFAULT_PAUSE_DAYS = 63
@@ -89,7 +89,7 @@ type Options = {
   getPrices?: typeof getDailyPrices
   // The stocks on offer, which says which aren't listed yet and how deep each pool is
   market?: () => Promise<Stock[]>
-  plan?: (inputs: Parameters<typeof researchNotebooks>[0]) => NotebookPlan[]
+  plan?: (inputs: Parameters<typeof researchNotebook>[0]) => NotebookPlan
 }
 
 // Does the research on Sandworm, as the person: real prices for the stocks, a backtest notebook and a risk notebook built and run in their
@@ -100,7 +100,7 @@ export function createSandwormProducer({
   client = (token) => createSandwormClient({ baseUrl, token }),
   getPrices = getDailyPrices,
   market = async () => [],
-  plan = researchNotebooks,
+  plan = researchNotebook,
 }: Options): Producer {
   return {
     needsSandworm: true,
@@ -112,33 +112,28 @@ export function createSandwormProducer({
       const sandworm = client(sandwormToken)
       const workspaceId = await sandworm.workspaceId()
 
-      const links: { title: string; url: string }[] = []
-      const lines: Printed[] = []
-      const urls: Record<string, string> = {}
-      for (const { title, cells } of plan(inputs)) {
-        const { id, url } = await sandworm.createNotebook(workspaceId, title)
-        // Each notebook is linked from its step as soon as it exists, while it is still being filled and run
-        urls[STEPS[links.length + 2]!] = url
-        await progress(progressOf(links.length + 2, urls))
-        const added = await sandworm.addCells(workspaceId, id, cells)
-        const runnable = added.filter(({ kind }) => kind === "python").map(({ id: cellId }) => cellId)
-        const ran = await sandworm.run(workspaceId, id, runnable)
-        const failed = ran.find(({ state }) => state === "error")
-        if (failed) throw new SandwormError(`A notebook cell failed: ${failed.error?.slice(0, 200) ?? "no reason given"}`)
-        lines.push(...printed(ran))
-        links.push({ title: title.split(" · ").at(-1) ?? title, url })
-      }
+      const { title, cells } = plan(inputs)
+      const { id, url } = await sandworm.createNotebook(workspaceId, title)
+      // Both parts are linked from their steps as soon as the notebook exists, while it is still being filled and run
+      const urls = { [STEPS[2]]: url, [STEPS[3]]: url }
+      await progress(progressOf(2, urls))
+      const added = await sandworm.addCells(workspaceId, id, cells)
+      const runnable = added.filter(({ kind }) => kind === "python").map(({ id: cellId }) => cellId)
+      const ran = await sandworm.run(workspaceId, id, runnable)
+      const failed = ran.find(({ state }) => state === "error")
+      if (failed) throw new SandwormError(`A notebook cell failed: ${failed.error?.slice(0, 200) ?? "no reason given"}`)
+      const lines = printed(ran)
       await progress(progressOf(STEPS.length - 1, urls))
 
       const backtest = lines.find(({ kind }) => kind === "backtest") as Backtest | undefined
       const risk = lines.find(({ kind }) => kind === "risk") as Risk | undefined
       const growth = lines.find(({ kind }) => kind === "growth") as Series | undefined
       const drawdown = lines.find(({ kind }) => kind === "drawdown") as Series | undefined
-      if (!backtest || !risk || !growth || !drawdown) throw new SandwormError("The notebooks didn't print their results")
+      if (!backtest || !risk || !growth || !drawdown) throw new SandwormError("The notebook didn't print its results")
       return toResult(
         { backtest, risk, growth, drawdown },
         {
-          links,
+          notebook: { title, url },
           dates: inputs.dates,
           panic,
           maxShare,

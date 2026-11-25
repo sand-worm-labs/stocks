@@ -1,13 +1,17 @@
 "use client"
 
 import { useState } from "react"
+import { PiCoins } from "react-icons/pi"
 
 import { Card } from "@/components/ui/card"
 import { InfoTip } from "@/components/ui/info-tip"
 import { Slider } from "@/components/ui/slider"
 import { type GrowthPoint, startingOn, yearRange } from "@/lib/report/what-if"
+import { cn } from "@/lib/utils"
 
 import { Lines } from "./Lines"
+
+const PRESETS = [100, 500, 1000, 5000]
 
 const usdc = (amount: number) => `${Math.round(amount).toLocaleString("en-US")} USDC`
 const signed = (fraction: number) => {
@@ -38,30 +42,54 @@ export function WhatIf({
   const ahead = result ? result.strategyNow >= result.benchNow : true
 
   return (
-    <Card className="flex flex-col gap-4 p-4 md:p-5">
-      <div className="flex items-center gap-1.5">
-        <h2 className="text-sm font-medium">Try it with your own money</h2>
+    <Card raised className="flex flex-col gap-5 p-5 md:p-6">
+      <div className="flex items-center gap-2.5">
+        <span aria-hidden="true" className="bg-inputBg text-ink-200 flex size-8 flex-none items-center justify-center rounded-lg">
+          <PiCoins size={18} aria-hidden />
+        </span>
+        <h2 className="text-base font-medium tracking-tight">Try it with your own money</h2>
         <InfoTip label="this calculator">
           This takes the test's real results and applies them to the amount you choose, starting from the date you choose. It shows what
           would have happened, not what will.
         </InfoTip>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5 text-xs font-medium">
-          <span className="text-ink-200">I put in (USDC)</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            min={1}
-            step={50}
-            value={amount}
-            onChange={(event) => setAmount(Math.max(0, Number(event.target.value)))}
-            className="border-border-secondary dark:border-border-tertiary bg-inputBg h-10 rounded-xl border px-3 text-base tabular-nums outline-none focus-visible:ring-2"
-          />
-        </label>
-        <div className="flex flex-col gap-3 text-xs font-medium">
-          <span className="text-ink-200 flex justify-between">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="what-if-amount" className="text-ink-200 text-[13px] font-medium">
+            I put in
+          </label>
+          <div className="border-hover-border focus-within:border-primary flex h-11 items-center rounded-xl border bg-white px-3.5 transition-colors">
+            <input
+              id="what-if-amount"
+              type="number"
+              inputMode="decimal"
+              min={1}
+              step={50}
+              value={amount}
+              onChange={(event) => setAmount(Math.max(0, Number(event.target.value)))}
+              className="min-w-0 flex-1 bg-transparent text-lg font-medium tabular-nums outline-none"
+            />
+            <span className="text-ink-400 text-sm">USDC</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {PRESETS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setAmount(preset)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  amount === preset ? "border-ink-100 bg-inputBg text-ink-100" : "border-hover-border text-ink-200 hover:bg-inputBg"
+                )}
+              >
+                {preset.toLocaleString("en-US")}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-3">
+          <span className="text-ink-200 flex justify-between text-[13px] font-medium">
             <span>Starting on</span>
             <span className="text-ink-100 tabular-nums">{start?.label}</span>
           </span>
@@ -73,29 +101,34 @@ export function WhatIf({
             value={[Math.min(startAt, latest)]}
             onValueChange={([value]) => setStartAt(value ?? 0)}
           />
+          <span className="text-ink-400 flex justify-between text-xs tabular-nums">
+            <span>{points[0]?.label}</span>
+            <span>{points[latest]?.label}</span>
+          </span>
         </div>
       </div>
 
       {result && (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-ink-200 text-xs font-medium">This strategy</span>
-              <span className="text-[28px] leading-9 font-medium tabular-nums">{usdc(result.strategyNow)}</span>
-              <span className="text-ink-400 text-xs tabular-nums">
+            <div className="bg-inputBg flex flex-col gap-0.5 rounded-xl px-4 py-3.5">
+              <span className="text-ink-200 text-[13px] font-medium">This strategy</span>
+              <span className="text-[28px] leading-9 font-semibold tracking-tight tabular-nums">{usdc(result.strategyNow)}</span>
+              <span className="text-ink-200 text-xs tabular-nums">
                 {gain >= 0 ? "+" : "−"}
                 {usdc(Math.abs(gain))} ({signed(result.strategyNow / amount - 1)})
               </span>
             </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-ink-200 text-xs font-medium">Holding the S&P 500</span>
-              <span className="text-ink-300 text-[28px] leading-9 font-medium tabular-nums">{usdc(result.benchNow)}</span>
+            <div className="border-hover-border flex flex-col gap-0.5 rounded-xl border px-4 py-3.5">
+              <span className="text-ink-200 text-[13px] font-medium">Holding the S&P 500</span>
+              <span className="text-ink-200 text-[28px] leading-9 font-semibold tracking-tight tabular-nums">{usdc(result.benchNow)}</span>
               <span className="text-ink-400 text-xs tabular-nums">{ahead ? "behind this strategy" : "ahead of this strategy"}</span>
             </div>
           </div>
           <Lines
             title="Your money over time"
             format="currency"
+            height={260}
             series={[
               { name: "This strategy", points: result.line.map(({ label, strategy }) => ({ label, value: strategy })) },
               { name: "S&P 500", points: result.line.map(({ label, bench }) => ({ label, value: bench })) },
@@ -105,9 +138,9 @@ export function WhatIf({
       )}
 
       {range && amount > 0 && (
-        <div className="border-border-secondary dark:border-border-tertiary flex flex-col gap-2 border-t pt-4">
+        <div className="border-border-secondary flex flex-col gap-3 border-t pt-5">
           <div className="flex items-center gap-1.5">
-            <h3 className="text-xs font-medium">How a year went in the test</h3>
+            <h3 className="text-[13px] font-medium">How a year went in the test</h3>
             <InfoTip label="a year in the test">
               Every 12-month stretch in the test, ranked. A bad year is one that only 1 in 20 stretches fell short of; a good year is
               one that only 1 in 20 beat. It is history, not a forecast, and a worse year than any of these is possible.
@@ -121,9 +154,9 @@ export function WhatIf({
                 ["A good year", range.good],
               ] as const
             ).map(([label, change]) => (
-              <div key={label} className="flex flex-col gap-0.5">
+              <div key={label} className="border-hover-border flex flex-col gap-0.5 rounded-xl border px-3.5 py-3">
                 <dt className="text-ink-400 text-xs">{label}</dt>
-                <dd className="font-medium tabular-nums">{usdc(amount * (1 + change))}</dd>
+                <dd className="text-base font-semibold tabular-nums">{usdc(amount * (1 + change))}</dd>
                 <dd className="text-ink-400 text-xs tabular-nums">{signed(change)}</dd>
               </div>
             ))}

@@ -22,3 +22,11 @@ export const displayFont = localFont({
   ],
   display: "swap",
 })
+
+// Bricolage Grotesque (OFL), latin, one variable file. The typeface of a report on Sandworm and of its charts, so a strategy report reads the
+// same as a notebook does.
+export const reportFont = localFont({
+  src: "../../public/fonts/bricolage/BricolageGrotesque-latin.woff2",
+  weight: "400 700",
+  display: "swap",
+})

@@ -47,7 +47,9 @@
 
 /* Sandworm theme tokens: same names and values as sandworm-web's globals.scss, trimmed to what this app uses.
    Colours that are HSL triplets there stay triplets here, so web's hsl(var(--x)) pattern carries over. */
-:root {
+/* A report is a sheet of paper: .report-paper takes the light values whatever the theme, so it reads the same as a PDF */
+:root,
+.report-paper {
   --primary: 276 90% 49%; /* #A308F0 */
   /* The violet that marks a tick, a line or a glow: white in dark mode, where violet does not read */
   --mark: #7f56d9;
@@ -375,6 +377,15 @@
   }
 }
 
+/* The shadow a report cell sits on, the same as a block in the Sandworm editor (soft, 4% blue). On a dark surface it would only show as a blue glow, so there the border alone separates cells. */
+@utility block-shadow-soft {
+  box-shadow: 0px 7.5px 8px 0px #8497c30a;
+
+  &:where(.dark, .dark *) {
+    box-shadow: none;
+  }
+}
+
 @utility skeleton {
   position: relative;
   overflow: hidden;
@@ -688,4 +699,16 @@ nav {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+}
+
+/* Plotly draws a tooltip as a plain rectangle and has no setting for rounding it. The one box that lists every line at a date is a <rect>,
+   which takes a radius; the single-value one (a bar) is a <path>, so it is rounded by drawing a thick round-cornered stroke in its own colour. */
+.report-paper .hoverlayer .legend rect.bg {
+  rx: 10px;
+  ry: 10px;
+}
+
+.report-paper .hoverlayer .hovertext path {
+  stroke-linejoin: round;
+  stroke-width: 10px !important;
 }

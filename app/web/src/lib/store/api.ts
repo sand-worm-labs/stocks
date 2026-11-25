@@ -1,17 +1,21 @@
 import { callStocksApi } from "@/lib/api/stocks-api"
 import type { StrategyRecord, StrategyStore } from "@/types/store"
 
+import { completeRecord } from "./complete"
+
 // Strategies kept by the Stocks API, in its database
 export class ApiStore implements StrategyStore {
   async list(ownerId: string) {
     const response = await callStocksApi(`/strategies?ownerId=${encodeURIComponent(ownerId)}`)
-    return (await response.json()) as StrategyRecord[]
+    const records = (await response.json()) as StrategyRecord[]
+    return records.map(completeRecord)
   }
 
   async get(id: string) {
     const response = await callStocksApi(`/strategies/${encodeURIComponent(id)}`)
     if (response.status === 404) return undefined
-    return (await response.json()) as StrategyRecord
+    const record = (await response.json()) as StrategyRecord
+    return completeRecord(record)
   }
 
   async save(record: StrategyRecord) {

@@ -10,7 +10,7 @@ import type { Report } from "@/types/report"
 
 export function SourcesSection({ sources }: { sources: Report["sources"] }) {
   return (
-    <Card className="rounded-[14px] px-4 py-[18px] md:px-6">
+    <Card raised className="rounded-[14px] px-4 py-[18px] md:px-6">
       <div className="mb-1.5 flex items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 text-sm font-medium">
           <span aria-hidden="true" className="flex">

@@ -69,7 +69,7 @@ export function ResearchWaiting({ id, running, failure, progress, onDone }: Rese
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-medium">{error ? "The research stopped" : "Sandworm is researching"}</h2>
         <p className="text-ink-400 text-sm">
-          {error ?? "It is testing this strategy on real prices, in notebooks in your Sandworm account. The results appear here when they are ready."}
+          {error ?? "It is testing this strategy on real prices, in a notebook in your Sandworm account. The results appear here when they are ready."}
         </p>
         {error && (
           <button

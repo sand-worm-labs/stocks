@@ -63,8 +63,8 @@ export function reportInstructions(priorities: Priority[], kpis: KpiId[]) {
   return [
     "Report structure. Test the plan on real daily prices against the S&P 500 (SPY), after trading costs and with the rules' stop.",
     `The person cares about: ${cares}. Lead with these four numbers: ${kpis.join(", ")}.`,
-    "One notebook per question: Backtest (growth, return, Sharpe, beta, a bad/typical/good year) and Risk (worst fall, worst month, share of the risk by stock, each stock on its own).",
-    "End every notebook with lines that print `STOCKS_RESULT {json}`, each under 3,000 characters. Print numbers, not sentences.",
+    "Do all of it in one notebook for this strategy, with its summary in the first cell. Then two parts: Backtest (growth, return, Sharpe, beta, a bad/typical/good year) and Risk (worst fall, worst month, share of the risk by stock, each stock on its own).",
+    "Have the notebook print lines of `STOCKS_RESULT {json}` for what it found, each under 3,000 characters. Print numbers, not sentences.",
     "Say plainly when a stock has no price history. Never promise a return; give what history shows and how wide the spread was.",
   ].join("\n")
 }

@@ -187,9 +187,10 @@ chart(fig, title="${title}", source="Source: Yahoo Finance daily closes, backtes
 print("${RESULT_MARKER}" + json.dumps({"kind": "${kind}", "idx": idx, "strategy": [round(${strategy}[i], ${digits}) for i in idx], "bench": [round(${benchmark}[i], ${digits}) for i in idx]}, separators=(",", ":")))
 `
 
-// The notebooks of one strategy's research: a backtest, and a look at its risk. Each is given the same real prices and holds the same test,
-// so a number in one can be checked in the other, and each is something a person can open, read and run again.
-export function researchNotebooks(inputs: ResearchInputs): NotebookPlan[] {
+// The notebook of one strategy's research: its summary first, then a backtest, and a look at its risk. Both parts are given the same real
+// prices and hold the same test, so a number in one can be checked in the other, and the whole is something a person can open, read and run
+// again.
+export function researchNotebook(inputs: ResearchInputs): NotebookPlan {
   const data = JSON.stringify({
     dates: inputs.dates,
     closes: inputs.closes,
@@ -204,30 +205,24 @@ export function researchNotebooks(inputs: ResearchInputs): NotebookPlan[] {
     title: "Prices and plan",
     content: `# Real daily closes of the shares each token follows (Yahoo Finance), the S&P 500 as SPY, and the plan's weights\nimport json\nDATA = json.loads(r'''${data}''')\nprint(len(DATA["dates"]), "days,", len(DATA["closes"]), "price series, from", DATA["dates"][0], "to", DATA["dates"][-1])`,
   }
+  const summary = `# ${inputs.name}\n${about("Research.")}\n\nTwo parts follow: **Backtest**, how the plan would have done against the S&P 500, and **Risk**, how far it fell and where the risk sits.`
   const test = (title: string, body: string): NotebookCell => ({
     type: "python",
     title,
     content: `${ENGINE}${body}`,
   })
 
-  return [
-    {
-      title: `${inputs.name} · Backtest`,
-      cells: [
-        { type: "markdown", title: "About this notebook", content: about("Backtest.") },
-        prices,
-        test("Backtest", BACKTEST),
-        { type: "python", title: "Growth of 1 USDC", content: CHART("Growth of 1 USDC: this strategy vs the S&P 500", "growth", "values", "bench", 3) },
-      ],
-    },
-    {
-      title: `${inputs.name} · Risk`,
-      cells: [
-        { type: "markdown", title: "About this notebook", content: about("Risk.") },
-        prices,
-        test("Risk", RISK),
-        { type: "python", title: "Drop from the high", content: CHART("Drop from the highest value, % (strategy vs S&P 500)", "drawdown", "drop_p", "drop_b", 2) },
-      ],
-    },
-  ]
+  return {
+    title: `${inputs.name} · Research`,
+    cells: [
+      { type: "markdown", title: "Summary", content: summary },
+      prices,
+      { type: "markdown", title: "Backtest", content: "## Backtest\nHow this plan would have done on the real prices, against the S&P 500." },
+      test("Backtest", BACKTEST),
+      { type: "python", title: "Growth of 1 USDC", content: CHART("Growth of 1 USDC: this strategy vs the S&P 500", "growth", "values", "bench", 3) },
+      { type: "markdown", title: "Risk", content: "## Risk\nHow far it fell, and which stocks the ups and downs came from." },
+      test("Risk", RISK),
+      { type: "python", title: "Drop from the high", content: CHART("Drop from the highest value, % (strategy vs S&P 500)", "drawdown", "drop_p", "drop_b", 2) },
+    ],
+  }
 }

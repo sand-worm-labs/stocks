@@ -2,12 +2,14 @@ import type { ComponentProps } from "react"
 
 import { cn } from "@/lib/utils"
 
-function Card({ className, ...props }: ComponentProps<"section">) {
+// A raised card is a report cell: the lilac border and soft shadow of a block in the Sandworm editor
+function Card({ className, raised = false, ...props }: ComponentProps<"section"> & { raised?: boolean }) {
   return (
     <section
       data-slot="card"
       className={cn(
-        "border-border-secondary bg-block-surface dark:border-border-tertiary rounded-2xl border",
+        "bg-block-surface dark:border-border-tertiary rounded-2xl border",
+        raised ? "border-hover-border block-shadow-soft" : "border-border-secondary",
         className
       )}
       {...props}

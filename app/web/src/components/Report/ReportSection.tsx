@@ -13,7 +13,7 @@ type ReportSectionProps = {
 
 export function ReportSection({ title, notebook = true, className, children }: ReportSectionProps) {
   return (
-    <Card className={cn("flex min-w-0 flex-col gap-3.5 rounded-[14px] p-4 md:px-6 md:py-[22px]", className)}>
+    <Card raised className={cn("flex min-w-0 flex-col gap-3.5 rounded-[14px] p-4 md:px-6 md:py-[22px]", className)}>
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-xl leading-7 font-medium tracking-tight">{title}</h3>
         {notebook && (

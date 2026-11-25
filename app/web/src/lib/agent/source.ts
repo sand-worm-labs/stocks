@@ -120,7 +120,7 @@ export async function getLiveResearchScript(portfolio: Portfolio, run: ResearchR
         blocks: [
           {
             type: "text",
-            text: "I'm testing this on three years of real prices. The work is done in notebooks in your Sandworm account, and each one is linked here when it is made, so you can open it and read every number.",
+            text: "I'm testing this on three years of real prices. The work is done in one notebook in your Sandworm account, linked here when it is made, so you can open it and read every number.",
           },
           { type: "steps", title: "Research", steps },
           ...(run.error ? [{ type: "note" as const, label: "What went wrong", text: run.error, tone: "negative" as const }] : []),
@@ -138,7 +138,7 @@ const researchStepsStarting = (): AgentStep[] =>
 
 const TONE_OF_VERDICT = { good: "positive", warn: "warning", bad: "negative" } as const
 
-// The sidebar once the research is done: what it found, in its own words, with the notebooks it was found in. The cautions come first.
+// The sidebar once the research is done: what it found, in its own words, with the notebook it was found in. The cautions come first.
 export async function getResultScript(portfolio: Portfolio, result: ResearchResult): Promise<AgentScript> {
   const worries = result.checks.filter(({ tone }) => tone !== "good").slice(0, 2)
   const steps: AgentStep[] = result.steps.map(({ label, url }) => ({ label, state: "done", ...(url && { url }) }))

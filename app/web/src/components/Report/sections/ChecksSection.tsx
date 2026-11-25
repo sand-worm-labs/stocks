@@ -15,7 +15,7 @@ type ChecksSectionProps = {
 export function ChecksSection({ title, intro, checks, verdict }: ChecksSectionProps) {
   if (verdict) {
     return (
-      <Card className="flex flex-col gap-1.5 rounded-[14px] px-4 py-5 md:px-6">
+      <Card raised className="flex flex-col gap-1.5 rounded-[14px] px-4 py-5 md:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-[17px] font-medium">{title}</h3>
           <VerdictPill verdict={verdict} />

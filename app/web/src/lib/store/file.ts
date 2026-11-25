@@ -3,6 +3,8 @@ import { dirname } from "node:path"
 
 import type { StrategyRecord, StrategyStore } from "@/types/store"
 
+import { completeRecord } from "./complete"
+
 type Data = Record<string, StrategyRecord>
 
 // Strategies in one JSON file: what the app uses until a database is set up, and what the tests use. Fine for one process; it is not
@@ -31,12 +33,16 @@ export class FileStore implements StrategyStore {
     return this.serial(async () =>
       Object.values(await this.read())
         .filter((record) => record.ownerId === ownerId)
+        .map(completeRecord)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     )
   }
 
   get(id: string) {
-    return this.serial(async () => (await this.read())[id])
+    return this.serial(async () => {
+      const record = (await this.read())[id]
+      return record && completeRecord(record)
+    })
   }
 
   save(record: StrategyRecord) {

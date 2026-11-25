@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { z } from "zod"
 
+import { agentOwner, hasAgentToken } from "@/lib/auth/agent"
 import { isSameOrigin } from "@/lib/auth/request"
 import { StrategyError } from "@/lib/strategies/service"
 import { getOwnerId } from "@/lib/strategies/source"
@@ -31,26 +32,29 @@ function failure(error: unknown) {
 
 // The one way an API route answers, so a route can't forget a check: it never touches the request itself.
 //
-//   respond(request, { body: schema, status: 201 }, async ({ ownerId, body }) => result)
+//   respond(request, { body: schema, status: 201 }, async ({ ownerId, body, isAgent }) => result)
 //
-// In order, it makes sure the request came from this site's own pages, that someone is signed in, and that the body is what was
-// expected (when the route says what that is). Then it runs the route's work for that person, and turns anything that goes wrong into an
-// answer that is safe to show.
+// In order, it works out who is asking (a person signed in on this site's pages, or an agent with its token), and that the body is what
+// was expected (when the route says what that is). Then it runs the route's work for that person, and turns anything that goes wrong into
+// an answer that is safe to show. An agent is the person's own agent, so it can do what they can; `isAgent` is there for the few things that
+// are done differently for it, such as research that it does itself.
 export async function respond<S extends Schema = undefined>(
   request: Request,
   options: { body?: S; status?: number },
-  run: (input: { ownerId: string; body: Parsed<S> }) => Promise<unknown>
+  run: (input: { ownerId: string; body: Parsed<S>; isAgent: boolean }) => Promise<unknown>
 ) {
-  // Only a request that changes something has to have come from this site's pages: reading what is yours cannot be done from another site
+  const isAgent = hasAgentToken(request)
+  // Only a person's request that changes something has to have come from this site's pages: that check is against another site using their
+  // cookie, and an agent's token is not something a browser sends on its own
   const changesSomething = request.method !== "GET"
-  if (changesSomething && !isSameOrigin(request)) return answer({ error: "This request didn't come from the app" }, 403)
+  if (!isAgent && changesSomething && !isSameOrigin(request)) return answer({ error: "This request didn't come from the app" }, 403)
 
-  const ownerId = await getOwnerId()
+  const ownerId = isAgent ? agentOwner(request) : await getOwnerId()
   if (!ownerId) return answer({ error: "Sign in first" }, 401)
 
   try {
     const body = (await readBody(request, options.body)) as Parsed<S>
-    return answer(await run({ ownerId, body }), options.status ?? 200)
+    return answer(await run({ ownerId, body, isAgent }), options.status ?? 200)
   } catch (error) {
     return failure(error)
   }

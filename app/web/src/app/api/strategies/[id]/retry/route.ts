@@ -11,8 +11,13 @@ export const maxDuration = 300
 export async function POST(request: Request, { params }: IdParams) {
   const { id } = await params
 
-  return respond(request, {}, async ({ ownerId }) => {
+  return respond(request, {}, async ({ ownerId, isAgent }) => {
     const service = getStrategyService()
+    // An agent does the research itself and hands it back, so there is no Sandworm login of the person's to use and nothing to start here
+    if (isAgent) {
+      const { stage } = await service.retryResearch(ownerId, id, { submittedByAgent: true })
+      return { stage }
+    }
     // Read now: after the answer is sent the request's cookies are no longer there to read
     const sandwormToken = await getSandwormToken()
     const { stage } = await service.retryResearch(ownerId, id, { sandwormToken })

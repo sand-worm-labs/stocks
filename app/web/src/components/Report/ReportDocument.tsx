@@ -1,7 +1,9 @@
 import Image from "next/image"
 import type { ReactNode } from "react"
 
+import { reportFont } from "@/config/fonts"
 import type { ResearchResult } from "@/lib/research/result"
+import { cn } from "@/lib/utils"
 
 import { ResearchResultView } from "./ResearchResultView"
 
@@ -27,8 +29,15 @@ export function ReportDocument({ id, name, brief, result, amount, preparedAt, ac
   const period = labels?.length ? `${labels[0]?.label} to ${labels.at(-1)?.label}` : undefined
 
   return (
-    <article className="report-print flex flex-col gap-6">
-      <header className="border-border-secondary dark:border-border-tertiary flex flex-col gap-5 border-b pb-6">
+    <article
+      className={cn(
+        reportFont.className,
+        // A sheet of paper on the page: always light, with the border and soft shadow of a block in the Sandworm editor, and none of it on a printed page
+        "report-print report-paper text-ink-100 border-hover-border block-shadow-soft flex flex-col gap-8 rounded-3xl border bg-white p-5 md:p-10",
+        "print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none"
+      )}
+    >
+      <header className="border-border-secondary flex flex-col gap-5 border-b pb-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-sm font-medium">
             <Image src="/logo.svg" alt="" width={22} height={22} />
@@ -38,7 +47,7 @@ export function ReportDocument({ id, name, brief, result, amount, preparedAt, ac
           {actions}
         </div>
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-medium tracking-tight md:text-4xl">{name}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight md:text-[44px] md:leading-[52px]">{name}</h1>
           <p className="text-ink-400 max-w-2xl text-[15px] leading-6 italic">“{brief}”</p>
         </div>
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
@@ -60,9 +69,9 @@ export function ReportDocument({ id, name, brief, result, amount, preparedAt, ac
 
       <ResearchResultView result={result} amount={amount} />
 
-      <footer className="text-ink-400 border-border-secondary dark:border-border-tertiary flex flex-col gap-1.5 border-t pt-4 text-xs leading-5">
+      <footer className="text-ink-400 border-border-secondary flex flex-col gap-1.5 border-t pt-4 text-xs leading-5">
         <p>
-          Made by Sandworm Stocks on {date(preparedAt)}. Every number comes from the Sandworm notebooks linked above and can be opened and
+          Made by Sandworm Stocks on {date(preparedAt)}. Every number comes from the Sandworm notebook linked above and can be opened and
           re-run.
         </p>
         <p>

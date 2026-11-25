@@ -24,7 +24,7 @@ describe("sandwormUserId", () => {
   it("sends the token and returns the account's id", async () => {
     const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(reply(200, { user: { id: ID }, roles: [] }))
     expect(await sandwormUserId("tok")).toBe(ID)
-    const [url, init] = fetch.mock.calls[0]
+    const [url, init] = fetch.mock.calls[0] ?? []
     expect(url).toBe("https://api.example.com/api/auth/dynamic/login")
     expect(JSON.parse(String(init?.body))).toEqual({ token: "tok" })
   })

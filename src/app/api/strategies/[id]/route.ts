@@ -1,13 +1,15 @@
 import { z } from "zod"
 
-import { respond } from "@/lib/api/respond"
+import { type IdParams, respond } from "@/lib/api/respond"
 import { getStrategyService } from "@/lib/strategies/source"
 
-const body = z.object({ name: z.string().min(1).max(200) })
+const renameSchema = z.object({ name: z.string().min(1).max(200) })
 
-type Context = { params: Promise<{ id: string }> }
+export async function PATCH(request: Request, { params }: IdParams) {
+  const { id } = await params
 
-export const PATCH = async (request: Request, { params }: Context) =>
-  respond(request, body, async (ownerId, { name }) => ({
-    name: (await getStrategyService().rename(ownerId, (await params).id, name)).name,
-  }))
+  return respond(request, { body: renameSchema }, async ({ ownerId, body }) => {
+    const { name } = await getStrategyService().rename(ownerId, id, body.name)
+    return { name }
+  })
+}

@@ -1,0 +1,21 @@
+# A database of its own for working locally: `docker compose up -d db`, then DATABASE_URL=postgresql://stocks:stocks@localhost:5433/stocks
+# `docker compose down -v` throws it away; the next `pnpm dev` makes the tables again from drizzle/ (it migrates before it starts).
+services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: stocks
+      POSTGRES_PASSWORD: stocks
+      POSTGRES_DB: stocks
+    volumes:
+      - stocks-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stocks"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  stocks-db:

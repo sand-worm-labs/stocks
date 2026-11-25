@@ -3,11 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "predev": "tsx --env-file-if-exists=.env.local src/db/migrate.ts --if-configured",
     "dev": "cross-env FORCE_COLOR=1 next dev --turbo --port 3001",
     "realtime": "tsx --env-file=.env.local src/server/run-realtime.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env.local src/db/migrate.ts",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
+    "prestart": "tsx src/db/migrate.ts --if-configured",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

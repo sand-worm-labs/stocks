@@ -53,7 +53,7 @@ template's, and the report says so in a banner, in the verdict ("Example results
 ## To switch on
 
 - `DATABASE_URL`: a Postgres (Neon works). Without it strategies live in `.data/strategies.json` locally and in a temp folder on Vercel, which
-  is lost. Make the tables once with `pnpm db:migrate`. Owners must be account ids (uuids), which Dynamic's and the main app's are; with sign-in switched off the one local person has `LOCAL_USER_ID`.
+  is lost. The tables are made and kept up to date by `pnpm db:migrate`, which `pnpm dev` and `pnpm start` run first (an old `strategies` table from before the migrations is renamed `strategies_legacy`, not deleted); `GET /api/health` is a 503 while a migration is missing. Locally, `docker compose up -d db` gives a throwaway Postgres (`DATABASE_URL=postgresql://stocks:stocks@localhost:5433/stocks`); `docker compose down -v` empties it. Owners must be account ids (uuids), which Dynamic's and the main app's are; with sign-in switched off the one local person has `LOCAL_USER_ID`.
 - Test USDC: https://faucet.circle.com (Base Sepolia).
 
 ## Known gaps

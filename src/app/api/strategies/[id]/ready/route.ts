@@ -1,8 +1,11 @@
-import { respond } from "@/lib/api/respond"
+import { type IdParams, respond } from "@/lib/api/respond"
 import { getStrategyService } from "@/lib/strategies/source"
 
-export const POST = async (request: Request, { params }: { params: Promise<{ id: string }> }) =>
-  respond(request, undefined, async (ownerId) => {
-    const { stage } = await getStrategyService().finishResearch(ownerId, (await params).id)
+export async function POST(request: Request, { params }: IdParams) {
+  const { id } = await params
+
+  return respond(request, {}, async ({ ownerId }) => {
+    const { stage } = await getStrategyService().finishResearch(ownerId, id)
     return { stage }
   })
+}

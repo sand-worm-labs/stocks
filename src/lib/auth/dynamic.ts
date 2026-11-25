@@ -23,16 +23,15 @@ export type DynamicIdentity = {
 
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/
 
-const walletsIn = (credentials: unknown) =>
-  Array.from(
-    new Set(
-      (Array.isArray(credentials) ? credentials : [])
-        .filter(
-          (item) => item?.format === "blockchain" && typeof item.address === "string" && ADDRESS.test(item.address)
-        )
-        .map((item) => (item.address as string).toLowerCase())
-    )
-  )
+type Credential = { format?: string; address?: string }
+
+const walletsIn = (credentials: unknown) => {
+  const list = (Array.isArray(credentials) ? credentials : []) as Credential[]
+  const addresses = list
+    .filter(({ format, address }) => format === "blockchain" && ADDRESS.test(address ?? ""))
+    .map(({ address }) => address!.toLowerCase())
+  return [...new Set(addresses)]
+}
 
 export async function verifyDynamicToken(token: string, environmentId: string): Promise<DynamicIdentity> {
   try {

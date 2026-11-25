@@ -10,14 +10,28 @@ import { SandwormAccountError } from "@/lib/auth/sandworm"
 import { signSession } from "@/lib/auth/token"
 import { readOnboarding } from "@/lib/onboarding/profile"
 
-const body = z.object({
-  token: z.string().min(1).max(8000),
-})
+const body = z.object({ token: z.string().min(1).max(8000) })
 
 class AccountError extends Error {}
 
 const fail = (error: string, status: number) =>
   NextResponse.json({ error }, { status, headers: { "Cache-Control": "no-store" } })
+
+// What went wrong, as an answer that is safe to show
+function failure(error: unknown) {
+  if (error instanceof SandwormAccountError) return fail(error.message, error.status)
+  if (error instanceof AccountError || error instanceof ProviderUnavailableError) return fail(error.message, 503)
+  if (error instanceof DynamicTokenError) return fail(error.message, 401)
+  return fail("We couldn't sign you in", 401)
+}
+
+async function createAccount(identity: Awaited<ReturnType<typeof identify>>) {
+  try {
+    await ensureAccount(identity)
+  } catch {
+    throw new AccountError("We couldn't set up your account. Try again in a moment")
+  }
+}
 
 // Turns a sign-in done in the browser into a session on our side. The browser hands over the token Dynamic gave it; it is checked here
 // and never kept. The first time, the person's Sandworm account is made from it on the main app's API (`identify`), and their account here
@@ -30,13 +44,11 @@ export async function POST(request: Request) {
 
   try {
     const identity = await identify(parsed.data.token)
-    const userId = identity.id
-    await ensureAccount(identity).catch(() => {
-      throw new AccountError("We couldn't set up your account. Try again in a moment")
-    })
-    const { done } = await readOnboarding(userId)
+    await createAccount(identity)
+
+    const { done } = await readOnboarding(identity.id)
     const response = NextResponse.json({ ok: true, onboarded: done }, { headers: { "Cache-Control": "no-store" } })
-    response.cookies.set(SESSION_COOKIE, await signSession(userId), {
+    response.cookies.set(SESSION_COOKIE, await signSession(identity.id), {
       httpOnly: true,
       sameSite: "lax",
       secure: isSecureRequest(request),
@@ -45,9 +57,6 @@ export async function POST(request: Request) {
     })
     return response
   } catch (error) {
-    if (error instanceof SandwormAccountError) return fail(error.message, error.status)
-    if (error instanceof AccountError) return fail(error.message, 503)
-    if (error instanceof ProviderUnavailableError) return fail(error.message, 503)
-    return fail(error instanceof DynamicTokenError ? error.message : "We couldn't sign you in", 401)
+    return failure(error)
   }
 }

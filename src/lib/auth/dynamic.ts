@@ -15,7 +15,26 @@ const keysFor = (environmentId: string) => {
 
 export class DynamicTokenError extends Error {}
 
-export async function verifyDynamicToken(token: string, environmentId: string) {
+export type DynamicIdentity = {
+  id: string
+  // The wallet addresses Dynamic has verified for this person, lowercase. Read from the signed token, never from what the browser says.
+  wallets: string[]
+}
+
+const ADDRESS = /^0x[0-9a-fA-F]{40}$/
+
+const walletsIn = (credentials: unknown) =>
+  Array.from(
+    new Set(
+      (Array.isArray(credentials) ? credentials : [])
+        .filter(
+          (item) => item?.format === "blockchain" && typeof item.address === "string" && ADDRESS.test(item.address)
+        )
+        .map((item) => (item.address as string).toLowerCase())
+    )
+  )
+
+export async function verifyDynamicToken(token: string, environmentId: string): Promise<DynamicIdentity> {
   try {
     const { payload } = await jwtVerify(token, keysFor(environmentId), {
       issuer: `app.dynamicauth.com/${environmentId}`,
@@ -23,7 +42,7 @@ export async function verifyDynamicToken(token: string, environmentId: string) {
     })
     const scopes = typeof payload.scope === "string" ? payload.scope.split(" ") : []
     if (!scopes.includes("user:basic") || !payload.sub) throw new DynamicTokenError("Sign-in isn't finished")
-    return payload.sub
+    return { id: payload.sub, wallets: walletsIn(payload.verified_credentials) }
   } catch (error) {
     throw error instanceof DynamicTokenError ? error : new DynamicTokenError("This sign-in couldn't be checked")
   }

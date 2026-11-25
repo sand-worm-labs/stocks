@@ -128,10 +128,11 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
     const response = await fetch("/api/auth/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ provider: "wallet", token }),
+      body: JSON.stringify({ token }),
     })
     if (!response.ok) {
-      toast.error("We couldn't sign you in", { description: "Try again in a moment." })
+      const { error } = (await response.json().catch(() => ({}))) as { error?: string }
+      toast.error("We couldn't sign you in", { description: error ?? "Try again in a moment." })
       return false
     }
 

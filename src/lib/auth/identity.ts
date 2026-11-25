@@ -1,21 +1,16 @@
-import { verifyDynamicToken } from "./dynamic"
-import { AUTH_PROVIDERS, type AuthProviderId } from "./providers"
+import { type DynamicIdentity, verifyDynamicToken } from "./dynamic"
+import { sandwormUserId } from "./sandworm"
 
 export class ProviderUnavailableError extends Error {}
 
-// Proves who a person is from what a provider handed the browser, and returns their id. This is the one place that differs between
-// ways of signing in. To switch Sandworm on: check the token the main app issues here (as `verifyDynamicToken` does for a wallet),
-// return the account id from it, and set `available` for it in `AUTH_PROVIDERS`.
-export async function identify(provider: AuthProviderId, token: string) {
-  if (!AUTH_PROVIDERS[provider].available) throw new ProviderUnavailableError("This way of signing in isn't open yet")
+// Proves who a person is from what Dynamic handed the browser (a wallet, or an email that comes with one), and returns their account's
+// id and the wallets Dynamic has verified for them. The token is checked against Dynamic's public keys; nothing the browser adds is
+// believed. The id is their Sandworm account's, made on the way in if they are new; with no main app to ask, it is Dynamic's own.
+export async function identify(token: string): Promise<DynamicIdentity> {
+  const environmentId = process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID
+  if (!environmentId) throw new ProviderUnavailableError("Sign-in isn't set up")
 
-  switch (provider) {
-    case "wallet": {
-      const environmentId = process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID
-      if (!environmentId) throw new ProviderUnavailableError("Sign-in isn't set up")
-      return verifyDynamicToken(token, environmentId)
-    }
-    case "sandworm":
-      throw new ProviderUnavailableError("Sign in with Sandworm isn't connected yet")
-  }
+  const dynamic = await verifyDynamicToken(token, environmentId)
+  const id = (await sandwormUserId(token)) ?? dynamic.id
+  return { id, wallets: dynamic.wallets }
 }

@@ -13,16 +13,20 @@ Written 2026-11-24. The app behaves the way production will: nothing opens witho
    The guided tour (`src/components/Tour`, 6 steps) then shows once on the first page; Skip, Esc or the last button ends it, and Settings has "Replay".
 4. **Been through it** goes to where they were going (default `/strategies`). The sign-in page redirects away from anyone signed in.
 
-## Providers (`src/lib/auth/providers.ts`, `identity.ts`)
+## Signing in and the account (`src/lib/auth/identity.ts`, `account.ts`)
 
-| Provider                          | State                                                                            |
-| --------------------------------- | -------------------------------------------------------------------------------- |
-| Wallet (Dynamic: wallet or email) | Works. Needs `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` and `AUTH_SECRET`.             |
-| Sandworm                          | Button shown as "Soon". `available: false`; `identify("sandworm", ...)` refuses. |
+There is one way in: **connect a wallet** (Dynamic: a wallet, or an email that comes with one). Needs `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID`
+and `AUTH_SECRET`. "Continue with Sandworm" was removed. The browser posts Dynamic's token to `/api/auth/session`, which checks it
+against Dynamic's public keys, then **creates the account the first time** (`ensureAccount`): a `profiles` row keyed by Dynamic's user id
+(a uuid) and a `wallets` row for each address Dynamic verified in the token (never what the browser says; only addresses, never a key).
+Every later sign-in leaves what exists alone. Without `DATABASE_URL` there is nothing to create and it does nothing. If the database
+can't make the account (for instance `pnpm db:migrate` has not been run) the sign-in fails with a 503, not a half-made account.
 
-**To switch Sandworm on:** (1) make the button start the sign-in on the main app and bring a token back; (2) check that token in
-`identify` (the `sandworm` case) and return the account id; (3) set `available: true`; (4) have the browser POST
-`{ provider: "sandworm", token }` to `/api/auth/session`. The cookie, first run, middleware and sign-out need no change.
+**The Sandworm account.** With `SANDWORM_API_URL` set (the main app's API, with its `/api`), the session route first sends Dynamic's token to
+the main app's `POST /auth/dynamic/login` (`apps/api/src/features/auth/dynamic`, no password). It checks the token itself, finds or creates
+the Sandworm user for that wallet or email (the same path as Google and GitHub sign-in), adds the verified wallets to their settings,
+and answers with the user. **That user's id is the account id here**, so strategies belong to the Sandworm account. A new person gets their account made on the spot, with no invite (the main app opens sign-up for this route only). Without
+`SANDWORM_API_URL` it keeps to Dynamic's own id, for working locally. The main app needs `DYNAMIC_PUBLIC_KEY` (the environment public key, PEM, from the Dynamic dashboard) in its `.env`.
 
 ## Known limits
 

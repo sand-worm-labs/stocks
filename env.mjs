@@ -10,6 +10,9 @@ export const env = createEnv({
     // Where strategies are kept: any Postgres (Neon, or the main app's). Without it they are kept in a file, which is for trying the app,
     // not for real use.
     DATABASE_URL: z.string().url().optional(),
+    // The main Sandworm app's API, with its /api prefix. Signing in with a wallet makes the person's Sandworm account there (the web app's
+    // `POST /auth/dynamic/login`), and their id is that account's. Without it the app keeps to Dynamic's own id, for working locally.
+    SANDWORM_API_URL: z.string().url().optional(),
     ANALYZE: z
       .enum(["true", "false"])
       .optional()
@@ -29,6 +32,7 @@ export const env = createEnv({
     ANALYZE: process.env.ANALYZE,
     COINGECKO_API_KEY: process.env.COINGECKO_API_KEY,
     DATABASE_URL: process.env.DATABASE_URL,
+    SANDWORM_API_URL: process.env.SANDWORM_API_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
     NEXT_PUBLIC_WEB_APP_URL: process.env.NEXT_PUBLIC_WEB_APP_URL,
     NEXT_PUBLIC_LANDING_URL: process.env.NEXT_PUBLIC_LANDING_URL,

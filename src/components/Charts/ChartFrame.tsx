@@ -8,11 +8,9 @@ import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 type ChartFrameProps = {
   height: number
   label: string
-  // Receives whether to animate, so a chart honours reduced motion
   children: (animate: boolean) => ReactNode
 }
 
-// Holds a chart's space from the first paint, then draws it once it scrolls into view, so its animation is seen
 export function ChartFrame({ height, label, children }: ChartFrameProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)

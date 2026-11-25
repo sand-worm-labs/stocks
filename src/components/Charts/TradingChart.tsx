@@ -17,145 +17,46 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts"
 import { useTheme } from "next-themes"
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 
 import { BenchmarkPicker } from "@/components/Charts/BenchmarkPicker"
 import { ChartLoader } from "@/components/Charts/ChartLoader"
 import { ChartTooltip, type TooltipRow } from "@/components/Charts/ChartTooltip"
+import { ChipSlot } from "@/components/Charts/ChipSlot"
+import { drawFund, type Fund } from "@/components/Charts/fund-line"
 import { Pill } from "@/components/ui/pill"
 import { SegmentedControl } from "@/components/ui/segmented-control"
+import { HEIGHT, TOOLTIP_WIDTH } from "@/constants/components/charts/trading-chart"
+import { useComparedFunds } from "@/hooks/use-compared-funds"
 import { useInView } from "@/hooks/use-in-view"
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 import type { BenchmarkLine } from "@/lib/benchmarks/compare"
+import {
+  ACCENT,
+  formats,
+  formatSignedPercentPoints,
+  FUND_MS,
+  isoOf,
+  LINE_COLORS,
+  markerTimes,
+  MAX_COMPARED,
+  percent,
+  plotted,
+  REVEAL_MS,
+  risingTimes,
+  type View,
+  VIEWS,
+  withAlpha,
+} from "@/lib/charts/trading"
 import { formatDay, formatTime } from "@/lib/dates"
 import { formatAmount, formatPercent, formatSignedAmount } from "@/lib/format"
 import type { ChartEvent } from "@/lib/portfolios/chart"
 import { changeOver, type ValuePoint } from "@/lib/portfolios/performance"
 
-// The portfolio's own line: violet by day, white by night, where violet doesn't read
-const ACCENT = {
-  light: { line: "#7F56D9", top: "rgba(127, 86, 217, 0.32)", bottom: "rgba(127, 86, 217, 0)", label: "#7F56D9" },
-  dark: { line: "#FFFFFF", top: "rgba(255, 255, 255, 0.22)", bottom: "rgba(255, 255, 255, 0)", label: "#3a3a3a" },
-}
-// A fund takes the first colour no other one on the chart has, and keeps it while it stays
-const LINE_COLORS = ["#64748b", "#f59e0b", "#06b6d4", "#ec4899", "#84cc16"]
-// More than three lines is a tangle, so a fourth switched on pushes the oldest off
-const MAX_COMPARED = 3
-const DEFAULT_COMPARED = "SPY"
-// The chart is wiped in from the left, over this long
-const REVEAL_MS = 1100
-// A fund's line draws itself in, or out, over this long; its chip opens or closes in a little less
-const FUND_MS = 520
-const CHIP_MS = 320
-const EASE = "cubic-bezier(0.22, 1, 0.36, 1)"
-const HEIGHT = 280
-const TOOLTIP_WIDTH = 224
-
-const isoOf = (seconds: Time) => new Date(Number(seconds) * 1000).toISOString()
 const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-
-// One comparison line on the chart. `progress` is how much of it is drawn, from none to all: it draws in from the left as it is
-// added and back out as it is taken off, and the chart's scale follows what is showing, so nothing jumps.
-type Fund = { series: ISeriesApi<"Line">; color: string; progress: number; wanted: boolean; frame?: number }
-
-type Slot = { id: string; color: string }
-// A chip on the row above the chart. It stays in place, closing, until its animation is done.
-type Chip = Slot & { open: boolean; immediate?: boolean }
-
-const withAlpha = (hex: string, alpha: number) => {
-  const n = Number.parseInt(hex.slice(1), 16)
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha.toFixed(3)})`
-}
-
-// What the chart shows: what the money is worth, or how far it has moved from where it started, in percent. The second is the fair way to
-// hold one line against another, and it is the same whatever money is added or taken out.
-type View = "value" | "return"
-const VIEWS = [
-  { value: "value", label: "Value" },
-  { value: "return", label: "Return" },
-] as const
-
-const plotted = (value: number, base: number, view: View) =>
-  view === "return" ? (value / (base || 1) - 1) * 100 : value
-
-const formatSignedPercentPoints = (value: number) => `${value > 0 ? "+" : ""}${value.toFixed(2)} points`
-
-const percent = (value: number) => `${value > 0 ? "+" : ""}${value.toFixed(Math.abs(value) < 10 ? 2 : 1)}%`
-
-// How prices on the scale and on a line are written, for each view
-function formats(view: View, biggest: number) {
-  if (view === "return") {
-    return { series: { type: "custom" as const, minMove: 0.01, formatter: percent }, axis: percent }
-  }
-  return {
-    series: { type: "price" as const, precision: biggest >= 1000 ? 0 : 2, minMove: biggest >= 1000 ? 1 : 0.01 },
-    axis: (price: number) => price.toLocaleString("en-US", { maximumFractionDigits: biggest >= 1000 ? 0 : 2 }),
-  }
-}
-
-// Draws as much of a fund's line as its progress says, and as faint as it says
-function drawFund(fund: Fund, values: number[] | undefined, times: UTCTimestamp[], view: View, base: number) {
-  const shown = Math.round(fund.progress * times.length)
-  fund.series.setData(
-    times.slice(0, shown).map((time, i) => ({ time, value: plotted(values?.[i] ?? base, base, view) }))
-  )
-  fund.series.applyOptions({ color: withAlpha(fund.color, Math.min(1, fund.progress * 1.8)) })
-}
-
-const defaultPicked = (lines: BenchmarkLine[]): Slot[] =>
-  lines.some((line) => line.id === DEFAULT_COMPARED)
-    ? [{ id: DEFAULT_COMPARED, color: LINE_COLORS[0] ?? "#64748b" }]
-    : []
-
-// A chip's place on the row, which opens as it comes and closes as it goes, taking the room it was using with it, so the chips beside
-// it slide rather than jump
-function ChipSlot({
-  open,
-  immediate,
-  reduced,
-  children,
-}: {
-  open: boolean
-  immediate?: boolean
-  reduced: boolean
-  children: ReactNode
-}) {
-  const [arrived, setArrived] = useState(Boolean(immediate))
-
-  useEffect(() => {
-    if (arrived) return
-    // Two frames, so the closed state has been drawn before it is opened
-    let second = 0
-    const first = requestAnimationFrame(() => {
-      second = requestAnimationFrame(() => setArrived(true))
-    })
-    return () => {
-      cancelAnimationFrame(first)
-      cancelAnimationFrame(second)
-    }
-  }, [arrived])
-
-  const shown = arrived && open
-  return (
-    <div
-      style={{
-        gridTemplateColumns: shown ? "1fr" : "0fr",
-        opacity: shown ? 1 : 0,
-        transition: reduced ? "none" : `grid-template-columns ${CHIP_MS}ms ${EASE}, opacity ${CHIP_MS}ms ease`,
-      }}
-      className="grid"
-    >
-      <div className="min-w-0 overflow-hidden">
-        <div className="pr-2">{children}</div>
-      </div>
-    </div>
-  )
-}
 
 type Tip = { x: number; y: number; width: number; title: string; rows: TooltipRow[]; footer?: string }
 
-// `name` is what the line is called: "Portfolio" for one, "My portfolios" for all of them together
-// `events` are what happened that the line marks, such as when a strategy was started
 type TradingChartProps = {
   points: ValuePoint[]
   lines: BenchmarkLine[]
@@ -164,29 +65,19 @@ type TradingChartProps = {
   events?: ChartEvent[]
 }
 
-// The portfolio's value against any of the index funds and ETFs, drawn with TradingView's chart library. The funds are
-// picked from the chips above it, each held to the same start so the lines say who did better.
 export function TradingChart({ points, lines, label, name = "Strategy", events = [] }: TradingChartProps) {
   const { resolvedTheme } = useTheme()
   const reduced = usePrefersReducedMotion()
   const [frame, inView] = useInView<HTMLDivElement>()
   const canvas = useRef<HTMLDivElement>(null)
-  const [picked, setPicked] = useState<Slot[]>(() => defaultPicked(lines))
-  const [chips, setChips] = useState<Chip[]>(() =>
-    defaultPicked(lines).map((slot) => ({ ...slot, open: true, immediate: true }))
-  )
+  const { picked, chips, toggle } = useComparedFunds(lines.map(({ id }) => id))
   const [view, setView] = useState<View>("value")
   const [tip, setTip] = useState<Tip>()
   const [dot, setDot] = useState<{ x: number; y: number }>()
-  // The chart is wiped in from the left once it is made, and the live dot comes when the line has got there
   const [wiped, setWiped] = useState(false)
   const [landed, setLanded] = useState(false)
 
-  // The chart wants times that only go up, so two points on one second are moved a second apart
-  const times = useMemo(() => {
-    let last = 0
-    return points.map(({ time }) => (last = Math.max(time, last + 1)) as UTCTimestamp)
-  }, [points])
+  const times = useMemo(() => risingTimes(points.map(({ time }) => time)), [points])
 
   const chart = useRef<IChartApi>(undefined)
   const area = useRef<ISeriesApi<"Area">>(undefined)
@@ -195,7 +86,6 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
   const fresh = useRef(true)
   // What the chart's callbacks should see, since they outlive a render
   const latest = useRef({ points, times, lines, name, view, events })
-  latest.current = { points, times, lines, name, view, events }
   const markers = useRef<ISeriesMarkersPluginApi<Time>>(undefined)
   const accentColor = useRef<string>(ACCENT.light.line)
   // A line is drawn once there are two points to draw; more points arriving after that don't make the chart again
@@ -203,31 +93,19 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
 
   const colorOf = (id: string) => picked.find((slot) => slot.id === id)?.color ?? LINE_COLORS[0] ?? "#64748b"
   const colorOfRef = useRef(colorOf)
-  colorOfRef.current = colorOf
 
-  // Where what happened is marked on the line: on the point nearest it. One event says what it was; several are just dots.
   const markersFor = () => {
     const { times: at, events: happened } = latest.current
-    return happened
-      .flatMap(({ time }) => {
-        const nearest = at.reduce<UTCTimestamp | undefined>(
-          (best, one) => (best === undefined || Math.abs(one - time) < Math.abs(best - time) ? one : best),
-          undefined
-        )
-        return nearest === undefined ? [] : [nearest]
-      })
-      .sort((a, b) => a - b)
-      .map((time) => ({
-        time,
-        position: "belowBar" as const,
-        shape: "circle" as const,
-        color: accentColor.current,
-        size: 1,
-        text: happened.length === 1 ? "Started" : "",
-      }))
+    return markerTimes(at, happened).map((time) => ({
+      time,
+      position: "belowBar" as const,
+      shape: "circle" as const,
+      color: accentColor.current,
+      size: 1,
+      text: happened.length === 1 ? "Started" : "",
+    }))
   }
 
-  // Every line on the chart, with all its points
   const paint = () => {
     const { points: all, times: at, lines: known, view: shown } = latest.current
     const base = all[0]?.value ?? 0
@@ -238,7 +116,6 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
     markers.current?.setMarkers(markersFor())
   }
   const paintRef = useRef(paint)
-  paintRef.current = paint
 
   const placeDot = () => {
     const { points: all, times: at } = latest.current
@@ -255,9 +132,15 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
     )
   }
   const placeDotRef = useRef(placeDot)
-  placeDotRef.current = placeDot
 
-  // The chart itself: made when it first comes into view, and again if the theme or the points change
+  // What the chart's callbacks should see is brought up to date after each drawing, before any effect runs
+  useLayoutEffect(() => {
+    latest.current = { points, times, lines, name, view, events }
+    colorOfRef.current = colorOf
+    paintRef.current = paint
+    placeDotRef.current = placeDot
+  })
+
   useEffect(() => {
     const host = canvas.current
     if (!host || !inView || !ready) return
@@ -265,7 +148,7 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
     const dark = resolvedTheme === "dark"
     const accent = dark ? ACCENT.dark : ACCENT.light
     accentColor.current = accent.line
-    const biggest = Math.max(...points.map(({ value }) => value))
+    const biggest = Math.max(...latest.current.points.map(({ value }) => value))
     const shape = formats(latest.current.view, biggest)
     const api = createChart(host, {
       autoSize: true,
@@ -327,7 +210,6 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
       const point = latest.current.points[index]
       if (!param.point || !point) return setTip(undefined)
 
-      // The words follow the view: what the money is worth, or how far it has moved. What is compared is the same either way.
       const { view: shown, points: all } = latest.current
       const base = all[0]?.value ?? 0
       const say = (value: number) =>
@@ -385,8 +267,6 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
     }
   }, [inView, resolvedTheme, ready, reduced])
 
-  // Draws a fund's line in (`to` 1) or out (`to` 0), the scale following what is showing. Out, the line is taken off the chart when it has
-  // gone. `instant` does it at once: for the first drawing of a chart, and for anyone who has asked for less motion.
   const slideFund = (id: string, to: 0 | 1, instant: boolean) => {
     const api = chart.current
     const fund = funds.current.get(id)
@@ -429,13 +309,11 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
     fund.frame = requestAnimationFrame(tick)
   }
 
-  // The funds on the chart: each is drawn in when it is picked and out when it is taken off, and the ones that stay are left alone, so
-  // switching one never redraws the rest
   useEffect(() => {
     const api = chart.current
     if (!api || !inView) return
 
-    const biggest = Math.max(...points.map(({ value }) => value))
+    const biggest = Math.max(...latest.current.points.map(({ value }) => value))
     const shape = formats(latest.current.view, biggest)
     const instant = fresh.current || reduced
     fresh.current = false
@@ -455,7 +333,6 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
         fund = { series, color, progress: instant ? 1 : 0, wanted: true }
         funds.current.set(id, fund)
       }
-      // One already drawn in full is left as it is; only one coming in, or coming back, is drawn
       const settled = fund.wanted && fund.progress === 1
       fund.wanted = true
       fund.color = color
@@ -470,7 +347,6 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
     requestAnimationFrame(() => placeDotRef.current())
   }, [inView, resolvedTheme, ready, reduced, picked])
 
-  // A new price, or the clock moving on, moves the lines: the data is set again and the chart made to fit it, and it is not made again
   useEffect(() => {
     if (!chart.current) return
     paintRef.current()
@@ -478,7 +354,6 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
     requestAnimationFrame(() => placeDotRef.current())
   }, [points, lines, events])
 
-  // Value or return: the lines are drawn in the other terms, and the scale is written the other way
   useEffect(() => {
     const api = chart.current
     if (!api) return
@@ -491,35 +366,6 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
     requestAnimationFrame(() => placeDotRef.current())
   }, [view])
 
-  const toggle = (id: string) => {
-    let next: Slot[]
-    if (picked.some((slot) => slot.id === id)) next = picked.filter((slot) => slot.id !== id)
-    else {
-      const kept = picked.length >= MAX_COMPARED ? picked.slice(1) : picked
-      const color = LINE_COLORS.find((free) => !kept.some((slot) => slot.color === free)) ?? LINE_COLORS[0] ?? "#64748b"
-      next = [...kept, { id, color }]
-    }
-    const gone = picked.filter((slot) => !next.some((other) => other.id === slot.id))
-    const added = next.filter((slot) => !picked.some((other) => other.id === slot.id))
-
-    setPicked(next)
-    // A chip that goes closes where it is, and is taken off the row once it has; one that comes opens at the end
-    setChips((current) => {
-      const out = current.map((chip) => (gone.some((slot) => slot.id === chip.id) ? { ...chip, open: false } : chip))
-      for (const slot of added) {
-        const at = out.findIndex((chip) => chip.id === slot.id)
-        if (at >= 0) out[at] = { ...out[at]!, color: slot.color, open: true }
-        else out.push({ ...slot, open: false })
-      }
-      return out
-    })
-    if (gone.length) {
-      setTimeout(
-        () => setChips((current) => current.filter((chip) => chip.open || !gone.some((slot) => slot.id === chip.id))),
-        CHIP_MS + 60
-      )
-    }
-  }
   const own = changeOver(points)
 
   return (
@@ -583,7 +429,7 @@ export function TradingChart({ points, lines, label, name = "Strategy", events =
             className="pointer-events-none absolute flex size-3.5 items-center justify-center"
           >
             <span className="bg-mark absolute inline-flex size-full animate-ping rounded-full opacity-50" />
-            <span className="bg-mark relative block size-3 rounded-full border-2 border-white dark:border-[#1a1a1a]" />
+            <span className="bg-mark dark:border-primary-tint-50 relative block size-3 rounded-full border-2 border-white" />
           </span>
         )}
         {tip && (

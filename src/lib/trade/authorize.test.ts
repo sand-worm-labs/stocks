@@ -51,7 +51,6 @@ describe("approving a strategy to trade from a wallet", () => {
 
   it("refuses a signature from anyone but the wallet's owner", async () => {
     await expect(check({}, await sign(other))).rejects.toMatchObject({ status: 422 })
-    // someone else's wallet named with their own signature
     await expect(check({ address: other.address }, await sign(owner))).rejects.toMatchObject({ status: 422 })
   })
 

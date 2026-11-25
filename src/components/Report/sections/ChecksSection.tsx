@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card"
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 import { CheckList } from "../CheckList"
 import { ReportSection, SectionIntro } from "../ReportSection"
@@ -9,7 +9,6 @@ type ChecksSectionProps = {
   title: string
   intro?: string
   checks: Report["checks"]["honesty"]
-  // Set on the check that gives the verdict, which is drawn as the report's answer
   verdict?: Report["verdict"]
 }
 

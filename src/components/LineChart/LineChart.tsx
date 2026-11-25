@@ -1,18 +1,14 @@
+import { HEIGHT, WIDTH } from "@/constants/components/line-chart/line-chart"
 import { cn } from "@/lib/utils"
 
 type Line = { id: string; points: number[]; className: string; dashed?: boolean }
 
 type LineChartProps = {
   lines: Line[]
-  // Read out by a screen reader, since the lines themselves say nothing
   label: string
   className?: string
 }
 
-const WIDTH = 600
-const HEIGHT = 200
-
-// Lines drawn on one scale, so they can be compared. Each takes its colour from its class.
 export function LineChart({ lines, label, className }: LineChartProps) {
   const all = lines.flatMap(({ points }) => points)
   const min = Math.min(...all)

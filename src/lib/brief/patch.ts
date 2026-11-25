@@ -1,26 +1,22 @@
+import type { BriefChange, BriefFields, Goal, Horizon, NamedList, Span } from "@/types/brief"
 import { parseBrief } from "./parse"
-import type { BriefChange, BriefFields, Goal, Horizon, NamedList, Span } from "./types"
 
 const splice = (text: string, { start, end }: Span, replacement: string) =>
   text.slice(0, start) + replacement + text.slice(end)
 
-// "robotics", "robotics and AI", "robotics, AI and chips"
-export const joinList = (items: string[]) =>
+const joinList = (items: string[]) =>
   items.length < 2 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`
 
-// A sentence added to the end of the brief, after whatever it ends with
 const append = (text: string, sentence: string) => {
   const body = text.trimEnd()
   return `${body}${!body ? "" : /[.!?]$/.test(body) ? " " : ". "}${sentence}`
 }
 
-// How each goal reads where the brief names one, as a verb ("Grow 500 USDC") or as a noun ("for growth")
 const GOAL_WORDS: Record<Goal, { verb: string; noun: string }> = {
   Growth: { verb: "grow", noun: "growth" },
   Income: { verb: "earn income on", noun: "income" },
   "Protect capital": { verb: "protect", noun: "capital protection" },
 }
-// How each horizon reads in a sentence ("over 6 months"), in words the agent reads back as the same horizon
 const HORIZON_PHRASE: Record<Horizon, string> = {
   "Under 1 year": "6 months",
   "1–3 years": "1–3 years",
@@ -31,7 +27,6 @@ const VERBS = ["grow", "protect", "preserve"]
 const matchCase = (original: string, replacement: string) =>
   /^[A-Z]/.test(original) ? replacement.charAt(0).toUpperCase() + replacement.slice(1) : replacement
 
-// Takes a phrase out of the text with the joining word and spacing around it, so what is left still reads
 const remove = (text: string, { start, end }: Span) =>
   (text.slice(0, start).replace(/\s*(?:,|\band\b|&|\bor\b)\s*$/i, " ") + text.slice(end).replace(/^\s*[,]/, ""))
     .replace(/\b(?:with|in|into|on|around)\s+(?=(?:over|for|max|only|[.,;]|$))/gi, "")
@@ -45,7 +40,6 @@ function changeList(text: string, list: NamedList, items: string[], sentence: (i
   const added = items.filter((item) => !list.items.some((existing) => existing.toLowerCase() === item.toLowerCase()))
 
   let next = text
-  // Words and clauses further on in the text go first, so the spans before them stay where they were
   const edits: { span: Span; replacement?: string }[] = []
 
   for (const { item, span } of list.hits) if (!wanted.has(item.toLowerCase())) edits.push({ span })
@@ -61,12 +55,9 @@ function changeList(text: string, list: NamedList, items: string[], sentence: (i
     next = replacement === undefined ? remove(next, span) : splice(next, span, replacement)
   }
 
-  // Nowhere in the text lists them yet, so new ones get a sentence of their own
   return !clause && added.length ? append(next, sentence(joinList(added))) : next
 }
 
-// Writes a change made in a control into the brief, in the words the person used where they used some and in a new
-// sentence where they didn't. What it returns reads back as the same change.
 export function applyChange(text: string, fields: BriefFields, change: BriefChange): string {
   switch (change.field) {
     case "goal": {
@@ -81,7 +72,6 @@ export function applyChange(text: string, fields: BriefFields, change: BriefChan
         matchCase(original, VERBS.includes(original.toLowerCase()) ? words.verb : words.noun)
       )
 
-      // A goal written in words the agent can't read back would come up as a question again, so it is written plainly
       return parseBrief(written).goal?.value === change.value ? written : splice(text, goal.span, words.noun)
     }
     case "horizon": {

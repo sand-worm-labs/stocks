@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { useWallet } from "@/components/Wallet/WalletContext"
 import { SIGN_IN_PATH } from "@/lib/auth/config"
 
-// A way out for someone who landed on another person's session. It ends the sign-in, here and with Dynamic.
 export function SignOutLink() {
   const { status, signOut } = useWallet("now")
   const router = useRouter()

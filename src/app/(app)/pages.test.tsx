@@ -28,7 +28,6 @@ const token = (symbol: string, company: string, rank: number) => ({
   series: [1, 2, 3],
 })
 
-// Fonts are made by the build, so in a test there is only the class name
 vi.mock("next/font/local", () => ({ default: () => ({ className: "font-test" }) }))
 
 vi.mock("@/lib/markets/tokens", async (importOriginal) => ({
@@ -42,7 +41,6 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 
-// Waits for everything that streams in behind a Suspense boundary, as a browser does, before reading the markup
 const render = async (page: Promise<React.ReactElement>) => {
   const stream = await renderToReadableStream(
     <LiveMarketProvider>
@@ -51,7 +49,6 @@ const render = async (page: Promise<React.ReactElement>) => {
   )
   await stream.allReady
 
-  // Streamed markup marks where one run of text ends and the next begins, which a reader never sees
   return (await new Response(stream).text()).replaceAll("<!-- -->", "")
 }
 
@@ -71,7 +68,6 @@ describe("app screens", () => {
     const robotics = await render(PortfoliosPage({ searchParams: Promise.resolve({ q: "robotics" }) }))
     const chips = await render(PortfoliosPage({ searchParams: Promise.resolve({ q: "chips" }) }))
 
-    // Forty of them, the most profitable first and ten to a page: the summary and the filters are what all of them share
     expect(all).toContain("Total value")
     expect(all).toContain("Most profitable")
     expect(robotics).toContain("Robotics, capped at 20%")

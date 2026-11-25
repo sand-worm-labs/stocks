@@ -14,7 +14,6 @@ import {
 import type { BlockInfo } from "@/lib/strategy/catalog"
 import type { BlockKind } from "@/lib/strategy/flow/graph"
 
-// How each kind of block looks, on the canvas and in the palette: its tile, its colour, the tint of the whole card and the word on it
 export const BLOCK_STYLE: Record<
   BlockKind,
   { label: string; icon: IconType; tint: string; accent: string; card: string; map: string }
@@ -79,7 +78,6 @@ export const BLOCK_STYLE: Record<
 
 const PLAIN = "border-border-secondary bg-white text-ink-100 dark:border-border-tertiary dark:bg-white/5"
 
-// The tile each thing in the add menu wears, after Composer's: plain for what holds, a colour for what decides or divides
 export const MENU_STYLE: Record<BlockInfo["id"], { icon: IconType; tile: string }> = {
   asset: { icon: BLOCK_STYLE.asset.icon, tile: PLAIN },
   group: { icon: BLOCK_STYLE.group.icon, tile: PLAIN },

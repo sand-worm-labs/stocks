@@ -1,4 +1,3 @@
-// A repeatable wiggle around a drift, so every chart in the mock data looks the same on every load.
 export function makeSeries(seed: number, drift: number, points = 14) {
   let state = seed
   let value = 100
@@ -10,11 +9,9 @@ export function makeSeries(seed: number, drift: number, points = 14) {
   })
 }
 
-// The same shape moved so it ends on `last`
 export const endAt = (series: number[], last: number) =>
   series.map((value) => Number(((value * last) / (series.at(-1) ?? 1)).toFixed(2)))
 
-// Month-end values of 100 where the build period and the held-back period each end on a given total return
 export function makeGrowth(
   seed: number,
   volatility: number,
@@ -40,8 +37,6 @@ export function makeGrowth(
   )
 }
 
-// The range of a year's outcomes for a middle return and the bad and good year at 1 in 20, month by month. Spread grows
-// with the square root of time, the way compounding uncertainty does.
 export function makeFan(median: number, bad: number, good: number, months = 12) {
   const middle = Math.log(1 + median)
   const down = middle - Math.log(1 + bad)

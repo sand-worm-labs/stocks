@@ -1,10 +1,9 @@
-import type { Holding, Portfolio } from "@/lib/portfolios/types"
+import type { Holding, Portfolio } from "@/types/portfolios"
 
 import { makeSeries } from "./series"
 
 const round = (value: number, places = 2) => Math.round(value * 10 ** places) / 10 ** places
 
-// About what each token's share trades at, the prices the entries below are set against
 const REFERENCE_PRICES: Record<string, number> = {
   AAPLc: 342.56,
   GOOGLc: 265.29,
@@ -25,8 +24,6 @@ const REFERENCE_PRICES: Record<string, number> = {
 }
 export const STOCK_POOL = Object.keys(REFERENCE_PRICES)
 
-// What was spent on a stock, and how far its price has gone since: from those, the price it was bought at and how many
-// units that bought. Its value is its units at today's price, which the portfolio source marks again from the market.
 function bought(symbol: string, cost: number, rise: number): Holding {
   const price = REFERENCE_PRICES[symbol] ?? 100
   const entryPrice = round(price / (1 + rise))
@@ -34,7 +31,6 @@ function bought(symbol: string, cost: number, rise: number): Holding {
   return { symbol, units, entryPrice, cost: round(units * entryPrice), value: round(units * price) }
 }
 
-// Names for the first models made up to fill out the list, each a theme; after them, a name is made from two word lists
 const THEMES = [
   "Cloud leaders",
   "Chip equipment",
@@ -105,14 +101,11 @@ const modelName = (i: number) =>
 const SPLIT = [0.34, 0.26, 0.2]
 const DRAFT_STAGES = ["researching", "rules", "ready", "rules"] as const
 
-// Every way of choosing three of the stocks, so each model can hold a set that no other holds
 const TRIPLES = STOCK_POOL.flatMap((first, i) =>
   STOCK_POOL.slice(i + 1).flatMap((second, j) => STOCK_POOL.slice(i + j + 2).map((third) => [first, second, third]))
 )
-// 37 shares no factor with the number of sets, so stepping by it doesn't land on the same set twice
 const stocksFor = (i: number) => TRIPLES[(i * 37) % TRIPLES.length] ?? []
 
-// Models made up in a repeatable way, every ninth still a draft: a list as long as someone with many models would have
 function generatedModel(name: string, i: number): Portfolio {
   const day = String(1 + (i % 19)).padStart(2, "0")
   const base = {
@@ -129,7 +122,6 @@ function generatedModel(name: string, i: number): Portfolio {
     return {
       ...base,
       status: "draft",
-      // The drafts are at different points: some just written, some being researched, some nearly ready
       stage: DRAFT_STAGES[Math.floor(i / 9) % DRAFT_STAGES.length],
       holdings: [],
       cash: 0,
@@ -255,7 +247,6 @@ const BASE_MODELS: Portfolio[] = [
   },
 ]
 
-// As many portfolios as asked for: the first few are the hand-made ones, and the rest are made up in a repeatable way
 export function buildPortfoliosMockData(total: number): Portfolio[] {
   const made = Array.from({ length: Math.max(total - BASE_MODELS.length, 0) }, (_, i) =>
     generatedModel(modelName(i), i)

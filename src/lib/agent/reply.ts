@@ -1,6 +1,5 @@
-import type { AgentMessage } from "./types"
+import type { AgentMessage } from "@/types/agent"
 
-// What the agent says back while it can't yet act on what it is asked. A reply that does something replaces this.
 export function replyTo(text: string, id: string): AgentMessage {
   return {
     id,

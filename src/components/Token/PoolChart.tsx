@@ -4,8 +4,6 @@ import { useTheme } from "next-themes"
 
 import { POOL_CHART_INTERVAL, POOL_CHART_URL } from "@/constants/markets"
 
-// The token's own chart: the candles of the pool it trades in on Base, a minute to a candle, drawn by the same
-// charting library TradingView's are and moving with every swap
 export function PoolChart({ pair, label }: { pair: string; label: string }) {
   const { resolvedTheme } = useTheme()
   const theme = resolvedTheme === "dark" ? "dark" : "light"

@@ -4,6 +4,7 @@ import { memo } from "react"
 
 import { AppLink } from "@/components/AppLink/AppLink"
 import { Money } from "@/components/Money/Money"
+import { SECONDS_PER_ITEM } from "@/constants/components/markets/price-ticker"
 import type { BaseToken } from "@/lib/markets/tokens"
 
 import { Change } from "./Change"
@@ -13,8 +14,6 @@ import { useLiveMarketContext } from "./LiveMarket"
 import { TokenAvatar } from "./TokenAvatar"
 
 type TickerToken = Pick<BaseToken, "id" | "address" | "symbol" | "image" | "price" | "change24h">
-
-const SECONDS_PER_ITEM = 3
 
 type TickerItemProps = { id: string; symbol: string; image?: string; price: number; change?: number }
 
@@ -38,8 +37,6 @@ const TickerItem = memo(function TickerItem({ id, symbol, image, price, change }
   )
 })
 
-// A tape of prices running along under the header, the way a trading screen has one, with the state of the connection
-// pinned at its left end
 export function PriceTicker({ tokens }: { tokens: TickerToken[] }) {
   const { quotes } = useLiveMarketContext()
 
@@ -75,7 +72,6 @@ export function PriceTicker({ tokens }: { tokens: TickerToken[] }) {
             ))
           )}
         </ul>
-        {/* Soft edges. A gradient laid over the strip costs nothing, where masking it would redraw it every frame. */}
         <div
           aria-hidden="true"
           className="from-block-surface pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r to-transparent"

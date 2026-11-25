@@ -1,17 +1,14 @@
 import { AppLink } from "@/components/AppLink/AppLink"
 import { buttonVariants } from "@/components/Button/Button"
+import { HEADROOM } from "@/constants/components/report/sections/tolerance-section"
 import { formatPercent } from "@/lib/format"
-import type { Report } from "@/lib/report/types"
 import { cn } from "@/lib/utils"
+import type { Report } from "@/types/report"
 
 import { ReportSection, SectionIntro } from "../ReportSection"
 
 type ToleranceSectionProps = { report: Report; portfolioId: string }
 
-// Leaves a little room past the longer of the two marks
-const HEADROOM = 1.17
-
-// How far down the portfolio fell, against the loss its owner said they could live with
 export function ToleranceSection({ report: { tolerance, version }, portfolioId }: ToleranceSectionProps) {
   const { panic, worst, fits, text } = tolerance
   const scale = Math.max(Math.abs(worst), Math.abs(panic), 0.05) * HEADROOM

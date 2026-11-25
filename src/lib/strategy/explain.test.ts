@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
+import type { Condition, Strategy } from "@/types/strategy"
 import { explainStrategy, plainCondition, termsOf } from "./explain"
 import { getStrategy } from "./source"
-import type { Condition, Strategy } from "./types"
 
 const above = (symbol: string, value: number): Condition => ({
   left: { symbol, indicator: { kind: "rsi", days: 14 } },

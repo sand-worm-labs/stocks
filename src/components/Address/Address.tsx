@@ -3,33 +3,21 @@
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { PiCheck, PiCopy } from "react-icons/pi"
 
+import { COPIED_MS, EXPLORER, NOUN } from "@/constants/components/address/address"
 import { type AddressLength, formatAddress } from "@/lib/format"
 import { cn } from "@/lib/utils"
-
-// What an explorer calls each thing a value can be
-type Kind = "address" | "token" | "tx"
-const NOUN: Record<Kind, string> = { address: "address", token: "contract address", tx: "transaction hash" }
-
-const EXPLORER = "https://basescan.org"
-export const explorerUrl = (kind: Kind, value: string) => `${EXPLORER}/${kind}/${value}`
-
-const COPIED_MS = 1500
+import type { AddressKind } from "@/types/ui"
+const explorerUrl = (kind: AddressKind, value: string) => `${EXPLORER}/${kind}/${value}`
 
 type AddressProps = {
   value: string
-  kind?: Kind
-  // How much of it to show: the ends (short), more of it (long), or all of it
+  kind?: AddressKind
   length?: AddressLength
-  // Where it links: the explorer's page for it unless told otherwise, such as a DefiLlama, CoinGecko or DexScreener page. `null` for
-  // no link at all.
   href?: string | null
-  // Something small before it, such as the logo of where it links
   icon?: ReactNode
   className?: string
 }
 
-// Every address, contract and transaction hash in the app: monospaced, linked to where it can be read about, and with a button to copy it
-// whole, whatever length is shown. The one place that decides how they look, so they all behave the same.
 export function Address({ value, kind = "address", length = "short", href, icon, className }: AddressProps) {
   const [copied, setCopied] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -41,7 +29,6 @@ export function Address({ value, kind = "address", length = "short", href, icon,
     try {
       await navigator.clipboard.writeText(value)
     } catch {
-      // A browser that won't let a page write to the clipboard: select what is there so it can be copied by hand
       const field = document.createElement("textarea")
       field.value = value
       document.body.append(field)

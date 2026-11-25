@@ -7,9 +7,16 @@ import type { PoolQuote } from "@/lib/markets/pools"
 
 const LiveMarketContext = createContext<ReturnType<typeof useLiveMarket> | undefined>(undefined)
 
-// One connection to the market for everything on the page that moves
-export function LiveMarketProvider({ children, initialPools }: { children: ReactNode; initialPools?: PoolQuote[] }) {
-  return <LiveMarketContext value={useLiveMarket(initialPools)}>{children}</LiveMarketContext>
+export function LiveMarketProvider({
+  children,
+  initialPools,
+  url,
+}: {
+  children: ReactNode
+  initialPools?: PoolQuote[]
+  url?: string
+}) {
+  return <LiveMarketContext value={useLiveMarket(initialPools, url)}>{children}</LiveMarketContext>
 }
 
 export function useLiveMarketContext() {

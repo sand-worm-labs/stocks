@@ -1,42 +1,22 @@
 import type { ReactNode } from "react"
 
+import { EXAMPLE } from "@/constants/components/tour/steps"
 import { env } from "env.mjs"
-
-// The tour, as data: a walk from the first idea to a live strategy, over the real screens. Each step says where it happens (`route`,
-// which the tour opens for the person) and what it points at (`target`, the name a `data-tour` attribute carries on that page).
-//
-// It is ordered by what someone does, and then by what they must know:
-//   Get started        welcome, then where a strategy begins
-//   Write the idea     the box (and what fills in under it), then the five steps that follow
-//   Design and test    the rules it can't break, and the research the agent does
-//   Decide and trade   the results, then refine or trade
-//   After you trade    a strategy's own page, and the holdings across all of them
-// The steps from the rules on use a strategy that already exists (Steady leaders), because a new one has no rules or results until the
-// agent has made them.
 
 export type TourStep = {
   id: string
-  // Which of CHAPTERS it belongs to
   chapter: number
-  // The page it happens on. The tour goes there when it gets to the step, and back when it goes back.
   route?: string
-  // The `data-tour` name of what the step points at. With none, or until it is on screen, the card is centred.
   target?: string
   title: string
   text: string
   visual?: ReactNode
-  // Wears the app's mark above the title, as the welcome does
   mark?: boolean
-  // A link for more, opened in another tab so the tour is still there when they come back
   more?: { label: string; href: string }
-  // The last step's way into the app
   action?: { label: string; href: string }
 }
 
 export const CHAPTERS = ["Get started", "Write the idea", "Design and test", "Decide and trade", "After you trade"]
-
-// The strategy the tour opens to show the pages a new one only has later
-const EXAMPLE = "/strategies/steady-leaders"
 
 export const TOUR_STEPS: TourStep[] = [
   {

@@ -6,7 +6,6 @@ import { PiGlobe } from "react-icons/pi"
 import { flagUrl } from "@/lib/region/countries"
 import { cn } from "@/lib/utils"
 
-// A country's flag, round. Where the picture can't be had, a globe stands in for it.
 export function CountryFlag({ code, className }: { code: string; className?: string }) {
   const [failed, setFailed] = useState(false)
 

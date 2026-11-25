@@ -1,12 +1,10 @@
 "use client"
 
+import { NONE } from "@/constants/components/wallet/usdc-balance"
 import { formatAmount } from "@/lib/format"
 
 import { useWalletUsdc } from "./useWalletUsdc"
 
-const NONE = "Connect a wallet to see it"
-
-// The USDC in the wallet, in words, for a line of text
 export function UsdcBalance() {
   const { connected, chain, reading, isWaiting } = useWalletUsdc()
 

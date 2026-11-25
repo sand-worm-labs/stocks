@@ -2,11 +2,9 @@
 
 import { type ReactNode, useEffect, useRef, useState } from "react"
 
+import { FLASH_MS } from "@/constants/components/markets/flash"
 import { cn } from "@/lib/utils"
 
-const FLASH_MS = 1200
-
-// Lights up green when its number goes up and red when it goes down, then settles
 export function Flash({ value, children }: { value?: number; children: ReactNode }) {
   const previous = useRef(value)
   const [direction, setDirection] = useState<"up" | "down">()

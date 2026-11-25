@@ -9,7 +9,6 @@ export const CUSTOM_BUDGET = "custom"
 // The deepest fall the slider offers, in percent
 export const MAX_LOSS = 50
 
-// Themes the agent recognises in a brief without being told they are one
 export const BRIEF_THEMES = [
   "Robotics",
   "AI",

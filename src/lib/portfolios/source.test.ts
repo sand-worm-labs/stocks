@@ -8,7 +8,6 @@ vi.mock("next/headers", () => ({
   }),
 }))
 vi.mock("@/lib/markets/source", () => ({ getStocks: async () => [] }))
-// `cache` only holds a result inside a render, so a plain function is what a test calls
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   cache: <T>(fn: T) => fn,

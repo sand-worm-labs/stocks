@@ -34,7 +34,6 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 const link = "text-accent dark:text-primary hover:underline"
 
-// What a token's page on a block explorer shows: what exists of it, what it is worth, and where it lives
 export function TokenOverview({ token, supply, ethUsd }: TokenOverviewProps) {
   const { address, symbol, issuer, company, id, marketCap, change24h } = token
   const pool = useLiveMarketContext().quotes[address.toLowerCase()]

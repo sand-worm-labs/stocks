@@ -3,14 +3,10 @@ import { MarketTabs } from "@/components/Markets/MarketTabs"
 import { PageHeader } from "@/components/PageHeader/PageHeader"
 import { Card } from "@/components/ui/card"
 
+import { CHIPS, ROWS } from "@/constants/components/skeleton/markets-skeleton"
 import { Skeleton, SkeletonAvatar, SkeletonPill, SkeletonText } from "./Skeleton"
 import { type SkeletonColumn, SkeletonTable, SkeletonTableFooter } from "./SkeletonTable"
 
-const ROWS = 12
-// The chips under the highlights, each as wide as its label
-const CHIPS = ["w-[42px]", "w-[88px]", "w-[129px]", "w-[93px]", "w-[200px]", "w-[78px]", "w-[78px]"]
-
-// The same columns as the token table, with the same ones left out on a smaller screen
 const COLUMNS: SkeletonColumn[] = [
   { width: "w-4" },
   { width: "w-24", lead: true },
@@ -26,7 +22,6 @@ const COLUMNS: SkeletonColumn[] = [
   { width: "w-10", className: "text-right", cell: <Skeleton className="ml-auto h-9 w-10 rounded-full" /> },
 ]
 
-// The strip of the latest swaps: its label on the left and the swaps as they land
 function TapeSkeleton() {
   return (
     <div className="border-border-secondary bg-block-surface dark:border-border-tertiary flex h-16 items-stretch overflow-hidden rounded-2xl border">
@@ -43,7 +38,6 @@ function TapeSkeleton() {
   )
 }
 
-// The three lists the market leads with: who rose, who fell and what is traded most
 function HighlightsSkeleton() {
   return (
     <div className="grid gap-3 md:grid-cols-3">
@@ -68,8 +62,6 @@ function HighlightsSkeleton() {
   )
 }
 
-// The market's live page before its data: the tabs are real, and the strip, the highlights, the chips and the table are
-// where they will be
 export function MarketsSkeleton() {
   return (
     <div className="flex flex-col gap-4">
@@ -95,7 +87,6 @@ export function MarketsSkeleton() {
   )
 }
 
-// One of the two charts of where the market sits, or the card of who issues it
 function ChartCardSkeleton({ height }: { height: number }) {
   return (
     <Card className="flex flex-col gap-3 p-5" style={{ height }}>
@@ -106,7 +97,6 @@ function ChartCardSkeleton({ height }: { height: number }) {
   )
 }
 
-// The market's summary before its data: the tabs, the title, its line and the live mark are real
 export function MarketSummarySkeleton() {
   return (
     <div className="flex flex-col gap-6">

@@ -2,10 +2,8 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import { DEBOUNCE_MS } from "@/constants/hooks/use-search-param"
 
-const DEBOUNCE_MS = 250
-
-// Keeps a text field in sync with a search param, so a search is a link and survives a reload
 export function useSearchParam(param: string) {
   const router = useRouter()
   const pathname = usePathname()

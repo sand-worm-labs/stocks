@@ -1,12 +1,13 @@
 "use client"
 
 import { useTheme } from "next-themes"
-import { type ReactNode, useEffect, useState } from "react"
+import type { ReactNode } from "react"
 import { PiMoon, PiSun } from "react-icons/pi"
 
+import { PREVIEW } from "@/constants/components/settings/appearance-section"
+import { useMounted } from "@/hooks/use-mounted"
 import { cn } from "@/lib/utils"
-
-type ThemeId = "light" | "dark"
+import type { ThemeId } from "@/types/ui"
 
 type ThemeOption = {
   id: ThemeId
@@ -30,12 +31,6 @@ const THEMES: ThemeOption[] = [
   },
 ]
 
-// The little window in each card: the page colour and the shade of its blocks, drawn the way that theme looks
-const PREVIEW = {
-  light: { page: "bg-[#FDFDFD]", block: "bg-[#E7F3F6]" },
-  dark: { page: "bg-[#09091B]", block: "bg-[#352F37]" },
-} satisfies Record<ThemeId, { page: string; block: string }>
-
 type ThemeCardProps = { option: ThemeOption; selected: boolean; onSelect: () => void }
 
 function ThemeCard({ option, selected, onSelect }: ThemeCardProps) {
@@ -49,7 +44,7 @@ function ThemeCard({ option, selected, onSelect }: ThemeCardProps) {
       className="border-border-secondary bg-block-surface dark:border-border-tertiary w-full rounded-3xl border p-6 text-left transition-all"
     >
       <div className="flex items-start gap-4">
-        <div className="dark:bg-base-600 border-border-secondary dark:border-border-tertiary text-ink-400 rounded-full border bg-[#EFF1F2] p-3">
+        <div className="border-border-secondary dark:border-border-tertiary text-ink-400 bg-toggle-track rounded-full border p-3">
           {option.icon}
         </div>
         <div className="flex-1">
@@ -82,8 +77,7 @@ function ThemeCard({ option, selected, onSelect }: ThemeCardProps) {
 export function AppearanceSection() {
   const { theme, setTheme } = useTheme()
   // The chosen theme is only known in the browser, so nothing is shown as picked until the page is there
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
 
   return (
     <section className="flex flex-col gap-3">

@@ -1,10 +1,8 @@
 import { NETWORK_FEE, SWAP_FEE_RATE } from "@/constants/trade"
 
+import type { Portfolio } from "@/types/portfolios"
 import { portfolioValue } from "./portfolio"
-import type { Portfolio } from "./types"
 
-// Where new money would go. It goes to the stocks furthest under their cap, none past it, and what no stock has room
-// for stays as cash. Nothing is sold.
 export function splitDeposit(portfolio: Portfolio, amount: number, cap: number) {
   const total = (portfolioValue(portfolio) ?? 0) + amount
   const room = portfolio.holdings.map(({ symbol, value }) => ({ symbol, room: Math.max(cap * total - value, 0) }))

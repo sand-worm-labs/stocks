@@ -1,5 +1,5 @@
+import type { Condition, History, Node, Schedule, Weights } from "@/types/strategy"
 import { read } from "./indicators"
-import type { Condition, History, Node, Schedule, Weights } from "./types"
 
 const DEFAULT_VOLATILITY_DAYS = 20
 
@@ -24,7 +24,6 @@ export function holds(condition: Condition, history: History, at: number): boole
   return op === ">" ? a > b : a < b
 }
 
-// The shares of a group, one for each of its children, adding up to one
 function shares(node: Extract<Node, { type: "group" }>, history: History, at: number) {
   const count = node.children.length
   const equal = node.children.map(() => 1 / count)
@@ -51,7 +50,6 @@ function shares(node: Extract<Node, { type: "group" }>, history: History, at: nu
   return equal
 }
 
-// What the strategy would hold on day `at`, from the prices up to and including it
 export function evaluate(node: Node, history: History, at: number): Weights {
   switch (node.type) {
     case "asset":
@@ -125,7 +123,6 @@ const conditionSymbols = (condition: Condition): string[] => {
   return [condition.left.symbol, ...("symbol" in condition.right ? [condition.right.symbol] : [])]
 }
 
-// Every stock a strategy reads or can hold, for knowing which prices to load
 export function symbolsOf(node: Node): string[] {
   switch (node.type) {
     case "asset":

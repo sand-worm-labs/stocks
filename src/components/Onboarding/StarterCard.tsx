@@ -5,8 +5,8 @@ import Link from "next/link"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { CARD_SURFACE, CARD_TINTS } from "@/constants/cards"
 import { formatPercent } from "@/lib/format"
-import type { Starter } from "@/lib/onboarding/types"
 import { cn } from "@/lib/utils"
+import type { Starter } from "@/types/onboarding"
 
 import { StarterChart } from "./StarterChart"
 
@@ -15,8 +15,6 @@ type StarterCardProps = { starter: Starter; index: number; className?: string } 
   | { href: string; selected?: never; onSelect?: never }
 )
 
-// A brief to start from: how its backtest did over the last year, the stocks in it, and its name. Choosing one opens
-// the new portfolio with that brief already written: from a step that picks it, or as a link to it.
 export function StarterCard({ starter, index, className, selected, onSelect, href }: StarterCardProps) {
   const { title, oneYearReturn, series, symbols } = starter
   const logos = symbols.slice(0, 5)

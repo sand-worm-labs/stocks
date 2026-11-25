@@ -10,12 +10,9 @@ type FlowCanvasProps = {
   edges: Edge[]
   nodeTypes: NodeTypes
   height: number
-  // Told which block the pointer is over, and when it leaves
   onHover?: (id?: string) => void
 }
 
-// The frame every diagram here is drawn in: a still, dotted board that is looked at and not edited, with zoom buttons. It
-// fits what is drawn to its width, and never scrolls the page out from under the pointer.
 export function FlowCanvas({ nodes, edges, nodeTypes, height, onHover }: FlowCanvasProps) {
   const { resolvedTheme } = useTheme()
 

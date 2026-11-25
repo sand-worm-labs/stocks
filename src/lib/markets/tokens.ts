@@ -9,31 +9,25 @@ import { env } from "env.mjs"
 
 export type BaseToken = {
   id: string
-  // What it trades as: GOOGLc for Coinbase's token of Alphabet
   symbol: string
-  // The company the token stands for
   company: string
   issuer: string
   image?: string
-  // Its contract on Base
   address: string
   price: number
   marketCap?: number
   volume?: number
-  // Where it stands by market cap, among these tokens
   rank: number
   // As fractions: 0.012 is +1.2%
   change1h?: number
   change24h?: number
   change7d?: number
-  // A close every few hours across the last week, oldest first
   series: number[]
 }
 
 const PAGE_SIZE = 250
 const MAX_PAGES = 8
 const CACHE_MS = 60 * 1000
-// One point in six keeps the week's shape without sending every hour of it
 const SERIES_STEP = 6
 
 const number = z.number().nullable().optional()
@@ -69,7 +63,6 @@ async function get<T>(path: string, schema: z.ZodType<T>, retry = true): Promise
     signal: AbortSignal.timeout(30_000),
   })
 
-  // The free feed allows a few calls a minute: wait once for the limit to pass
   if (response.status === 429 && retry) {
     await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_WAIT_MS))
     return get(path, schema, false)
@@ -86,7 +79,6 @@ const BY_NAME = /^(.*?)\s*\(/
 function describe(name: string, symbol: string) {
   const issuer = ISSUER.exec(name)?.[1] ?? ISSUER_SUFFIX.exec(name)?.[1] ?? "Other"
   const company = BY_NAME.exec(name)?.[1] ?? name.replace(ISSUER_SUFFIX, "").trim()
-  // Coinbase's tokens are the ticker with a lowercase c
   const display = issuer === "Coinbase" ? `${symbol.slice(0, -1).toUpperCase()}c` : symbol.toUpperCase()
 
   return { issuer, company, symbol: display }
@@ -97,7 +89,6 @@ const toFraction = (percent?: number | null) => (percent == null ? undefined : p
 const MARKETS = "/coins/markets?vs_currency=usd&per_page=250"
 const IDS_PER_REQUEST = 150
 
-// The coins in the tokenized stock category, page by page
 async function getCategoryIds() {
   const ids: string[] = []
 
@@ -110,7 +101,6 @@ async function getCategoryIds() {
   return ids
 }
 
-// A few ids at a time, so a refresh is a couple of calls however long the list is
 async function getMarketsOf(ids: string[]) {
   const chunks = Array.from({ length: Math.ceil(ids.length / IDS_PER_REQUEST) }, (_, i) =>
     ids.slice(i * IDS_PER_REQUEST, (i + 1) * IDS_PER_REQUEST)
@@ -124,8 +114,6 @@ async function getMarketsOf(ids: string[]) {
   return batches.flat()
 }
 
-// What was fetched is kept on disk too, so a restart doesn't start again from nothing and a failing feed leaves the
-// last good list on the page
 const cacheFile = (name: string) => join(tmpdir(), `sandworm-stocks-${name}.json`)
 
 async function readCache<T>(name: string): Promise<{ at: number; value: T } | undefined> {
@@ -144,13 +132,11 @@ async function writeCache(name: string, value: unknown) {
 
 const BASE_ADDRESSES_MS = 24 * 60 * 60 * 1000
 
-// Which coins are on Base, and their contracts, changes slowly and the list is large, so it is fetched about once a day
 async function getBaseAddresses(): Promise<Record<string, string>> {
   const cachedAddresses = await readCache<Record<string, string>>("base-addresses")
   if (cachedAddresses && Date.now() - cachedAddresses.at < BASE_ADDRESSES_MS) return cachedAddresses.value
 
   try {
-    // Twenty thousand coins come back, so they are filtered as they are read, not checked one by one against a schema
     const response = await fetch(`${COINGECKO_URL}/coins/list?include_platform=true`, {
       headers: coingeckoHeaders(),
       cache: "no-store",
@@ -170,7 +156,6 @@ async function getBaseAddresses(): Promise<Record<string, string>> {
   }
 }
 
-// Which of the tokenized stocks are on Base. Found by walking the whole category, so it is done about once a day.
 async function getTokenIds(addresses: Record<string, string>): Promise<string[]> {
   const cachedIds = await readCache<string[]>("token-ids")
   if (cachedIds && Date.now() - cachedIds.at < BASE_ADDRESSES_MS) return cachedIds.value
@@ -208,12 +193,10 @@ async function loadBaseTokens(): Promise<BaseToken[]> {
     }))
 }
 
-// The list is also kept in Next's data cache, which every server instance shares, so one that has only just started reads
-// what another fetched instead of walking the free feed again: a start with nothing in memory or on disk is a read, not
-// a dozen slow calls. A list that has gone stale is served and renewed behind it, and one that can't be renewed stays.
-// The in-memory copy below still decides when to ask, so a feed that is refusing is tried about once a minute per instance,
-// not once per visit.
-const loadSharedTokens = unstable_cache(loadBaseTokens, ["base-tokens"], { revalidate: CACHE_MS / 1000 })
+// Next's cache shares the list between the app's instances; the realtime server runs outside Next, where it isn't there
+const loadSharedTokens = process.env.NEXT_RUNTIME
+  ? unstable_cache(loadBaseTokens, ["base-tokens"], { revalidate: CACHE_MS / 1000 })
+  : loadBaseTokens
 
 const FAILED_RETRY_MS = 60 * 1000
 
@@ -240,8 +223,6 @@ function refresh() {
   return loading
 }
 
-// Every tokenized stock on Base, with its live price and moves. A list a few minutes old is served at once and
-// renewed in the background, so a visit never waits on the free feed unless there is nothing to show yet.
 export async function getBaseTokens(): Promise<BaseToken[]> {
   if (!cached) {
     const onDisk = await readCache<BaseToken[]>("tokens-v2")
@@ -254,8 +235,6 @@ export async function getBaseTokens(): Promise<BaseToken[]> {
     return cached.tokens
   }
 
-  // With nothing to show and the feed having just failed, the page is not held up for another try that is bound to be
-  // refused as well: it shows no tokens now and the next visit after the pause tries again
   if (Date.now() < retryAt) return []
 
   return refresh()
@@ -271,7 +250,6 @@ export const ALL_ISSUERS = "all"
 export const filterByIssuer = (tokens: BaseToken[], issuer: string) =>
   issuer === ALL_ISSUERS ? tokens : tokens.filter((token) => token.issuer === issuer)
 
-// Issuers, the one with the most tokens first
 export const issuerCounts = (tokens: BaseToken[]) =>
   Array.from(
     Map.groupBy(tokens, ({ issuer }) => issuer),
@@ -293,8 +271,6 @@ export function marketStats(tokens: BaseToken[]) {
 const TRADED_VOLUME = 10_000
 const HIGHLIGHT_COUNT = 3
 
-// The lists a market page leads with: who rose most, who fell most and what is traded most. A token nobody trades
-// can swing wildly, so only those with volume can be a mover.
 export function marketHighlights(tokens: BaseToken[]) {
   const traded = tokens.filter(({ volume = 0, change24h }) => volume >= TRADED_VOLUME && change24h !== undefined)
   const byChange = traded.toSorted((a, b) => (b.change24h ?? 0) - (a.change24h ?? 0))
@@ -306,15 +282,12 @@ export function marketHighlights(tokens: BaseToken[]) {
   }
 }
 
-// A token by its CoinGecko id, or by the symbol it trades as
 export const findToken = (tokens: BaseToken[], slug: string) =>
   tokens.find(({ id }) => id === slug) ?? tokens.find(({ symbol }) => symbol === slug)
 
 const PARETO_SHARE = 0.8
 const PARETO_SHOWN = 20
 
-// How concentrated a market is: the biggest tokens first with the share they have added up to, and how few it takes to
-// reach most of the total
 export function pareto(tokens: BaseToken[], value: (token: BaseToken) => number | undefined) {
   const sorted = tokens
     .map((token) => ({ token, value: value(token) ?? 0 }))
@@ -331,13 +304,11 @@ export function pareto(tokens: BaseToken[], value: (token: BaseToken) => number 
   return {
     total,
     count: ranked.length,
-    // How many tokens it takes to make up 80% of the total
     reach: ranked.findIndex(({ cumulative }) => cumulative >= PARETO_SHARE) + 1,
     shown: ranked.slice(0, PARETO_SHOWN),
   }
 }
 
-// Each issuer's share of the market cap, the largest first
 export function issuerShares(tokens: BaseToken[]) {
   const total = tokens.reduce((sum, { marketCap = 0 }) => sum + marketCap, 0)
 

@@ -1,4 +1,4 @@
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 import { makeFan, makeGrowth } from "./series"
 
@@ -110,7 +110,6 @@ const original: Report = {
       { id: "o4", tone: "positive", text: "No settings were tuned to fit the past." },
     ],
   },
-  // Built on 24 months at +33.1% and +22% a year, then 12 months held back at +23% and +8.1%
   performance: {
     start: "2023-11",
     holdoutMonths: 12,
@@ -199,7 +198,6 @@ const original: Report = {
   ],
 }
 
-// Version 2: the same stocks and rules with less in each, so the worst drop fits what was asked
 const lessRisk: Report = {
   ...original,
   version: 2,
@@ -233,7 +231,6 @@ const lessRisk: Report = {
 
 export const reportMockData = { 1: original, 2: lessRisk } as const
 
-// What buying each version of the report would do, at 75 and 100 USDC a stock
 export const ordersMockData = {
   1: [
     { symbol: "NVDAc", spend: 100, receive: 0.6881, impact: 0.0003 },

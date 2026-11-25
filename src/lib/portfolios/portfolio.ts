@@ -1,7 +1,7 @@
 import { DRAFT_STAGE, PORTFOLIO_PENDING_TEXT } from "@/constants/portfolio"
 import { searchBy } from "@/lib/search"
 
-import type { Portfolio } from "./types"
+import type { Portfolio } from "@/types/portfolios"
 
 export const isLive = (portfolio: Portfolio) => portfolio.status === "live"
 
@@ -25,7 +25,6 @@ export function statusText(portfolio: Portfolio) {
 export const searchPortfolios = (portfolios: Portfolio[], query: string) =>
   searchBy(portfolios, query, ({ name, brief }) => `${name} ${brief}`)
 
-// Where a stock is held: the portfolio, its share of that portfolio and what it has gained since it was bought.
 export const exposureTo = (portfolios: Portfolio[], symbol: string) =>
   portfolios.filter(isLive).flatMap((portfolio) => {
     const holding = portfolio.holdings.find((h) => h.symbol === symbol)

@@ -18,6 +18,7 @@ import {
 import { FancyIcon } from "@/components/ui/fancy-icon"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
+import { DIRECTIONS } from "@/constants/components/portfolio-detail/add-funds-dialog"
 import {
   ADD_FUNDS_CHOICES,
   DEFAULT_ADD_FUNDS,
@@ -28,23 +29,15 @@ import {
 import { formatAmount, formatPercent, pluralize } from "@/lib/format"
 import { readAmount } from "@/lib/portfolios/amount"
 import { splitDeposit } from "@/lib/portfolios/deposit"
-import type { Portfolio } from "@/lib/portfolios/types"
 import { cn } from "@/lib/utils"
+import type { Portfolio } from "@/types/portfolios"
+import type { FundsDirection } from "@/types/ui"
 
 type AddFundsDialogProps = { portfolios: Portfolio[]; cap: number }
 
-type Direction = "add" | "remove"
-
-const DIRECTIONS: { value: Direction; label: string }[] = [
-  { value: "add", label: "Add" },
-  { value: "remove", label: "Remove" },
-]
-
-// Putting more money in, or taking cash out. With several portfolios, which one is asked first; then how much. The agent buys with it where the
-// rules leave room, after you have looked at where it goes.
 export function AddFundsDialog({ portfolios, cap }: AddFundsDialogProps) {
   const [open, setOpen] = useState(false)
-  const [direction, setDirection] = useState<Direction>("add")
+  const [direction, setDirection] = useState<FundsDirection>("add")
   const [text, setText] = useState(DEFAULT_ADD_FUNDS.toFixed(2))
   const [chosen, setChosen] = useState(portfolios[0]?.id)
   const portfolio = portfolios.find(({ id }) => id === chosen) ?? portfolios[0]
@@ -63,7 +56,7 @@ export function AddFundsDialog({ portfolios, cap }: AddFundsDialogProps) {
   })
   const amount = reading.amount ?? 0
   const { buys, invested, cash, fees } = splitDeposit(portfolio, adding ? amount : 0, cap)
-  const change = (next: Direction) => {
+  const change = (next: FundsDirection) => {
     setDirection(next)
     setText((next === "add" ? DEFAULT_ADD_FUNDS : Math.min(DEFAULT_ADD_FUNDS, portfolio.cash)).toFixed(2))
   }

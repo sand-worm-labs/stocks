@@ -27,7 +27,6 @@ import { TradePulse } from "./TradePulse"
 
 type TokenTableProps = { tokens: BaseToken[] }
 
-// A token with what its pool says right now
 type LiveToken = BaseToken & { liquidity?: number }
 
 const toFraction = (percent?: number) => (percent === undefined ? undefined : percent / 100)

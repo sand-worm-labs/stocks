@@ -1,7 +1,7 @@
 import { MAX_PLANNABLE_ANNUAL_RETURN, MIN_LOSS_LIMIT } from "@/constants/brief"
 
+import type { BriefAnalysis, BriefFields, BriefIssue, MissingField } from "@/types/brief"
 import { parseBrief } from "./parse"
-import type { BriefAnalysis, BriefFields, BriefIssue, MissingField } from "./types"
 
 const YEARS = { day: 1 / 365, week: 1 / 52, month: 1 / 12, year: 1 } as const
 const HORIZON_YEARS = { "Under 1 year": 0.5, "1–3 years": 2, "3+ years": 5 } as const
@@ -13,7 +13,6 @@ const number = (digits = "", scale = "") =>
 const replaceAt = (text: string, start: number, end: number, replacement: string) =>
   text.slice(0, start) + replacement + text.slice(end)
 
-// "20× in a week": what is asked for, over how long, and what that is a year
 function returnTarget(text: string, fields: BriefFields): BriefIssue | undefined {
   const pattern = new RegExp(
     String.raw`(${NUMBER})\s?(k)?\s?(?:usdc|usd|dollars)?\s+(?:into|to)\s+\$?(${NUMBER})\s?(k)?\s?(?:usdc|usd|dollars)?(?:\s*(?:by|in|within|over)\s+(?:the\s+)?(?:next\s+)?(\d+\s*)?(day|week|month|year)s?)?`,
@@ -44,7 +43,6 @@ function returnTarget(text: string, fields: BriefFields): BriefIssue | undefined
   }
 }
 
-// "8 stocks, each at least 15%": more than all of the money
 function positionsConflict(text: string): BriefIssue | undefined {
   const match = text.match(
     /(\d+)\s*(?:\w+\s+){0,2}?(?:stocks|positions|companies|names)\D{0,40}?(?:at least|min(?:imum)?(?: of)?|each)\D{0,10}?(\d{1,3})\s?%/i
@@ -87,7 +85,6 @@ function lossLimit(text: string, { loss }: BriefFields): BriefIssue | undefined 
 
 const FIELDS: MissingField[] = ["goal", "horizon", "loss", "budget"]
 
-// Whether a brief can be acted on: what was read in it, what is still to ask, and what can't be done as written
 export function analyzeBrief(text: string): BriefAnalysis {
   const fields = parseBrief(text)
   if (!text.trim()) return { status: "empty", fields, issues: [], missing: [] }

@@ -1,12 +1,8 @@
 import { PageHeader } from "@/components/PageHeader/PageHeader"
 import { Card } from "@/components/ui/card"
 
+import { DAYS, FILTERS } from "@/constants/components/skeleton/activity-skeleton"
 import { Skeleton, SkeletonPill, SkeletonText } from "./Skeleton"
-
-// The days, and how many events each had, as the list will show them
-const DAYS = [4, 3, 5]
-// The filters, each as wide as its label
-const FILTERS = ["w-[46px]", "w-[72px]", "w-[67px]", "w-[86px]", "w-[83px]"]
 
 function EventRow() {
   return (
@@ -21,8 +17,6 @@ function EventRow() {
   )
 }
 
-// The activity before its data: the title and its line are real, and the filters and the days of events are where they
-// will be
 export function ActivitySkeleton() {
   return (
     <div className="flex flex-col gap-6">

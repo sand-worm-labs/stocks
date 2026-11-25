@@ -13,8 +13,6 @@ import { StepHeading } from "./StepHeading"
 
 type ChecksStepProps = { region: string; chain: string; onContinue: () => void }
 
-// Whether they can trade tokenized stocks: where they live, a wallet, and USDC to buy with. Asked here, once, after
-// sign-up, and not before every portfolio. None of it blocks: without it they can still use paper trading.
 export function ChecksStep({ region, chain, onContinue }: ChecksStepProps) {
   return (
     <div className="flex w-full max-w-4xl flex-col items-center gap-6">

@@ -15,7 +15,6 @@ vi.mock("./tokens", () => ({ getBaseTokens: async () => [{ address: POOL.address
 vi.mock("./pools", () => ({ getAllPoolQuotes: async () => [POOL] }))
 
 const word = (value: bigint) => value.toString(16).padStart(64, "0")
-// 1 token bought for 100 USDC, in a V2 pool where the token is token0
 const log = {
   address: POOL.pair,
   topics: [V2_SWAP],
@@ -67,7 +66,11 @@ describe("swap feed", () => {
     expect(FakeSocket.instances).toHaveLength(1)
     const [socket] = FakeSocket.instances as [FakeSocket]
     socket.onopen?.()
-    expect(JSON.parse(socket.sent[0] as string)).toMatchObject({ method: "eth_subscribe" })
+    await vi.waitFor(() => expect(socket.sent).toHaveLength(1))
+    expect(JSON.parse(socket.sent[0] as string)).toMatchObject({
+      method: "eth_subscribe",
+      params: ["logs", { address: [POOL.pair] }],
+    })
 
     socket.onmessage?.({ data: JSON.stringify({ params: { result: log } }) })
     await vi.waitFor(() => expect(first).toHaveBeenCalledTimes(1))
@@ -87,7 +90,6 @@ describe("swap feed", () => {
     expect(socket.closed).toBe(false)
     vi.advanceTimersByTime(11_000)
     expect(socket.closed).toBe(true)
-    // Closing it on purpose is not a reason to connect again
     vi.advanceTimersByTime(60_000)
     expect(FakeSocket.instances).toHaveLength(1)
   })
@@ -104,7 +106,6 @@ describe("swap feed", () => {
 
     expect(swaps).toHaveLength(1)
     expect(swaps[0]).toMatchObject({ id: "0xabc:0x1", side: "buy" })
-    // One block (200 ms) behind the head
     expect(Date.now() - (swaps[0]?.at ?? 0)).toBeGreaterThanOrEqual(190)
   })
 })

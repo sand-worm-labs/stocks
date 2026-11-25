@@ -22,16 +22,13 @@ type Notifications = {
   inbox: Notification[]
   archived: Notification[]
   unread: number
-  // The moment the page is for, to say how long ago each came
   now: string
   isUnread: (id: string) => boolean
   isArchived: (id: string) => boolean
   read: (id: string) => void
   readAll: () => void
-  // One put away, and one brought back
   archive: (id: string) => void
   unarchive: (id: string) => void
-  // Every one that has been read, put away
   archiveRead: () => void
 }
 
@@ -45,8 +42,6 @@ type NotificationsProviderProps = {
   children: ReactNode
 }
 
-// The notifications, and what has been done with them, for the bell, the badge on Activity, the bar on a phone and the
-// alerts on the activity page. They all read the same, so they never disagree about what is new or put away.
 export function NotificationsProvider({ notifications, initialState, now, children }: NotificationsProviderProps) {
   const state = useNotificationState(initialState)
 

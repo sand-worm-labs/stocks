@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 
 import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 import { ReportSection } from "../ReportSection"
 

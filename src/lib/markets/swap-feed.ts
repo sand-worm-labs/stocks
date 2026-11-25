@@ -40,8 +40,6 @@ async function rpc<T>(method: string, params: unknown[]): Promise<T> {
 
 let pools: { at: number; byPair: Record<string, PoolQuote> } | undefined
 
-// Which pools the swaps are looked for in. Shared with the prices the page polls, so it costs no extra calls to the
-// feed.
 async function getPools() {
   if (pools && Date.now() - pools.at < POOLS_REFRESH_MS) return pools.byPair
 
@@ -54,13 +52,11 @@ async function getPools() {
 
 let history: { at: number; swaps: Promise<Swap[]> } | undefined
 
-// The swaps of the last hour in our pools, newest first
 export function getRecentSwaps(): Promise<Swap[]> {
   if (history && Date.now() - history.at < HISTORY_CACHE_MS) return history.swaps
 
   const swaps = (async () => {
     const byPair = await getPools()
-    // Newer pools are named by a 32-byte id the node can't be asked about, so only ordinary contract addresses are
     const addresses = Object.keys(byPair).filter((pair) => CONTRACT_ADDRESS.test(pair))
     if (!addresses.length) return []
 
@@ -89,7 +85,6 @@ export function getRecentSwaps(): Promise<Swap[]> {
   })()
 
   history = { at: Date.now(), swaps }
-  // A failed read isn't kept: the next ask tries again
   swaps.catch(() => {
     if (history?.swaps === swaps) history = undefined
   })
@@ -97,8 +92,6 @@ export function getRecentSwaps(): Promise<Swap[]> {
   return swaps
 }
 
-// One connection to the node, however many pages are listening. The node limits a subscription to ten addresses, so
-// it is asked for every swap on Base and ours are picked out here.
 const listeners = new Set<Listener>()
 let socket: WebSocket | undefined
 let retry = 0
@@ -109,16 +102,21 @@ function connect() {
   const ws = new WebSocket(BASE_WS_URL)
   socket = ws
 
-  ws.onopen = () => {
+  ws.onopen = async () => {
     retry = 0
-    ws.send(
-      JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "eth_subscribe",
-        params: ["logs", { topics: [[V3_SWAP, V2_SWAP]] }],
-      })
-    )
+    try {
+      const address = Object.keys(await getPools()).filter((pair) => CONTRACT_ADDRESS.test(pair))
+      ws.send(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "eth_subscribe",
+          params: ["logs", { address, topics: [[V3_SWAP, V2_SWAP]] }],
+        })
+      )
+    } catch {
+      ws.close()
+    }
   }
 
   ws.onmessage = async ({ data }) => {
@@ -134,9 +132,7 @@ function connect() {
       const pool = (await getPools())[log.address.toLowerCase()]
       const swap = pool && decodeSwap(log, pool)
       if (swap) listeners.forEach((listener) => listener(withId(swap, log)))
-    } catch {
-      // The pools couldn't be read just now: this swap is missed, the next ones are not
-    }
+    } catch {}
   }
 
   ws.onerror = () => ws.close()
@@ -155,7 +151,6 @@ function connect() {
   }
 }
 
-// Calls `listener` with each swap as it happens, until the returned function is called
 export function onSwap(listener: Listener) {
   listeners.add(listener)
   clearTimeout(idleTimer)

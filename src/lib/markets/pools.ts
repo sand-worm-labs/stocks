@@ -6,7 +6,6 @@ import { DEXSCREENER_URL } from "@/constants/markets"
 export type PoolQuote = {
   // The token's contract, lowercase
   address: string
-  // The pool it trades in, and what it is traded against
   pair: string
   quote: string
   price: number
@@ -41,9 +40,7 @@ async function getPairs(addresses: string[]) {
   return response.ok ? pairsSchema.parse(await response.json()) : []
 }
 
-// Prices straight from the pools the tokens trade in, which move as trades happen. A token with several pools is read
-// from the deepest.
-export async function getPoolQuotes(addresses: string[]): Promise<PoolQuote[]> {
+async function getPoolQuotes(addresses: string[]): Promise<PoolQuote[]> {
   const chunks = Array.from({ length: Math.ceil(addresses.length / ADDRESSES_PER_CALL) }, (_, i) =>
     addresses.slice(i * ADDRESSES_PER_CALL, (i + 1) * ADDRESSES_PER_CALL)
   )
@@ -73,9 +70,6 @@ const ALL_POOLS_MS = 10_000
 let allPools: { at: number; quotes: PoolQuote[] } | undefined
 let loadingPools: Promise<PoolQuote[]> | undefined
 
-// Every token's pool, kept for a few seconds so many readers share one round of calls to the feed. Quotes that have gone
-// stale are served at once and renewed in the background: the page's first paint never waits on the feed, and the
-// browser polls for fresher ones anyway. Only the very first read, with nothing to show yet, waits.
 export async function getAllPoolQuotes(addresses: string[]): Promise<PoolQuote[]> {
   if (allPools && Date.now() - allPools.at < ALL_POOLS_MS) return allPools.quotes
 

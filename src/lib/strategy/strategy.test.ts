@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 
+import type { Condition, History, Node, Strategy } from "@/types/strategy"
 import { backtest } from "./backtest"
 import { describeCondition } from "./describe"
 import { evaluate, symbolsOf } from "./evaluate"
 import { averageReturn, cumulativeReturn, ema, maxDrawdown, priceDeviation, rsi, sma, volatility } from "./indicators"
-import type { Condition, History, Node, Strategy } from "./types"
 
 const rising = (from: number, by: number, length: number) => Array.from({ length }, (_, i) => from + by * i)
 
@@ -176,7 +176,6 @@ describe("evaluate", () => {
   })
 
   it("takes the then-branch when the condition holds, and the else when it does not", () => {
-    // AAA keeps rising, so it is above its average
     expect(evaluate(gate(">"), history, 20)).toEqual({ CCC: 1 })
     expect(evaluate(gate("<"), history, 20)).toEqual({ BBB: 1 })
   })
@@ -224,7 +223,6 @@ describe("backtest", () => {
   })
 
   it("never acts on a price it could not have known", () => {
-    // Today's price spikes, but yesterday's data says to hold the other stock: the spike is not chased
     const strategy: Strategy = {
       name: "Chase",
       schedule: "daily",

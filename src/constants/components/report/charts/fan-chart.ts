@@ -1,0 +1,1 @@
+export const MONTH_TICKS = [0, 3, 6, 9, 12]

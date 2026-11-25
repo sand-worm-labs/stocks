@@ -1,12 +1,11 @@
 "use client"
 
 import { useLivePortfolios } from "@/components/Portfolios/useLivePortfolios"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Session } from "@/lib/session/types"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
 import { PortfolioPreviews } from "./PortfolioPreviews"
 
-// The model cards, each at its live value, and in the order of what each is worth now
 export function PortfolioPreviewsLive({
   portfolios,
   addresses,

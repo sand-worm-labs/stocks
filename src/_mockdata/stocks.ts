@@ -1,4 +1,4 @@
-import type { Stock } from "@/lib/markets/types"
+import type { Stock } from "@/types/markets"
 
 import { makeSeries } from "./series"
 

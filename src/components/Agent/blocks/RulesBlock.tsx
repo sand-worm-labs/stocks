@@ -1,7 +1,7 @@
 import { PiLockKey, PiWarningCircleFill } from "react-icons/pi"
 
 import { RuleNumber } from "@/components/Rules/RuleNumber"
-import type { AgentBlock } from "@/lib/agent/types"
+import type { AgentBlock } from "@/types/agent"
 
 import { BlockFrame } from "./BlockFrame"
 

@@ -1,26 +1,22 @@
 import { z } from "zod"
 
 import { formatCompactUsd, formatPercent } from "@/lib/format"
-import type { Stock } from "@/lib/markets/types"
-import type { Portfolio } from "@/lib/portfolios/types"
 import { describeCondition } from "@/lib/strategy/describe"
 import { plainCondition } from "@/lib/strategy/explain"
 import { conditionSchema } from "@/lib/strategy/schema"
-import type { Condition } from "@/lib/strategy/types"
+import type { Stock } from "@/types/markets"
+import type { Portfolio } from "@/types/portfolios"
+import type { Rule } from "@/types/rules"
+import type { Condition } from "@/types/strategy"
 
 import { readRules, type RuleReading } from "./readings"
-import type { Rule } from "./types"
-
-// The rules a portfolio is held to, as data: what is saved, edited as JSON and checked every trade against.
 
 export type RuleSpec =
-  // The most it may have put in
   | { type: "budget"; amount: number }
   // The most of the portfolio one stock may be, as a fraction
   | { type: "max-weight"; limit: number }
   // The least that a stock's pool must hold, in dollars
   | { type: "min-liquidity"; amount: number }
-  // Nothing is bought or sold without the owner's OK
   | { type: "approval" }
   // Sell a stock that has fallen this far, as a fraction, below what was paid for it
   | { type: "stop-loss"; limit: number }
@@ -29,10 +25,9 @@ export type RuleSpec =
   // Sell everything once the whole strategy has fallen this far, as a fraction, from its high, then stay in cash for `pause` trading
   // days. It is watched on the portfolio, apart from trades, and never holds a trade back.
   | { type: "portfolio-stop"; limit: number; pause?: number }
-  // A condition on the market, held to at the top level: never trade while it is true, or only trade while it is
   | { type: "condition"; mode: "never" | "only"; condition: Condition }
 
-export const ruleSchema: z.ZodType<RuleSpec> = z.union([
+const ruleSchema: z.ZodType<RuleSpec> = z.union([
   z.object({ type: z.literal("budget"), amount: z.number().positive() }).strict(),
   z.object({ type: z.literal("max-weight"), limit: z.number().gt(0).max(1) }).strict(),
   z.object({ type: z.literal("min-liquidity"), amount: z.number().positive() }).strict(),
@@ -51,7 +46,6 @@ export const ruleSchema: z.ZodType<RuleSpec> = z.union([
 
 export const rulesSchema = z.array(ruleSchema).max(20)
 
-// A rule in words
 export function describeRule(spec: RuleSpec) {
   switch (spec.type) {
     case "budget":
@@ -73,14 +67,12 @@ export function describeRule(spec: RuleSpec) {
   }
 }
 
-// Trading days in a month, to say a pause in months
-export const DEFAULT_PAUSE = 63
+const DEFAULT_PAUSE = 63
 const pauseWords = (days: number) => {
   const months = Math.round(days / 21)
   return months >= 1 ? `${months} ${months === 1 ? "month" : "months"}` : `${days} ${days === 1 ? "day" : "days"}`
 }
 
-// A rule as a line to a person, in the same words as the rest of the model's rules: a lead word and what follows it
 export function explainRule(spec: RuleSpec): { lead: "Never" | "Only" | "Always"; text: string } {
   switch (spec.type) {
     case "budget":
@@ -120,7 +112,6 @@ export function explainRule(spec: RuleSpec): { lead: "Never" | "Only" | "Always"
   }
 }
 
-// The rule as the page reads it, to be measured against the portfolio
 export function ruleOf(spec: RuleSpec, id: number): Rule {
   const label = describeRule(spec)
   switch (spec.type) {
@@ -143,7 +134,6 @@ export function ruleOf(spec: RuleSpec, id: number): Rule {
   }
 }
 
-// The other way: a rule that was read off the portfolio, as data. A rule that can't be measured has none.
 export function specOf({ kind, limit, pause, mode, condition }: Rule): RuleSpec | undefined {
   if (kind === "budget" && limit) return { type: "budget", amount: limit }
   if (kind === "max-weight" && limit) return { type: "max-weight", limit }
@@ -156,8 +146,6 @@ export function specOf({ kind, limit, pause, mode, condition }: Rule): RuleSpec 
   return undefined
 }
 
-// Each rule against where the portfolio is now: how much room it has, and whether it holds. A rule is broken when the
-// portfolio is past its line.
 export function checkRules(
   portfolio: Portfolio,
   specs: RuleSpec[],

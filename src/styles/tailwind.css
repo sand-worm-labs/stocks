@@ -95,6 +95,20 @@
   --primary-300: #c97ff5;
   --primary-700: #7a06b8;
   --primary-710: #8a06cc;
+  --brand: #a308f0;
+  --control-border: #d0d5dd;
+  --field-border: #eeeef1;
+  --allocation: #ee149e;
+  --info: #4779ff;
+  --dialog-surface: #f7f7f9;
+  --dialog-ink: #383c48;
+  --aura-ink: #b4cace;
+  --toggle-track: #eff1f2;
+  --sign-in-surface: #ffffff;
+  --swatch-light-page: #fdfdfd;
+  --swatch-light-block: #e7f3f6;
+  --swatch-dark-page: #09091b;
+  --swatch-dark-block: #352f37;
   --warning: #d85a30;
   --success: #22c55e;
   --link: #005de7;
@@ -155,9 +169,32 @@
   --primary-710: #fafafa;
   --link: #85b7eb;
   --search-bg: #2a2a2a;
+  --brand: #c97ff5;
+  --control-border: #383838;
+  --field-border: #383838;
+  --dialog-surface: #161616;
+  --dialog-ink: #ffffff;
+  --toggle-track: hsl(0 0% 7%);
+  --sign-in-surface: #141412;
+  --wallet-button: #2e2e2c;
 }
 
 @theme inline {
+  --color-brand: var(--brand);
+  --color-control-border: var(--control-border);
+  --color-field-border: var(--field-border);
+  --color-allocation: var(--allocation);
+  --color-info: var(--info);
+  --color-dialog-surface: var(--dialog-surface);
+  --color-dialog-ink: var(--dialog-ink);
+  --color-aura-ink: var(--aura-ink);
+  --color-toggle-track: var(--toggle-track);
+  --color-sign-in-surface: var(--sign-in-surface);
+  --color-wallet-button: var(--wallet-button);
+  --color-swatch-light-page: var(--swatch-light-page);
+  --color-swatch-light-block: var(--swatch-light-block);
+  --color-swatch-dark-page: var(--swatch-dark-page);
+  --color-swatch-dark-block: var(--swatch-dark-block);
   --color-mark: var(--mark);
   --color-mark-soft: var(--mark-soft);
   --color-primary: hsl(var(--primary));

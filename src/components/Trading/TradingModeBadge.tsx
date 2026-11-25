@@ -1,10 +1,9 @@
 import { TRADING_MODE_LABEL } from "@/constants/portfolio"
-import type { Session } from "@/lib/session/types"
 import { cn } from "@/lib/utils"
+import type { Session } from "@/types/session"
 
 type TradingModeBadgeProps = {
   mode: Session["network"]["mode"]
-  // "Paper trading" in full, where there is room, and "Paper" where there isn't
   long?: boolean
   className?: string
 }

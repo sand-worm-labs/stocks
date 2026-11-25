@@ -7,8 +7,6 @@ import { MAX_LENGTH } from "@/lib/chat/protocol"
 
 import { CommentIcon } from "./CommentIcon"
 
-// The box a message is written in, styled as the comment box in the main app: a rounded field that takes the accent when it is used, with
-// the send button inside it. Enter sends and Shift+Enter starts a new line.
 export function ChatComposer({
   symbol,
   disabled,
@@ -18,7 +16,6 @@ export function ChatComposer({
   symbol: string
   disabled?: boolean
   placeholder: string
-  // Says whether the message went
   onSend: (text: string) => boolean
 }) {
   const [draft, setDraft] = useState("")
@@ -51,7 +48,6 @@ export function ChatComposer({
             placeholder={placeholder}
             onKeyDown={onKeyDown}
             onChange={(event) => setDraft(event.target.value)}
-            // Grows with what is written, up to a few lines
             onInput={({ currentTarget }) => {
               currentTarget.style.height = "auto"
               currentTarget.style.height = `${Math.min(currentTarget.scrollHeight, 96)}px`

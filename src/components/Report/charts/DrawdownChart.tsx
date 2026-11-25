@@ -6,14 +6,12 @@ import { ChartFrame } from "@/components/Charts/ChartFrame"
 import { ChartTooltip } from "@/components/Charts/ChartTooltip"
 import { ResponsiveChart } from "@/components/Charts/ResponsiveChart"
 import { CHART_ANIMATION, CHART_COLORS } from "@/constants/chart"
+import { GRADIENT_ID } from "@/constants/components/report/charts/drawdown-chart"
 import { formatPercent } from "@/lib/format"
 import type { DrawdownRow } from "@/lib/report/performance"
 
-const GRADIENT_ID = "drawdown-fill"
-
 type DrawdownChartProps = { rows: DrawdownRow[]; panic: number }
 
-// How far below its peak the portfolio was, month by month, and the loss its owner said they'd panic at
 export function DrawdownChart({ rows, panic }: DrawdownChartProps) {
   const floor = Math.floor(Math.min(panic, ...rows.map(({ portfolio }) => portfolio)) * 10) / 10
 

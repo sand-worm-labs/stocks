@@ -3,7 +3,6 @@ import { PiPlus } from "react-icons/pi"
 import { AppLink } from "@/components/AppLink/AppLink"
 import { IconTile } from "@/components/ui/icon-tile"
 
-// A box in the grid of portfolios for making another: the same size as the rest, drawn as an empty place
 export function NewPortfolioCard() {
   return (
     <AppLink

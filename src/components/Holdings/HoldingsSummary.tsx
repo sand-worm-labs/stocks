@@ -10,9 +10,9 @@ import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import { formatPercent } from "@/lib/format"
 import type { AllocationSlice } from "@/lib/home/allocation"
-import type { Kpi } from "@/lib/home/types"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
+import type { Kpi } from "@/types/home"
 
 type HoldingsSummaryProps = {
   value: number
@@ -22,7 +22,6 @@ type HoldingsSummaryProps = {
   figures: Kpi[]
 }
 
-// What is held in stocks across every model, how much of it each model has, and the figures that go with it
 export function HoldingsSummary({ value, gain, gainRate, slices, figures }: HoldingsSummaryProps) {
   return (
     <Card className="overflow-hidden bg-[radial-gradient(60%_70%_at_100%_0%,var(--mark-soft),transparent),radial-gradient(45%_50%_at_0%_100%,rgba(16,185,129,0.08),transparent)]">

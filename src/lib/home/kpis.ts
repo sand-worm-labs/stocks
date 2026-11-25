@@ -1,10 +1,10 @@
 import { formatAmount, formatPercent, formatSignedAmount, pluralize } from "@/lib/format"
 import { deposited } from "@/lib/portfolios/performance"
 import { isLive, portfolioValue } from "@/lib/portfolios/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
 import { changeTone } from "@/lib/tone"
 
-import type { Kpi } from "./types"
+import type { Kpi } from "@/types/home"
+import type { Portfolio } from "@/types/portfolios"
 
 const sum = (numbers: number[]) => numbers.reduce((total, n) => total + n, 0)
 

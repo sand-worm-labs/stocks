@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import type { Condition, Indicator, Node, Strategy } from "./types"
+import type { Condition, Indicator, Node, Strategy } from "@/types/strategy"
 
 // Strategies as JSON: what is saved, sent to the agent and shared. Anything read in goes through here first, so a strategy
 // that gets as far as the engine or the canvas is one they can run.
@@ -85,9 +85,8 @@ export const strategySchema: z.ZodType<Strategy> = z
   .object({ name: z.string().min(1).max(80), schedule: z.enum(["daily", "weekly", "monthly"]), root: node })
   .strict()
 
-export type ParsedStrategy = { ok: true; strategy: Strategy } | { ok: false; error: string }
+type ParsedStrategy = { ok: true; strategy: Strategy } | { ok: false; error: string }
 
-// JSON in: text or something already read, checked, and either a strategy or what is wrong with it
 export function parseStrategy(input: unknown): ParsedStrategy {
   let value = input
   if (typeof input === "string") {
@@ -103,5 +102,4 @@ export function parseStrategy(input: unknown): ParsedStrategy {
   return { ok: false, error: `${issue?.path.join(".") || "strategy"}: ${issue?.message ?? "is not valid"}` }
 }
 
-// JSON out
 export const serializeStrategy = (strategy: Strategy) => JSON.stringify(strategy, null, 2)

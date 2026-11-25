@@ -4,32 +4,23 @@ import type { ReactNode } from "react"
 
 import { Slider } from "@/components/ui/slider"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
+import { BUTTON } from "@/constants/components/money/amount-field"
 import type { AmountReading } from "@/lib/portfolios/amount"
 import { cn } from "@/lib/utils"
 
 type AmountFieldProps = {
   id: string
   label: string
-  // What is typed, and how to change it
   text: string
   onText: (text: string) => void
-  // What it reads as, from `readAmount`
   reading: AmountReading
   min: number
   max: number
-  // Amounts to jump to, with Min and Max always there
   quick?: { label: string; amount: number }[]
-  // A slider from nothing to the most. Left out where the most is too big to be a useful scale.
   slider?: boolean
-  // Something small at the end of the buttons, such as what the amount comes to in units
   note?: ReactNode
 }
 
-const BUTTON =
-  "border-border-secondary text-ink-200 hover:text-ink-100 hover:bg-hover-bg dark:border-border-tertiary rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-
-// The way to say how much, the same for adding and removing funds, buying and selling: a box to type in, with the coin,
-// buttons for the least, the most and amounts between, a slider, and what is wrong in words when it can't be used
 export function AmountField({
   id,
   label,

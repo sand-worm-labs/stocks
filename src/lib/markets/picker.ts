@@ -1,10 +1,8 @@
+import type { Stock, StockCategory } from "@/types/markets"
 import { summarizeCategory } from "./category"
-import type { Stock, StockCategory } from "./types"
 
-export type PickerGroup = { category: StockCategory; buyable: Stock[]; liquidity: number; shown: Stock[] }
+type PickerGroup = { category: StockCategory; buyable: Stock[]; liquidity: number; shown: Stock[] }
 
-// What the picker shows for what was typed. A category is shown when its name or any of its stocks match, and a stock
-// when its symbol or name does, or when its category's name does.
 export function filterPicker(query: string, stocks: Stock[], categories: StockCategory[]) {
   const needle = query.trim().toLowerCase()
   const matches = ({ symbol, name }: Stock) => `${symbol} ${name}`.toLowerCase().includes(needle)
@@ -25,6 +23,5 @@ export function filterPicker(query: string, stocks: Stock[], categories: StockCa
   }
 }
 
-// The categories that hold a stock, among those picked
 export const pickedWith = (symbol: string, categories: StockCategory[], pickedIds: Set<string>) =>
   categories.find(({ id, symbols }) => pickedIds.has(id) && symbols.includes(symbol))

@@ -4,9 +4,8 @@ import { PiPlay } from "react-icons/pi"
 
 import { buttonVariants } from "@/components/Button/Button"
 
-import { TOUR_EVENT } from "./ProductTour"
+import { TOUR_EVENT } from "@/constants/components/tour/product-tour"
 
-// Starts the guided tour again from its first step
 export function ReplayTourButton() {
   return (
     <button

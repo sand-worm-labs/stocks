@@ -1,9 +1,8 @@
 import { SWAP_FEE_RATE } from "@/constants/trade"
 
+import type { Portfolio } from "@/types/portfolios"
 import { portfolioValue } from "./portfolio"
-import type { Portfolio } from "./types"
 
-// The most that can go into a stock you hold: the cash there is, and no more than leaves it at its cap
 export function buyRoom(portfolio: Portfolio, symbol: string, cap: number) {
   const holding = portfolio.holdings.find((h) => h.symbol === symbol)
   if (!holding) return 0
@@ -12,7 +11,6 @@ export function buyRoom(portfolio: Portfolio, symbol: string, cap: number) {
   return Math.max(Math.min(portfolio.cash, cap * total - holding.value), 0)
 }
 
-// What putting an amount into a stock would do: the fee, how much of it that buys, and how much of the portfolio it is after
 export function quoteBuy(portfolio: Portfolio, symbol: string, amount: number) {
   const holding = portfolio.holdings.find((h) => h.symbol === symbol)
   if (!holding) return undefined

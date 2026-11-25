@@ -9,7 +9,6 @@ export function tickerOf({ issuer, symbol }: BaseToken) {
   return issuer === "Coinbase" ? symbol.slice(0, -1) : issuer === "Dinari" ? symbol : undefined
 }
 
-// The same, where the share is traded on an exchange and so has a chart
 export function shareTicker(token: BaseToken) {
   const ticker = tickerOf(token)
   return ticker && !PRE_IPO_TICKERS.includes(ticker) ? ticker : undefined

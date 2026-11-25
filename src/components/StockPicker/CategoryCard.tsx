@@ -2,8 +2,8 @@ import { Money } from "@/components/Money/Money"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import type { Stock, StockCategory } from "@/lib/markets/types"
 import { cn } from "@/lib/utils"
+import type { Stock, StockCategory } from "@/types/markets"
 
 type CategoryCardProps = {
   category: StockCategory

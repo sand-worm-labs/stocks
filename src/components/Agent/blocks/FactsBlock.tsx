@@ -1,4 +1,4 @@
-import type { AgentBlock } from "@/lib/agent/types"
+import type { AgentBlock } from "@/types/agent"
 
 import { BlockFrame } from "./BlockFrame"
 

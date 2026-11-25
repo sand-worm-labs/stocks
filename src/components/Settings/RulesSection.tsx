@@ -1,7 +1,7 @@
 import { Switch } from "@/components/ui/switch"
 import { MAX_PER_STOCK_CHOICES, MIN_LIQUIDITY_CHOICES } from "@/constants/settings"
 import { formatCompactUsd, formatPercent } from "@/lib/format"
-import type { Settings } from "@/lib/settings/types"
+import type { Settings } from "@/types/settings"
 
 import { SettingRow } from "./SettingRow"
 import { SettingSelect } from "./SettingSelect"

@@ -3,26 +3,10 @@ import { PiPlus, PiX } from "react-icons/pi"
 
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { SegmentedControl } from "@/components/ui/segmented-control"
+import { DEFAULT_DAYS, FIELD, INDICATORS } from "@/constants/components/strategy/filter-fields"
 import type { FilterBlock, FilterChange } from "@/lib/strategy/edit"
-import type { Indicator } from "@/lib/strategy/types"
 import { cn } from "@/lib/utils"
-
-export const FIELD =
-  "nodrag nopan border-hover-border bg-hover-bg focus-visible:ring-mark rounded-lg border text-[13px] font-medium outline-none focus-visible:ring-2 dark:bg-white/10"
-
-export const INDICATORS: { kind: Indicator["kind"]; label: string }[] = [
-  { kind: "return", label: "return" },
-  { kind: "sma-return", label: "average daily move" },
-  { kind: "rsi", label: "RSI" },
-  { kind: "volatility", label: "volatility" },
-  { kind: "drawdown", label: "worst fall" },
-  { kind: "sma", label: "average price" },
-  { kind: "ema", label: "weighted average price" },
-  { kind: "std-price", label: "price spread" },
-  { kind: "price", label: "price" },
-]
-
-export const DEFAULT_DAYS = 30
+import type { Indicator } from "@/types/strategy"
 
 // A whole number that is typed in, taken when Enter is pressed or the field is left; a wrong entry goes back to what it was
 export function WholeField({
@@ -67,7 +51,6 @@ export function WholeField({
   )
 }
 
-// The line a filter reads as, with each part of it a field: best or worst, how many, by what measure and over how many days
 export function FilterFields({ filter, onChange }: { filter: FilterBlock; onChange: (change: FilterChange) => void }) {
   const { pick, count, by } = filter
   const days = "days" in by ? by.days : DEFAULT_DAYS
@@ -122,8 +105,6 @@ export function FilterFields({ filter, onChange }: { filter: FilterBlock; onChan
   )
 }
 
-// What the filter chooses from, and how what it picks is weighted: a row of logos, each with a way to take it out and one more
-// to add, and the weighting as a switch at the end
 export function FilterPool({
   filter,
   choices,
@@ -191,7 +172,6 @@ export function FilterPool({
   )
 }
 
-// A number, possibly with a decimal point or a minus, that is typed in and taken when Enter is pressed or the field is left
 export function DecimalField({
   value,
   label,

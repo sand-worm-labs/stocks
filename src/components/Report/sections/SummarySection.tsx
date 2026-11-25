@@ -3,7 +3,6 @@ import { AppLink } from "@/components/AppLink/AppLink"
 type SummarySectionProps = {
   summary: string[]
   portfolioId: string
-  // Whether to point at the version with less risk
   suggestAdapt: boolean
 }
 

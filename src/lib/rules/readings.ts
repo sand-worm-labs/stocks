@@ -1,20 +1,17 @@
 import { formatCompactUsd, formatPercent } from "@/lib/format"
-import type { Stock } from "@/lib/markets/types"
 import { portfolioValue } from "@/lib/portfolios/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
-
 import { holds } from "@/lib/strategy/evaluate"
-import type { Condition, History } from "@/lib/strategy/types"
+import type { Stock } from "@/types/markets"
+import type { Portfolio } from "@/types/portfolios"
 
-import type { Rule } from "./types"
+import type { Rule } from "@/types/rules"
+import type { Condition, History } from "@/types/strategy"
 
 export type RuleReading = {
   rule: Rule
-  // What the portfolio is at, against the rule's line, in words
   reading: string
   // How close to the line: 1 is on it. Missing for a rule with no line to be close to.
   closeness?: number
-  // A rule with no line to be close to, such as a condition, that is broken outright
   broken?: boolean
 }
 
@@ -42,7 +39,6 @@ export const isExitRule = ({ kind }: Rule) =>
   kind === "stop-loss" || kind === "take-profit" || kind === "portfolio-stop"
 export const isExit = ({ rule }: RuleReading) => isExitRule(rule)
 
-// The readings with the exit rules first and the rest after them, each in the order it was in
 export const exitsFirst = (readings: RuleReading[]) => [
   ...readings.filter(isExit),
   ...readings.filter((r) => !isExit(r)),
@@ -50,7 +46,6 @@ export const exitsFirst = (readings: RuleReading[]) => [
 
 export const maxWeightOf = (rules: Rule[]) => rules.find(({ kind }) => kind === "max-weight")?.limit
 
-// Each rule set against where the portfolio is now, so a rule shows how much room it has, not only that it holds
 export function readRules(
   portfolio: Portfolio,
   rules: Rule[],
@@ -90,7 +85,6 @@ export function readRules(
         closeness: limit / thinnestLiquidity,
       }
     }
-    // What each stock has made or lost on what was paid for it: the worst against a stop-loss, the best against a take-profit
     if ((kind === "stop-loss" || kind === "take-profit") && limit) {
       const made = portfolio.holdings
         .filter(({ cost }) => cost > 0)
@@ -101,11 +95,9 @@ export function readRules(
       return {
         rule,
         reading: `${kind === "stop-loss" ? "Worst" : "Best"} is ${made.symbol} at ${formatPercent(made.change, { signed: true })}`,
-        // Past its line the stock should already have been sold, so the rule is not being kept
         closeness: closeness >= 1 ? 1.001 : closeness,
       }
     }
-    // The whole strategy against its own high: how far down it is, against the line at which everything is sold
     if (kind === "portfolio-stop" && limit) {
       const series = portfolio.series.filter((value) => value > 0)
       if (series.length < 2) return { rule, reading: "There is no history yet to check this against" }

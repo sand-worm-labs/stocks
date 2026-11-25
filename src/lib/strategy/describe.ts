@@ -1,4 +1,4 @@
-import type { Condition, Indicator, Reading } from "./types"
+import type { Condition, Indicator, Reading } from "@/types/strategy"
 
 export const describeIndicator = (indicator: Indicator) => {
   switch (indicator.kind) {
@@ -23,9 +23,8 @@ export const describeIndicator = (indicator: Indicator) => {
   }
 }
 
-export const describeReading = ({ symbol, indicator }: Reading) => `${symbol} ${describeIndicator(indicator)}`
+const describeReading = ({ symbol, indicator }: Reading) => `${symbol} ${describeIndicator(indicator)}`
 
-// A condition as a sentence: "AAPLc price is above AAPLc 50-day average"
 export function describeCondition(condition: Condition): string {
   if ("all" in condition) return condition.all.map(describeCondition).join(" and ")
   if ("any" in condition)

@@ -1,14 +1,12 @@
 import { WebSocket, WebSocketServer } from "ws"
 import { randomUUID } from "node:crypto"
 
-
 import { readChatTicket } from "@/lib/auth/token"
 import { type ChatMessage, cleanText, isRoom, nameOf, sayMessage, type ServerEvent } from "@/lib/chat/protocol"
 
 // How many messages a room remembers for whoever comes in next, and the least time between one person's messages
 const KEPT = 100
 const GAP_MS = 700
-const BEAT_MS = 30_000
 
 // Whatever arrives from a browser is not trusted: text that isn't JSON is nothing, and doesn't stop the server
 const parse = (data: unknown): unknown => {
@@ -25,12 +23,11 @@ const send = (socket: WebSocket, event: ServerEvent) => {
 
 // A room for each token, kept only while the server runs. Whoever opens the connection has to bring a ticket from the app, which says
 // who they are; what they write is passed to everyone in the room, and the room remembers the last few for those who come later.
-export function createChatServer(port: number) {
-  const server = new WebSocketServer({ port, maxPayload: 2048 })
+export function createChat() {
+  const server = new WebSocketServer({ noServer: true, maxPayload: 2048 })
   const rooms = new Map<string, Set<WebSocket>>()
   const history = new Map<string, ChatMessage[]>()
   const who = new WeakMap<WebSocket, string>()
-  const alive = new WeakSet<WebSocket>()
 
   // People, not tabs: someone with the page open twice is one in the room
   const online = (room: string) => new Set([...(rooms.get(room) ?? [])].map((socket) => who.get(socket))).size
@@ -47,7 +44,6 @@ export function createChatServer(port: number) {
     if (socket.readyState !== WebSocket.OPEN) return
 
     who.set(socket, userId)
-    alive.add(socket)
     rooms.set(room, (rooms.get(room) ?? new Set()).add(socket))
     send(socket, {
       type: "hello",
@@ -58,7 +54,6 @@ export function createChatServer(port: number) {
     tell(room, { type: "online", count: online(room) })
 
     let last = 0
-    socket.on("pong", () => alive.add(socket))
     socket.on("message", (data) => {
       const said = sayMessage.safeParse(parse(data))
       const text = said.success ? cleanText(said.data.text) : undefined
@@ -77,16 +72,6 @@ export function createChatServer(port: number) {
       else tell(room, { type: "online", count: online(room) })
     })
   })
-
-  // A connection that stops answering is dropped, so the room doesn't count people who have gone
-  const beat = setInterval(() => {
-    server.clients.forEach((socket) => {
-      if (!alive.has(socket)) return socket.terminate()
-      alive.delete(socket)
-      socket.ping()
-    })
-  }, BEAT_MS)
-  server.on("close", () => clearInterval(beat))
 
   return server
 }

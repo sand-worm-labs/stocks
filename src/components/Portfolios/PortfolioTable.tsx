@@ -11,28 +11,22 @@ import { Sparkline } from "@/components/Sparkline/Sparkline"
 import { TradingModeBadge } from "@/components/Trading/TradingModeBadge"
 import { DataTable } from "@/components/ui/data-table"
 import { routeHref } from "@/config/routes"
+import { EMPTY, PAGE_SIZE, PAGE_SIZES } from "@/constants/components/portfolios/portfolio-table"
 import { PORTFOLIO_STATUS } from "@/constants/portfolio"
 import { TONE_DOT_CLASSNAME, TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import { formatDay } from "@/lib/dates"
 import { formatPercent } from "@/lib/format"
 import { profit, returnOnDeposit } from "@/lib/portfolios/performance"
 import { isLive, portfolioValue, statusText } from "@/lib/portfolios/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Session } from "@/lib/session/types"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
 import { PortfolioIcon } from "./PortfolioIcon"
 
-const EMPTY = "—"
-
-// Forty models are a long page; ten at a time, with more to a page for anyone who wants it
-const PAGE_SIZE = 10
-const PAGE_SIZES = [10, 25, 50]
-
 const column = createColumnHelper<Portfolio>()
 
-// A figure only a live portfolio has, shown as a dash for the rest
 const live = <T,>(portfolio: Portfolio, figure: (portfolio: Portfolio) => T) =>
   isLive(portfolio) ? figure(portfolio) : undefined
 

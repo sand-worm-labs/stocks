@@ -1,7 +1,4 @@
-// How the browser asks the API to change a strategy. Each is one request, and each throws an error whose message is fit to show.
-// The API is this app's own for now; pointing these at the main app's API later changes this file and nothing else.
-
-export class ApiError extends Error {
+class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number
@@ -21,7 +18,7 @@ async function call<T>(path: string, method: "POST" | "PATCH", body?: unknown): 
   return data as T
 }
 
-export type TradeRequest =
+type TradeRequest =
   | { mode: "paper"; amount: number }
   | { mode: "live"; amount: number; address: string; expires: string; signature: string }
 

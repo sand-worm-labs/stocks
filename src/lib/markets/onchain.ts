@@ -24,7 +24,6 @@ const call = async (to: string, data: string) => {
 
 const supplies = new Map<string, { at: number; supply: TokenSupply }>()
 
-// How many of a token exist and how finely it divides, read from the contract itself
 export async function getTokenSupply(address: string): Promise<TokenSupply | undefined> {
   const cached = supplies.get(address)
   if (cached && Date.now() - cached.at < SUPPLY_CACHE_MS) return cached.supply
@@ -41,7 +40,6 @@ export async function getTokenSupply(address: string): Promise<TokenSupply | und
 
 let ethPrice: { at: number; usd: number } | undefined
 
-// What one ETH is worth in dollars, to price a token in ETH as well
 export async function getEthPrice(): Promise<number | undefined> {
   if (ethPrice && Date.now() - ethPrice.at < ETH_CACHE_MS) return ethPrice.usd
 
@@ -72,18 +70,16 @@ const callRaw = async (to: string, data: string) => {
   return rpcSchema.parse(await response.json()).result
 }
 
-// A string an ABI-encoded call returns: where it starts, how long it is, then its bytes
 function decodeString(hex: string) {
   const body = hex.slice(2)
   const length = parseInt(body.slice(64, 128), 16)
   return Buffer.from(body.slice(128, 128 + length * 2), "hex").toString("utf8")
 }
 
-export type TokenContract = TokenSupply & { name: string; symbol: string }
+type TokenContract = TokenSupply & { name: string; symbol: string }
 
 const contracts = new Map<string, TokenContract>()
 
-// What a token's contract says about itself
 export async function getTokenContract(address: string): Promise<TokenContract | undefined> {
   const known = contracts.get(address)
   if (known) return known

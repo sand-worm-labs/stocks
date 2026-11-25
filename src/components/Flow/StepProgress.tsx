@@ -7,12 +7,9 @@ import { cn } from "@/lib/utils"
 
 type StepProgressProps = {
   current: FlowStepId
-  // The portfolio the steps belong to. Without one (the brief step), done steps have nothing to link back to.
   portfolioId?: string
 }
 
-// Where the person is in the flow: a numbered circle for each step, joined by a line. A step done is a tick, the one
-// they are on is filled, and the ones to come are outlined. Labels are medium weight throughout, centred on the page.
 export function StepProgress({ current, portfolioId }: StepProgressProps) {
   const index = FLOW_STEPS.findIndex(({ id }) => id === current)
 

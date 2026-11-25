@@ -38,7 +38,6 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
           label: value === "alerts" ? <AlertsFilterLabel /> : ACTIVITY_FILTER_LABEL[value],
         }))}
       />
-      {/* The alerts are the notifications: they can be read, put away and brought back */}
       {filter === "alerts" ? (
         <AlertsView activity={events} now={session.now} portfolioNames={portfolioNames} />
       ) : (

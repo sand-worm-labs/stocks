@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils"
 
 type ReportSectionProps = {
   title: string
-  // Whether the section comes from a Sandworm notebook, and so can be opened there
   notebook?: boolean
   className?: string
   children: ReactNode

@@ -6,12 +6,12 @@ import { useEffect, useRef, useState } from "react"
 
 import { ChartLoader } from "@/components/Charts/ChartLoader"
 
+import { LINE } from "@/constants/components/token-line-chart/token-line-chart"
 import { cn } from "@/lib/utils"
 
 type TokenLineChartProps = {
   // Oldest first, evenly spaced, the last of them now
   series: number[]
-  // The time between one point and the next
   stepSeconds: number
   tone: "positive" | "negative"
   label: string
@@ -20,9 +20,6 @@ type TokenLineChartProps = {
 
 const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
-const LINE = { positive: "#059669", negative: "#dc2626" } as const
-
-// TradingView's own line chart, with a crosshair and a price scale, for a series of prices
 export function TokenLineChart({ series, stepSeconds, tone, label, className }: TokenLineChartProps) {
   const container = useRef<HTMLDivElement>(null)
   const { resolvedTheme } = useTheme()

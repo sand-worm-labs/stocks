@@ -1,17 +1,10 @@
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
+import { BAR_SCALE, HEAVY, ROW } from "@/constants/components/report/sections/concentration-section"
 import { formatPercent } from "@/lib/format"
-import type { Report } from "@/lib/report/types"
 import { cn } from "@/lib/utils"
+import type { Report } from "@/types/report"
 
 import { ReportSection, SectionIntro } from "../ReportSection"
-
-// A stock carrying this much of the risk is drawn as the problem
-const HEAVY = 0.25
-// The risk bars are drawn out of this, so the largest doesn't fill the row
-const BAR_SCALE = 0.4
-
-const ROW =
-  "grid grid-cols-[84px_44px_minmax(0,1fr)_40px] items-center gap-2.5 sm:grid-cols-[100px_52px_minmax(0,1fr)_44px]"
 
 export function ConcentrationSection({ concentration }: { concentration: Report["concentration"] }) {
   return (

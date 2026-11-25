@@ -18,7 +18,6 @@ type Approval = {
   address: Hex
   // The most the strategy may use of the wallet's USDC, fees included
   limit: number
-  // When the approval stops being good, as an ISO time
   expires: string
 }
 
@@ -34,8 +33,6 @@ export const approvalMessage = ({ strategyId, address, limit, expires }: Approva
     `Nothing is sent by signing this. The approval ends ${expires}.`,
   ].join("\n")
 
-// Proves a person has approved a strategy to trade from their own wallet, from the chain and not from the browser's word: the approval is
-// still good, the wallet's owner signed exactly these words, and the wallet holds the USDC. Nothing is moved or kept. Returns the balance.
 export async function verifyApproval(chain: Chain, approval: Approval & { signature: Hex }, now = new Date()) {
   const refuse = (message: string): never => {
     throw new StrategyError(message, 422)

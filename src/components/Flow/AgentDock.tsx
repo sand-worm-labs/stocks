@@ -9,8 +9,6 @@ import { cn } from "@/lib/utils"
 
 type AgentDockProps = { aside: ReactNode; children: ReactNode }
 
-// An agent that stays out of the way until it is asked for: a button in the corner opens it as a panel at the edge, and
-// the page makes room. Closing hides it and keeps the conversation, so opening it again carries on from where it was.
 export function AgentDock({ aside, children }: AgentDockProps) {
   const [open, setOpen] = useState(false)
   // Not drawn until the first time it is opened, so it starts its conversation when it is wanted

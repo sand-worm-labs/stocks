@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
+import type { Strategy } from "@/types/strategy"
 import { foldablePaths, INDENT, toGraph } from "./graph"
 import { getStrategy } from "../source"
-import type { Strategy } from "../types"
 
 const hold = (symbol: string): Strategy => ({ name: "Hold", schedule: "monthly", root: { type: "asset", symbol } })
 

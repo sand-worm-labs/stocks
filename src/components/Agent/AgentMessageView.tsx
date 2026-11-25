@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@/lib/agent/types"
+import type { AgentMessage } from "@/types/agent"
 
 import { AgentThinking } from "./AgentThinking"
 import { BlockView } from "./blocks/registry"
@@ -6,7 +6,6 @@ import { MessageActions } from "./MessageActions"
 
 type AgentMessageViewProps = {
   message: AgentMessage
-  // Whether the agent is shown at work for a moment before it answers
   thinking?: boolean
 }
 

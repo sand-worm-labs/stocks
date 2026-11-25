@@ -1,20 +1,16 @@
 "use client"
 
-import { buttonVariants } from "@/components/Button/Button"
 import { CheckRow } from "@/components/Check/CheckRow"
 import { appChainById } from "@/constants/chains"
+import { ACTION } from "@/constants/components/wallet/wallet-check-row"
 import { shortenAddress } from "@/lib/format"
 
 import { ConnectWalletButton } from "./ConnectWalletButton"
 import { useWallet } from "./WalletContext"
 
-const ACTION = buttonVariants({ intent: "outline", size: "sm", className: "min-h-9 min-w-0 px-3" })
-
-// The check of whether a wallet is ready to buy with, from what Dynamic says is connected right now
 export function WalletCheckRow({ chain }: { chain: string }) {
   const { status, address, network } = useWallet("now")
 
-  // The network the wallet is on, when it is one of ours; the one the app expects until it has connected
   const current = appChainById(network)
   const name = current?.name ?? chain
   const testnet = current?.testnet ?? true

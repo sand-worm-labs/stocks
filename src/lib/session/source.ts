@@ -8,9 +8,8 @@ import { getSignedInUserId } from "@/lib/auth/session"
 import { readOnboarding } from "@/lib/onboarding/profile"
 import { isCountryCode } from "@/lib/region/countries"
 
-import type { Session } from "./types"
+import type { Session } from "@/types/session"
 
-// Where the owner said they live, until there is an account to keep it in. Outside a request there is no cookie to read.
 async function savedRegion() {
   try {
     const value = (await cookies()).get(REGION_COOKIE)?.value
@@ -20,7 +19,6 @@ async function savedRegion() {
   }
 }
 
-// Paper trading, or their wallet: what they last chose in the trading mode menu
 async function savedMode(): Promise<keyof typeof TRADING_MODE_LABEL> {
   try {
     return (await cookies()).get(TRADING_MODE_COOKIE)?.value === "live" ? "live" : "paper"

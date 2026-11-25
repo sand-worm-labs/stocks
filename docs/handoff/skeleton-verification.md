@@ -13,7 +13,7 @@ shows where, and **that restructure has not been re-checked in a browser** becau
 ### Still open
 
 1. **Re-run the six checked pages**, because the route restructure touched Markets, Market summary and Portfolios.
-2. **Token page** (`/markets/[symbol]`, `TokenSkeleton`). Before the restructure, opening it showed the *Markets table* skeleton
+2. **Token page** (`/markets/[symbol]`, `TokenSkeleton`). Before the restructure, opening it showed the _Markets table_ skeleton
    first: the wrong one. The restructure is meant to fix that. Not yet seen to work.
 3. **Portfolio detail** (`/portfolios/robotics-20`, and its Rules and Activity tabs, `PortfolioSkeleton`). Never checked.
 4. **Home** (`HomeSkeleton`). Never run through the swap check.
@@ -35,7 +35,7 @@ switches off for reduced motion.
 move), `SkeletonAvatar`, `SkeletonPill`, `SkeletonTable` (header 49 px and rows 73 px, the real heights, built from the real
 table parts), `SkeletonShell` (wraps every `loading.tsx`: screen-reader status plus `SkeletonScope`), `SkeletonScope`.
 
-**One skeleton per page**, shaped like it. Static parts are the *real* components, not placeholders, so they do not change when
+**One skeleton per page**, shaped like it. Static parts are the _real_ components, not placeholders, so they do not change when
 the page arrives: titles, descriptions, tabs, search boxes, `MarketTabs`, `HoldingsTabs`, `TokenTabs`, `PortfolioTabs`,
 `BackLink`. Only data is a placeholder. Sizes come from measuring the real pages in the browser, not from guessing.
 `HoldingsSkeleton`, `TokenSkeleton` and `PortfolioSkeleton` are client components that read the address
@@ -47,22 +47,22 @@ for 0.7 s after (in a layout effect, so it is set in the same commit that swaps 
 animations **instant** (`animation-duration: 0s; animation-delay: 0s`). It must **not** be `animation: none`: that was tried,
 and when the attribute is removed the animation starts over from opacity 0, so the page fades in a second time 0.7 s after.
 
-**Route structure.** Next shows the *outermost new* `loading.tsx`, so a `loading.tsx` on a segment that also contains other
+**Route structure.** Next shows the _outermost new_ `loading.tsx`, so a `loading.tsx` on a segment that also contains other
 pages makes those pages show the wrong skeleton. So every page has its own and none is shared by sibling pages, using route
 groups (they do not change URLs):
 
-| Page | File | Skeleton |
-|---|---|---|
-| Home `/` | `app/(app)/(home)/page.tsx` + `loading.tsx` | `HomeSkeleton` |
-| `/markets` | `app/(app)/markets/(list)/` | `MarketsSkeleton` |
-| `/markets/summary` | `markets/summary/loading.tsx` | `MarketSummarySkeleton` (in `MarketsSkeleton.tsx`) |
-| `/markets/[symbol]` | `markets/[symbol]/loading.tsx` | `TokenSkeleton` (+ `TabSkeleton` inside the page's `Suspense`) |
-| `/portfolios` | `portfolios/(list)/` | `PortfoliosSkeleton` |
-| `/portfolios/[id]` | `portfolios/[id]/(overview)/` | `PortfolioSkeleton` |
-| `/portfolios/[id]/rules`, `/activity` | their own `loading.tsx` | `PortfolioSkeleton` (reads the tab from the path) |
-| `/portfolios/[id]/report`, `buy`, `adapt`, `research`, `/portfolios/new` | their own `loading.tsx` | generic `PageSkeleton` |
-| `/holdings`, `/activity`, `/settings` | their own `loading.tsx` | `HoldingsSkeleton`, `ActivitySkeleton`, `SettingsSkeleton` |
-| anything else in the app | `app/(app)/loading.tsx` | generic `PageSkeleton` (also shown when entering the app from outside) |
+| Page                                                                     | File                                        | Skeleton                                                               |
+| ------------------------------------------------------------------------ | ------------------------------------------- | ---------------------------------------------------------------------- |
+| Home `/`                                                                 | `app/(app)/(home)/page.tsx` + `loading.tsx` | `HomeSkeleton`                                                         |
+| `/markets`                                                               | `app/(app)/markets/(list)/`                 | `MarketsSkeleton`                                                      |
+| `/markets/summary`                                                       | `markets/summary/loading.tsx`               | `MarketSummarySkeleton` (in `MarketsSkeleton.tsx`)                     |
+| `/markets/[symbol]`                                                      | `markets/[symbol]/loading.tsx`              | `TokenSkeleton` (+ `TabSkeleton` inside the page's `Suspense`)         |
+| `/portfolios`                                                            | `portfolios/(list)/`                        | `PortfoliosSkeleton`                                                   |
+| `/portfolios/[id]`                                                       | `portfolios/[id]/(overview)/`               | `PortfolioSkeleton`                                                    |
+| `/portfolios/[id]/rules`, `/activity`                                    | their own `loading.tsx`                     | `PortfolioSkeleton` (reads the tab from the path)                      |
+| `/portfolios/[id]/report`, `buy`, `adapt`, `research`, `/portfolios/new` | their own `loading.tsx`                     | generic `PageSkeleton`                                                 |
+| `/holdings`, `/activity`, `/settings`                                    | their own `loading.tsx`                     | `HoldingsSkeleton`, `ActivitySkeleton`, `SettingsSkeleton`             |
+| anything else in the app                                                 | `app/(app)/loading.tsx`                     | generic `PageSkeleton` (also shown when entering the app from outside) |
 
 Tests import the moved pages from `src/app/(app)/pages.test.tsx` (`./(home)/page`, `./markets/(list)/page`,
 `./portfolios/(list)/page`). `SUMMARY_CARD_SURFACE` in `src/constants/cards.ts` is shared by the real summary cards and their
@@ -77,18 +77,21 @@ Verification must use a **production build**. In `next dev` links are not prefet
 this cannot be tested.
 
 ### 0. The machine is the hard part
+
 It is an 8 GB Mac that is usually near out of memory (about 60 MB free, about 3.8 GB compressed). A production build needs about
 4 GB. Before building, stop the dev server (the person's own, on port 3001: ask, do not kill it), close Chrome and other heavy
 apps, and run nothing else at the same time (no `tsc`, no `vitest`, no browser). A build takes about 3 minutes with memory free
 and 9 or more when it is not. If memory is short the dev server also becomes unusably slow; that is not a bug in the code.
 
 ### 1. Build
+
 ```bash
 cd stocks
 rm -rf .next-audit
 NODE_OPTIONS=--max-old-space-size=4096 NEXT_DIST_DIR=.next-audit node node_modules/next/dist/bin/next build > /tmp/build.log 2>&1; echo "exit $?" >> /tmp/build.log
 grep -nE "^exit|Failed to compile|Type error" /tmp/build.log
 ```
+
 - The default heap (about 2.2 GB) runs out of memory; `package.json`'s `build` script already sets 4096 for normal use.
 - **Read the `exit` line.** A background runner reports "completed" even when the build failed (this happened once).
 - `next build` rewrites `tsconfig.json` (reformats it and adds `.next-audit/types/**/*.ts` to `include`). Afterwards delete that
@@ -98,14 +101,18 @@ grep -nE "^exit|Failed to compile|Type error" /tmp/build.log
   `rm -rf .next`). It is regenerated.
 
 ### 2. Serve it
+
 ```bash
 NEXT_DIST_DIR=.next-audit node node_modules/next/dist/bin/next start --port 3055 &
 ```
+
 Load a few pages once to warm it: the first request fetches the token list from CoinGecko, which can take many seconds. To stop
 it, kill by port, **never** `pkill -f next` (that would kill the dev server): `kill $(lsof -nP -iTCP:3055 -sTCP:LISTEN -t)`.
 
 ### 3. Run the swap check
+
 Save the script below as `skel-check.mjs` in a scratch folder with a `skel/` folder beside it, and run, for example:
+
 ```bash
 node skel-check.mjs "/activity>/markets,/markets>/markets/summary,/activity>/holdings,/activity>/portfolios,/portfolios>/activity,/activity>/settings,/activity>/"
 node skel-check.mjs "/activity>/markets/apple-coinbase-tokenized-stock,/portfolios>/portfolios/robotics-20"
@@ -113,6 +120,7 @@ node skel-check.mjs "/portfolios/robotics-20>/portfolios/robotics-20/rules"
 DARK=1 node skel-check.mjs "<the same specs>"
 W=390  node skel-check.mjs "<the same specs>"
 ```
+
 Each spec is `start>target`, and the target must be linked from the start page. A token page needs a token that is in the
 ticker; the ids come from CoinGecko, so pick one that is there. Playwright browsers live in `~/Library/Caches/ms-playwright`;
 the version Playwright wants may differ from the one installed, so set `CHROME` to the installed
@@ -122,18 +130,21 @@ the version Playwright wants may differ from the one installed, so set `CHROME` 
 skeleton), `cls` 0 to 0.01, `blankFrames` 0, `maxFadedAfterSwap` 0.
 
 ### 4. Look at the screenshots
+
 `skel/*-skeleton-*.png` against `skel/*-final-*.png`. Check: the title and tabs are in the same place; the first screen of blocks
 lines up; nothing jumps. In dark mode the skeleton must be readable against the cards. On a phone nothing may overflow 390 px,
 and on the app's own pages the bottom bar must not be covered. The skeleton is allowed to be shorter than the real page (it has
 fewer rows) as long as the first screen matches.
 
 ### 5. Clean up
+
 Stop the server (by port), `rm -rf .next-audit`, and remove the `.next-audit/types` line from `tsconfig.json`.
 
 If something does not match, the geometry lives in the one file for that page under `src/components/Skeleton/`. Measure the real
 page rather than guessing: load it, and read `getBoundingClientRect()` of the blocks under `main`.
 
 ## Notes
+
 - The first navigation after the server starts can be slow because the layout waits on the token feed; that is separate from the
   skeletons.
 - The swap check script (set `W`, `DARK`, `TAG`, `BASE`, `CHROME` as needed):
@@ -180,7 +191,8 @@ for (const spec of process.argv[2].split(",")) {
   const gate = new Promise((resolve) => (release = resolve))
   await page.route("**/*", async (route) => {
     const headers = route.request().headers()
-    if (headers["rsc"] && !headers["next-router-prefetch"] && route.request().url().includes(target.split("?")[0])) await gate
+    if (headers["rsc"] && !headers["next-router-prefetch"] && route.request().url().includes(target.split("?")[0]))
+      await gate
     await route.continue()
   })
 
@@ -195,7 +207,9 @@ for (const spec of process.argv[2].split(",")) {
     ).observe({ type: "layout-shift" })
     const tick = () => {
       const main = document.querySelector("main")
-      const faded = [...(main?.querySelectorAll(".animate-fade-up") ?? [])].filter((el) => getComputedStyle(el).opacity !== "1").length
+      const faded = [...(main?.querySelectorAll(".animate-fade-up") ?? [])].filter(
+        (el) => getComputedStyle(el).opacity !== "1"
+      ).length
       window.__frames.push({
         skeleton: !!main?.querySelector(".skeleton"),
         textLength: main?.innerText.trim().length ?? 0,
@@ -219,7 +233,9 @@ for (const spec of process.argv[2].split(",")) {
   await page.waitForFunction(() => !!document.querySelector("main .skeleton"), { timeout: 30000 })
   const skeletonAfterMs = Date.now() - clickedAt
   await page.waitForTimeout(700)
-  const skeletonHeight = await page.evaluate(() => Math.round(document.querySelector("main").getBoundingClientRect().height))
+  const skeletonHeight = await page.evaluate(() =>
+    Math.round(document.querySelector("main").getBoundingClientRect().height)
+  )
   const name = spec.replace(/[^a-z0-9]/gi, "_")
   await page.screenshot({ path: `skel/${tag}-skeleton-${name}.png` })
   await page.evaluate(() => {

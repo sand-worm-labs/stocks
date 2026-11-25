@@ -1,15 +1,12 @@
 import { Money } from "@/components/Money/Money"
 import { TokenLineChart } from "@/components/TokenLineChart/TokenLineChart"
 import { Card } from "@/components/ui/card"
+import { SERIES_STEP_SECONDS } from "@/constants/components/token/token-analytics"
 import { formatCompactUsd, formatPercent } from "@/lib/format"
 import type { BaseToken } from "@/lib/markets/tokens"
 
 import { FactList } from "./FactList"
 
-// One point in six of the hourly prices CoinGecko gives for a week
-const SERIES_STEP_SECONDS = 6 * 60 * 60
-
-// How the token is trading, worked out from the numbers it already has
 export function TokenAnalytics({ token, liquidity }: { token: BaseToken; liquidity?: number }) {
   const { symbol, series, marketCap, volume, change7d } = token
   const low = Math.min(...series)

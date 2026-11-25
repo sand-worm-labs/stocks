@@ -3,13 +3,10 @@
 import { useTheme } from "next-themes"
 import { useEffect, useRef } from "react"
 
+import { WIDGET_SCRIPT } from "@/constants/components/trading-view-chart/trading-view-chart"
 import { cn } from "@/lib/utils"
 
-// The chart is left bare: no toolbars, indicators or volume, just the price and its date ranges
-const WIDGET_SCRIPT = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-
 type TradingViewChartProps = {
-  // A TradingView symbol: a bare ticker, or EXCHANGE:TICKER
   symbol: string
   label: string
   className?: string

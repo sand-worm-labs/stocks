@@ -6,7 +6,6 @@ import { getStrategyService } from "@/lib/strategies/source"
 
 const body = z.object({ brief: z.string().min(1).max(BRIEF_MAX_LENGTH) })
 
-// Makes a strategy from the idea typed, and answers with where to open it
 export const POST = (request: Request) =>
   respond(
     request,

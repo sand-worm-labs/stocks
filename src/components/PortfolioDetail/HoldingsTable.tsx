@@ -11,9 +11,9 @@ import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import { formatPercent } from "@/lib/format"
 import { portfolioValue } from "@/lib/portfolios/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Session } from "@/lib/session/types"
 import { changeTone } from "@/lib/tone"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
 type HoldingsTableProps = {
   portfolio: Portfolio
@@ -22,9 +22,6 @@ type HoldingsTableProps = {
   mode: Session["network"]["mode"]
 }
 
-// What is held, in the order to read it: the stock, how much of the portfolio it is against the cap, the price it was bought at
-// and the price now, what it is worth and what it has made, and the way to sell it. Everything but the price paid moves with
-// the market.
 export function HoldingsTable({ portfolio, cap, addresses, mode }: HoldingsTableProps) {
   const [live] = useLivePortfolios([portfolio], addresses)
   const { holdings, cash } = live ?? portfolio
@@ -116,16 +113,14 @@ export function HoldingsTable({ portfolio, cap, addresses, mode }: HoldingsTable
   )
 }
 
-// A bar of how much of the whole portfolio a holding is, with the share written beside it, and a tick where the cap is, for a
-// stock that has one
 function ShareBar({ share, cap }: { share: number; cap?: number }) {
   return (
     <div className="flex items-center gap-2.5">
       <span className="relative flex-1">
-        <span className="block h-2 overflow-hidden rounded-full bg-[#EE149E]/20 dark:bg-white/20">
+        <span className="bg-allocation/20 block h-2 overflow-hidden rounded-full dark:bg-white/20">
           <span
             style={{ width: `${share * 100}%` }}
-            className="animate-grow-x block h-full rounded-full bg-[#EE149E]"
+            className="animate-grow-x bg-allocation block h-full rounded-full"
           />
         </span>
         {cap !== undefined && (

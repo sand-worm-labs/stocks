@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import type { Activity } from "@/types/activity"
 import { activityCounts, filterActivity, groupByDay, parseActivityFilter } from "./filter"
-import type { Activity } from "./types"
 
 const NOW = "2026-11-20T14:20:00"
 const activity: Activity[] = [

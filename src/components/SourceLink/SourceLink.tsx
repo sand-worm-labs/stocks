@@ -1,4 +1,4 @@
-import type { Source } from "@/lib/markets/types"
+import type { Source } from "@/types/markets"
 
 export function SourceLink({ name, url, title }: Source) {
   return (

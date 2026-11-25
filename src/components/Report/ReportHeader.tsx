@@ -1,4 +1,4 @@
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 import { VerdictPill } from "./VerdictPill"
 

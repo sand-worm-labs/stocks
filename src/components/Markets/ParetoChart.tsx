@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card"
+import { HEIGHT } from "@/constants/components/markets/pareto-chart"
 import { formatCompactUsd, formatPercent } from "@/lib/format"
 import type { BaseToken } from "@/lib/markets/tokens"
 
@@ -6,7 +7,6 @@ type Entry = { token: BaseToken; value: number; cumulative: number }
 
 type ParetoChartProps = {
   title: string
-  // What "reach" tokens are, in a sentence: "hold 80% of the market cap"
   claim: string
   total: number
   count: number
@@ -14,9 +14,6 @@ type ParetoChartProps = {
   entries: Entry[]
 }
 
-const HEIGHT = 160
-
-// Bars for the biggest tokens, and a line for the share they have added up to
 export function ParetoChart({ title, claim, total, count, reach, entries }: ParetoChartProps) {
   const max = entries[0]?.value ?? 1
   const line = entries

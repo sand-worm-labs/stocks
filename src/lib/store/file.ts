@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises"
 import { dirname } from "node:path"
 
-import type { StrategyRecord, StrategyStore } from "./types"
+import type { StrategyRecord, StrategyStore } from "@/types/store"
 
 type Data = Record<string, StrategyRecord>
 

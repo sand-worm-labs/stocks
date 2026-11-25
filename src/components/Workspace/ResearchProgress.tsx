@@ -4,13 +4,10 @@ import { useEffect, useRef, useState } from "react"
 import { PiCheckBold, PiCircleNotch } from "react-icons/pi"
 
 import { Card } from "@/components/ui/card"
+import { STEP_MS, TICK_MS } from "@/constants/components/workspace/research-progress"
 import { RESEARCH_STEPS } from "@/constants/flow"
+import { useNow } from "@/hooks/use-now"
 import { cn } from "@/lib/utils"
-
-// How long each of the agent's steps takes when the run has no times of its own
-const STEP_MS = 850
-// How often the clock is read while it runs
-const TICK_MS = 400
 
 type ResearchProgressProps = {
   running: boolean
@@ -24,29 +21,17 @@ type ResearchProgressProps = {
 const timeLeft = (ms: number) =>
   ms < 60_000 ? "less than a minute left" : `about ${Math.ceil(ms / 60_000)} minutes left`
 
-// What the agent does, step by step: a tick for each done, a spinner on the one it is on. How far along it is comes from the clock and
-// the run's own start and end, so it is the same however often the page is opened. When it is all done it says so.
 export function ResearchProgress({ running, startedAt, readyAt, onDone }: ResearchProgressProps) {
-  // The run's start and end: the server's, or a made-up run from now
-  const run = useRef<{ start: number; end: number }>(undefined)
-  run.current ??=
+  const [{ start, end }] = useState(() =>
     startedAt && readyAt
       ? { start: Date.parse(startedAt), end: Date.parse(readyAt) }
       : { start: Date.now(), end: Date.now() + RESEARCH_STEPS.length * STEP_MS }
-  const { start, end } = run.current
+  )
 
-  // Read after the page is up, because the server's clock and this one are not the same one
-  const [now, setNow] = useState<number>()
+  const now = useNow(TICK_MS, running)
   const called = useRef(false)
   const progress = !running ? 1 : now === undefined ? 0 : Math.min(Math.max((now - start) / (end - start), 0), 1)
   const done = Math.min(Math.floor(progress * RESEARCH_STEPS.length), RESEARCH_STEPS.length)
-
-  useEffect(() => {
-    if (!running) return
-    setNow(Date.now())
-    const timer = setInterval(() => setNow(Date.now()), TICK_MS)
-    return () => clearInterval(timer)
-  }, [running])
 
   useEffect(() => {
     if (!running || progress < 1 || called.current) return
@@ -88,7 +73,7 @@ export function ResearchProgress({ running, startedAt, readyAt, onDone }: Resear
                 aria-hidden="true"
                 className={cn(
                   "flex size-5 flex-none items-center justify-center rounded-full border",
-                  isDone ? "border-mark text-mark" : "dark:border-border-tertiary border-[#D0D5DD]"
+                  isDone ? "border-mark text-mark" : "border-control"
                 )}
               >
                 {isDone ? (

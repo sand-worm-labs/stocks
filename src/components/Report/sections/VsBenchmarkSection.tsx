@@ -1,16 +1,12 @@
 import { ChartLegend } from "@/components/Charts/ChartLegend"
-import { CHART_COLORS } from "@/constants/chart"
+
+import { LEGEND } from "@/constants/components/report/sections/vs-benchmark-section"
 import { formatPercent } from "@/lib/format"
 import { growthRows } from "@/lib/report/performance"
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 import { GrowthChart } from "../charts/GrowthChart"
 import { ReportSection, SectionIntro } from "../ReportSection"
-
-const LEGEND = [
-  { label: "This strategy", color: CHART_COLORS.primary },
-  { label: "S&P 500", color: CHART_COLORS.muted, dashed: true },
-]
 
 export function VsBenchmarkSection({ report: { performance, periods } }: { report: Report }) {
   const [built, held] = periods

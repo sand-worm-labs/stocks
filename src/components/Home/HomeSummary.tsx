@@ -1,19 +1,19 @@
 import { Fragment, type ReactNode } from "react"
-import { PiChartLineUp, PiPiggyBank, PiWallet } from "react-icons/pi"
 
 import { TradingChart } from "@/components/Charts/TradingChart"
 import { ProfitLine } from "@/components/Money/ProfitLine"
 import { Card } from "@/components/ui/card"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
 import { SUMMARY_CARD_SURFACE } from "@/constants/cards"
+import { STATS } from "@/constants/components/home/home-summary"
 import { benchmarkLines } from "@/lib/benchmarks/compare"
-import type { Benchmark } from "@/lib/benchmarks/types"
 import { formatDay, formatTime } from "@/lib/dates"
 import type { AllocationSlice } from "@/lib/home/allocation"
-import type { Kpi } from "@/lib/home/types"
 import type { PricePoint } from "@/lib/markets/history"
 import type { ChartEvent } from "@/lib/portfolios/chart"
 import type { ValuePoint } from "@/lib/portfolios/performance"
+import type { Benchmark } from "@/types/benchmarks"
+import type { Kpi } from "@/types/home"
 
 import { AllocationBar } from "./AllocationBar"
 import { CountUp } from "./CountUp"
@@ -23,23 +23,12 @@ type HomeSummaryProps = {
   points: ValuePoint[]
   slices: AllocationSlice[]
   benchmarks: Benchmark[]
-  // Real prices of the funds over the same stretch, when the line is a real history; the funds are example series without
   funds?: Record<string, PricePoint[]>
-  // What happened that the line marks
   events?: ChartEvent[]
   now: string
-  // The way to put more in, which depends on how many portfolios there are to put it in
   addFunds: ReactNode
 }
 
-// The stat tiles under the total: what you put in (fixed), what your stocks are worth now (moving) and the cash
-const STATS = [
-  { id: "deposited", icon: PiPiggyBank },
-  { id: "inStocks", icon: PiChartLineUp },
-  { id: "cash", icon: PiWallet },
-]
-
-// What everything you hold is worth, what you put in and what that has made, where the money sits, and how it compares
 export function HomeSummary({ kpis, points, slices, benchmarks, funds, events, now, addFunds }: HomeSummaryProps) {
   const total = kpis.find(({ id }) => id === "value")
   const profit = kpis.find(({ id }) => id === "profit")

@@ -3,12 +3,12 @@
 import { useParams, usePathname } from "next/navigation"
 
 import { AppLink } from "@/components/AppLink/AppLink"
-import { type PortfolioTab, PortfolioTabs } from "@/components/PortfolioDetail/PortfolioTabs"
+import { PortfolioTabs } from "@/components/PortfolioDetail/PortfolioTabs"
 import { Card } from "@/components/ui/card"
 
+import type { PortfolioTab } from "@/types/ui"
 import { Skeleton, SkeletonText } from "./Skeleton"
 
-// Which of the portfolio's pages is open, from the address
 function tabOf(pathname: string): PortfolioTab {
   if (pathname.endsWith("/rules")) return "rules"
   if (pathname.endsWith("/activity")) return "activity"
@@ -24,8 +24,6 @@ function BlockSkeleton({ height }: { height: number }) {
   )
 }
 
-// A portfolio's pages before their data: where it sits, its name's place and its tabs, which are real and set from the
-// address, then the cards of the page that is open
 export function PortfolioSkeleton() {
   const { id } = useParams<{ id: string }>()
   const tab = tabOf(usePathname() ?? "")

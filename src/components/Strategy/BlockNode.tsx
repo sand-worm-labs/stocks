@@ -3,59 +3,45 @@ import { createContext, type ReactNode, use, useState } from "react"
 import { PiCaretDown, PiCaretRight, PiTrash } from "react-icons/pi"
 
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
+import { RAIL } from "@/constants/components/strategy/block-node"
+import { FIELD } from "@/constants/components/strategy/filter-fields"
+import { HANDLE } from "@/constants/components/strategy/shared"
 import type { FilterChange } from "@/lib/strategy/edit"
 import { BLOCK_WIDTH, type BlockData } from "@/lib/strategy/flow/graph"
-import type { Condition, Schedule, Side, Via } from "@/lib/strategy/types"
 import { cn } from "@/lib/utils"
+import type { Condition, Schedule, Side, Via } from "@/types/strategy"
 
 import { BLOCK_STYLE } from "./blocks"
 import { ConditionFields } from "./ConditionFields"
-import { FIELD, FilterFields, FilterPool } from "./FilterFields"
+import { FilterFields, FilterPool } from "./FilterFields"
 import { RebalanceFields } from "./RebalanceFields"
-
-// How far in from a block's left edge the line to what is under it leaves, so it runs down the gap before the next level
-const RAIL = 20
-
-const HANDLE = "!size-2.5 !border-2 !border-block-surface !bg-ink-400"
 
 // The block the pointer is over, told to every block so each can dim itself without the canvas making new nodes
 export const HoverContext = createContext<string | undefined>(undefined)
 
-// A block is lit if it is the one hovered, on the way to it, or on the way on from it
 export const isLit = (id: string, hovered?: string) =>
   !hovered ||
   hovered === "start" ||
   id === "start" ||
-  // The rules come before everything the strategy does, so they are on the way to any of it
   (id === "checks" && !hovered.startsWith("orders")) ||
   id === hovered ||
   hovered.startsWith(`${id}.`) ||
   id.startsWith(`${hovered}.`)
 
-// What the canvas adds to a block it draws: the way to fold it
 export type BlockNodeData = BlockData & {
   onFold?: () => void
-  // Only on a canvas that can be changed: the menu to add into this block, and the way to take it out
   adder?: ReactNode
   onRemove?: () => void
-  // Only on a canvas that can be changed, and only on a block in a group that splits by shares: its share as a percentage, and
-  // the way to change it. A group of nothing but stocks has its stocks as tags, and changes theirs by place.
   share?: number
   onShare?: (percent: number) => void
   onChipShare?: (index: number, percent: number) => void
-  // Only on a filter, on a canvas that can be changed: the way to change any of what it says, and every stock it could choose from
   onFilter?: (change: FilterChange) => void
-  // Only on a rebalance, on a canvas that can be changed: the way to change how far a stock may drift and how often it is looked at
   onRebalance?: (change: { drift?: number; every?: Schedule }) => void
-  // Only on an if, on a canvas that can be changed: the way to change what it reads
   onCondition?: (condition: Condition) => void
-  // Only on a stock, on a canvas that can be changed: the way to hold it long or short, as the token or through a perp
   onAsset?: (change: { side?: Side; via?: Via }) => void
   choices?: string[]
 }
 
-// A percentage that is typed in. It is changed when Enter is pressed or the field is left, not on every key, so a share can be
-// typed through numbers that would not do (a 5 on the way to 50). A wrong or empty entry goes back to what it was.
 function ShareField({
   value,
   label,
@@ -104,8 +90,6 @@ function ShareField({
   )
 }
 
-// One block, a bar across the page that reads like a sentence: what kind it is, what it is, what it decides. It joins the one
-// above it on its left, and the ones it holds are set in under it; an if has two ways out, then and else.
 export function BlockNode({ id, data, positionAbsoluteY }: NodeProps<Node<BlockNodeData, "block">>) {
   const hovered = use(HoverContext)
   const {
@@ -139,7 +123,6 @@ export function BlockNode({ id, data, positionAbsoluteY }: NodeProps<Node<BlockN
         {
           width: BLOCK_WIDTH,
           "--index": Math.round(positionAbsoluteY / 80),
-          // A filter, not opacity: the entrance animation holds opacity at 1 and would override it
           filter: `opacity(${isLit(id, hovered) ? 1 : 0.28})`,
           transition: "filter 200ms, box-shadow 150ms",
         } as React.CSSProperties

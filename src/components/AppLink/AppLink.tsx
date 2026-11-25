@@ -5,12 +5,10 @@ import { routeHref, type RouteId } from "@/config/routes"
 
 type AppLinkProps = {
   route: RouteId
-  // A page under the route, e.g. a stock's symbol
   slug?: string
   query?: Record<string, string>
   isCurrent?: boolean
   className?: string
-  // Names this link for the guided tour, which points at it
   tour?: string
   children: ReactNode
 }

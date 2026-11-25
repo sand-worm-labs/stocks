@@ -1,35 +1,17 @@
 "use client"
 
-import { useRef } from "react"
-import { PiArrowDownRight, PiArrowUpRight, PiCircleNotch } from "react-icons/pi"
+import { useState } from "react"
+import { PiCircleNotch } from "react-icons/pi"
 
 import { Flash } from "@/components/Markets/Flash"
 import { useLiveMarketContext } from "@/components/Markets/LiveMarket"
 import { Money } from "@/components/Money/Money"
 import { Card } from "@/components/ui/card"
+import { COLUMNS, ROW, SHOWN, SIDE } from "@/constants/components/token/token-trades"
 import { useSecondsSince } from "@/hooks/use-seconds-since"
 import { useTween } from "@/hooks/use-tween"
 import type { Swap } from "@/lib/markets/swaps"
 import { cn } from "@/lib/utils"
-
-// How many of the latest trades the tape shows, and how tall a row is. The list is always exactly this tall, whether it holds ten trades or
-// none, so a trade landing never moves anything else on the page.
-const SHOWN = 10
-const ROW = 45
-// The columns, the same on every row and on the empty ones that stand in for rows
-const COLUMNS = "grid grid-cols-[4.5rem_1fr_auto] items-center gap-x-3 px-4 sm:grid-cols-[5.5rem_1fr_1fr_3rem] md:px-5"
-
-// Each side's colour is only ever on its text, its dot and its share of the bar; nothing is filled with it
-const SIDE = {
-  buy: {
-    label: "Bought",
-    verb: "Buy",
-    Icon: PiArrowUpRight,
-    text: "text-emerald-700 dark:text-emerald-400",
-    dot: "bg-emerald-500",
-  },
-  sell: { label: "Sold", verb: "Sell", Icon: PiArrowDownRight, text: "text-error", dot: "bg-error" },
-} as const
 
 function Ago({ at }: { at: number }) {
   const seconds = useSecondsSince(at)
@@ -47,7 +29,6 @@ function Ago({ at }: { at: number }) {
 
 const worth = (trades: Swap[]) => trades.reduce((sum, { usd = 0 }) => sum + usd, 0)
 
-// How much one side has traded, under a small dot in its colour
 function Total({ side, trades }: { side: keyof typeof SIDE; trades: Swap[] }) {
   const { label, dot } = SIDE[side]
   const total = worth(trades)
@@ -68,14 +49,11 @@ function Total({ side, trades }: { side: keyof typeof SIDE; trades: Swap[] }) {
   )
 }
 
-// What is being bought and sold, as a trading screen's tape does it: the totals and who is winning on top, and under them the latest
-// trades, newest first, a line each. One quiet card; the only colour is in the words that say which way a trade went.
 export function TokenTrades({ address, symbol }: { address: string; symbol: string }) {
   const { trades, isConnected } = useLiveMarketContext()
-  // The trades there were when the page opened, which settle in; only ones after them open from nothing
-  const initial = useRef<Set<string>>(undefined)
-  const own = trades.filter(({ token }) => token === address.toLowerCase()).toSorted((a, b) => b.at - a.at)
-  initial.current ??= new Set(own.map(({ id }) => id))
+  const ofThisToken = (all: Swap[]) => all.filter(({ token }) => token === address.toLowerCase())
+  const [initial] = useState(() => new Set(ofThisToken(trades).map(({ id }) => id)))
+  const own = ofThisToken(trades).toSorted((a, b) => b.at - a.at)
   const bought = own.filter(({ side }) => side === "buy")
   const sold = own.filter(({ side }) => side === "sell")
 
@@ -143,13 +121,12 @@ export function TokenTrades({ address, symbol }: { address: string; symbol: stri
               const { verb, Icon, text } = SIDE[trade.side]
 
               return (
-                // A trade that was there when the page opened settles in; one that arrives after opens from nothing at the top
                 <li
                   key={trade.id}
                   style={{ "--index": index } as React.CSSProperties}
                   className={cn(
                     "border-border-secondary dark:border-border-tertiary hover:bg-hover-bg grid border-t transition-colors dark:hover:bg-white/5",
-                    initial.current?.has(trade.id) ? "animate-fade-up" : "animate-row-in"
+                    initial.has(trade.id) ? "animate-fade-up" : "animate-row-in"
                   )}
                 >
                   <div className="overflow-hidden">

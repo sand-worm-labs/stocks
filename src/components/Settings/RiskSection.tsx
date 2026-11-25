@@ -1,6 +1,6 @@
 import { HORIZON_OPTIONS, MAX_DRAWDOWN_CHOICES, RISK_GOAL_OPTIONS } from "@/constants/settings"
 import { formatPercent } from "@/lib/format"
-import type { Settings } from "@/lib/settings/types"
+import type { Settings } from "@/types/settings"
 
 import { SettingRow } from "./SettingRow"
 import { SettingSelect } from "./SettingSelect"

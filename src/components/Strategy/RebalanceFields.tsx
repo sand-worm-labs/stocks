@@ -1,21 +1,15 @@
-import type { Schedule } from "@/lib/strategy/types"
+import { FIELD } from "@/constants/components/strategy/filter-fields"
+import { EVERY } from "@/constants/components/strategy/rebalance-fields"
 import { cn } from "@/lib/utils"
+import type { Schedule } from "@/types/strategy"
 
-import { FIELD, WholeField } from "./FilterFields"
+import { WholeField } from "./FilterFields"
 
-const EVERY: { value: Schedule; label: string }[] = [
-  { value: "daily", label: "daily" },
-  { value: "weekly", label: "weekly" },
-  { value: "monthly", label: "monthly" },
-]
-
-// The line a rebalance reads as, with each part of it a field: how many points a stock may drift, and how often it is looked at
 export function RebalanceFields({
   drift,
   every,
   onChange,
 }: {
-  // A fraction of the portfolio
   drift: number
   every: Schedule
   onChange: (change: { drift?: number; every?: Schedule }) => void

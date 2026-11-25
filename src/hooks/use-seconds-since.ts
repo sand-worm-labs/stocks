@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 
-// Whole seconds since a time, counting up
 export function useSecondsSince(time?: number) {
   const [now, setNow] = useState(() => Date.now())
 

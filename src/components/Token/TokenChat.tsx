@@ -1,13 +1,15 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { PiChatCenteredText } from "react-icons/pi"
 
 import { BaseMark } from "@/components/BaseMark/BaseMark"
 import { useLiveMarketContext } from "@/components/Markets/LiveMarket"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import { type ChatStatus, useChatRoom } from "@/hooks/use-chat-room"
+import { ALERTS_KEY, STATUS_TEXT } from "@/constants/components/token/token-chat"
+import { useChatRoom } from "@/hooks/use-chat-room"
+import { useStoredChoice } from "@/hooks/use-stored-choice"
 import type { ChatMessage } from "@/lib/chat/protocol"
 import { formatTime } from "@/lib/dates"
 import { formatUsd } from "@/lib/format"
@@ -18,18 +20,8 @@ import { ChatComposer } from "./ChatComposer"
 
 type Item = { kind: "message"; at: number; message: ChatMessage } | { kind: "trade"; at: number; swap: Swap }
 
-const ALERTS_KEY = "sandworm-stocks:chat:trade-alerts"
-
 const clock = (at: number) => formatTime(new Date(at).toISOString())
 
-const STATUS_TEXT: Record<Exclude<ChatStatus, "live">, string> = {
-  connecting: "Connecting…",
-  offline: "Reconnecting…",
-  unavailable: "Chat isn't connected",
-}
-
-// A trade as it lands on Base, in the same bubble as what people say, on the left. A bar down its edge says which way it went, green for a
-// buy and red for a sell, and the Base mark and time sit above the first of a run of trades.
 function TradeBubble({ swap, first }: { swap: Swap; first: boolean }) {
   return (
     <li className="animate-slide-in flex flex-col items-start gap-1 pr-10">
@@ -55,8 +47,6 @@ function TradeBubble({ swap, first }: { swap: Swap; first: boolean }) {
   )
 }
 
-// What a person said. Your own are on the right in the bubble the agent chat gives what you write; everyone else's are on the left, in
-// the bubble it gives its answers. A name and time sit above the first of a run from one person.
 function Bubble({ message, mine, first }: { message: ChatMessage; mine: boolean; first: boolean }) {
   return (
     <li className={cn("animate-slide-in flex flex-col gap-1", mine ? "items-end pl-10" : "items-start pr-10")}>
@@ -82,19 +72,13 @@ function Bubble({ message, mine, first }: { message: ChatMessage; mine: boolean;
   )
 }
 
-// A room for the token. What people write is passed on to everyone there as it is written, over a websocket, and the trades as they land
-// on Base can be shown between the messages or left out.
 export function TokenChat({ address, symbol }: { address: string; symbol: string }) {
   const { trades } = useLiveMarketContext()
   const { messages, online, meId, status, notice, say } = useChatRoom(address)
-  const [alerts, setAlerts] = useState(true)
+  const [alertsChoice, chooseAlerts] = useStoredChoice(ALERTS_KEY, ["on", "off"], "on")
+  const alerts = alertsChoice === "on"
   const list = useRef<HTMLUListElement>(null)
-  // Whether the list is at the bottom, so a new line follows it down and doesn't pull someone away from what they are reading
   const atBottom = useRef(true)
-
-  useEffect(() => {
-    setAlerts(localStorage.getItem(ALERTS_KEY) !== "off")
-  }, [])
 
   const items = useMemo<Item[]>(() => {
     const said = messages.map<Item>((message) => ({ kind: "message", at: message.at, message }))
@@ -111,11 +95,6 @@ export function TokenChat({ address, symbol }: { address: string; symbol: string
     if (!element || !atBottom.current) return
     element.scrollTo({ top: element.scrollHeight, behavior: "smooth" })
   }, [items.length])
-
-  const toggleAlerts = (on: boolean) => {
-    setAlerts(on)
-    localStorage.setItem(ALERTS_KEY, on ? "on" : "off")
-  }
 
   return (
     <Card className="flex flex-col overflow-hidden">
@@ -136,7 +115,11 @@ export function TokenChat({ address, symbol }: { address: string; symbol: string
 
         <label className="flex cursor-pointer items-center gap-2.5 text-sm">
           Trade alerts
-          <Switch checked={alerts} onCheckedChange={toggleAlerts} aria-label="Show trades in the chat" />
+          <Switch
+            checked={alerts}
+            onCheckedChange={(on) => chooseAlerts(on ? "on" : "off")}
+            aria-label="Show trades in the chat"
+          />
         </label>
       </div>
 

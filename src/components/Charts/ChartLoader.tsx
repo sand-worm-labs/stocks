@@ -1,13 +1,10 @@
 import { PiSpinnerGap } from "react-icons/pi"
 
+import { GRIDLINES } from "@/constants/components/charts/chart-loader"
 import { cn } from "@/lib/utils"
 
 type ChartLoaderProps = { visible?: boolean; className?: string }
 
-const GRIDLINES = [0, 1, 2, 3]
-
-// What a chart's space shows until the chart is drawn: faint gridlines, a line breathing where the real one will be, and a
-// spinner. It is on the page from the first paint, so the box is never blank, and fades away when the chart arrives.
 export function ChartLoader({ visible = true, className }: ChartLoaderProps) {
   return (
     <div

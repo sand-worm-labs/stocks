@@ -1,17 +1,8 @@
 "use client"
 
 import { useLayoutEffect, useRef } from "react"
+import { EASE, ENTER_MS, MOVE_MS, STAGGER_MS } from "@/constants/hooks/use-flip"
 
-const EASE = "cubic-bezier(0.22, 1, 0.36, 1)"
-const MOVE_MS = 550
-const ENTER_MS = 600
-const STAGGER_MS = 45
-
-// Animates a row of items as they come and go, using nothing but the browser's own animations of transform and opacity,
-// which it can run off the main thread. An item that is already there glides to its new place, instead of jumping. A
-// new one rises in from the side.
-//
-// The items need `data-flip-key`, a stable key.
 export function useFlip<T extends HTMLElement>(change: unknown) {
   const container = useRef<T>(null)
   const lefts = useRef(new Map<string, number>())

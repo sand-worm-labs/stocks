@@ -7,7 +7,6 @@ type SegmentedControlProps<T extends string> = {
   options: { value: T; label: string }[]
   value?: T
   onChange: (value: T) => void
-  // Fills the width it is given, each choice taking an equal share
   fullWidth?: boolean
 }
 

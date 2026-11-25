@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import type { PricePoint } from "@/lib/markets/history"
 
+import type { Portfolio } from "@/types/portfolios"
 import { fundValues, priceAt, sumLines, valueHistory } from "./history"
-import type { Portfolio } from "./types"
 
 const T0 = 1_700_000_000
 const portfolio: Portfolio = {
@@ -49,9 +49,7 @@ describe("what a portfolio was worth over time", () => {
 
   it("is its units times each price at each moment, plus its cash", () => {
     const at = (offset: number) => points.find(({ time }) => time === T0 + offset)?.value
-    // AAA 2 × 110 + BBB 1 × 60 (first price it had) ... at 1200 both have moved
     expect(at(1200)).toBe(2 * 110 + 1 * 60 + 10)
-    // before BBB had a price in the feed it is held at its first, and AAA at its first
     expect(at(600)).toBe(2 * 100 + 1 * 60 + 10)
     expect(at(1800)).toBe(2 * 90 + 1 * 60 + 10)
     expect(points.at(-1)?.value).toBe(2 * 90 + 1 * 60 + 10)

@@ -1,6 +1,6 @@
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
-import type { AgentBlock } from "@/lib/agent/types"
 import { cn } from "@/lib/utils"
+import type { AgentBlock } from "@/types/agent"
 
 export function NoteBlock({ block: { label, text, tone } }: { block: Extract<AgentBlock, { type: "note" }> }) {
   if (tone) {

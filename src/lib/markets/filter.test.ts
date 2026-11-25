@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import type { Stock } from "@/types/markets"
 import { byLiquidity } from "./filter"
-import type { Stock } from "./types"
 
 const stock = (symbol: string, liquidity?: number): Stock => ({ symbol, name: symbol, liquidity })
 

@@ -3,8 +3,6 @@ import { Card } from "@/components/ui/card"
 import { Skeleton, SkeletonPill, SkeletonText } from "./Skeleton"
 import { SkeletonScope } from "./SkeletonScope"
 
-// What a token's tab holds while it reads the chain or the market: a card with its heading and a body, the size of the
-// price card the first tab opens on
 export function TabSkeleton() {
   return (
     <>

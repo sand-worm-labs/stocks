@@ -6,7 +6,6 @@ import type { ReactNode } from "react"
 type TooltipProps = {
   title: string
   side?: "top" | "right" | "bottom" | "left"
-  // For a sentence, which needs more room than a label
   wide?: boolean
   children: ReactNode
 }

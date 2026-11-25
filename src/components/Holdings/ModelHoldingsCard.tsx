@@ -15,8 +15,6 @@ import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 import { listItemHoverClassName } from "@/styles/interactive"
 
-// One model and the stocks it holds: how much of it each is, what each is worth and how each is doing. It folds shut,
-// so a long list of models can be read by their names and what each is worth.
 export function ModelHoldingsCard({
   model: { portfolio, index, value, rows },
   open,
@@ -25,7 +23,6 @@ export function ModelHoldingsCard({
   open: boolean
 }) {
   const fill = ALLOCATION_FILLS[index % ALLOCATION_FILLS.length]
-  // What its stocks have made on what was paid for them
   const gained = rows.reduce((sum, { gain }) => sum + gain, 0)
   const paid = rows.reduce((sum, { cost }) => sum + cost, 0)
   const rate = paid ? gained / paid : 0
@@ -34,7 +31,6 @@ export function ModelHoldingsCard({
 
   return (
     <Card className="group/card relative overflow-hidden transition-shadow duration-200 hover:shadow-md">
-      {/* A stripe down the edge in the colour this model has everywhere else */}
       <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-1", fill)} />
       <details open={open} className="group">
         <summary className="hover:bg-hover-bg/40 flex cursor-pointer list-none items-center gap-3.5 py-4 pr-5 pl-6 transition-colors [&::-webkit-details-marker]:hidden">

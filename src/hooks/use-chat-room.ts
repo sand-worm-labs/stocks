@@ -2,15 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { RECONNECT_MS } from "@/constants/realtime"
 import type { ChatMessage, ServerEvent } from "@/lib/chat/protocol"
 
 // connecting: opening; live: in the room; offline: dropped, and trying again; unavailable: no chat server is set up for this site
 export type ChatStatus = "connecting" | "live" | "offline" | "unavailable"
 
-const RETRY_MS = [1000, 2000, 5000, 10_000]
-
-// Being in a token's room: what has been said, who is there, and a way to say something. The connection is opened with a minute's pass
-// from the app and opened again, with a new one, whenever it drops.
 export function useChatRoom(room: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [online, setOnline] = useState(0)
@@ -26,7 +23,7 @@ export function useChatRoom(room: string) {
 
     const again = () => {
       setStatus("offline")
-      retry = setTimeout(open, RETRY_MS[Math.min(attempt++, RETRY_MS.length - 1)])
+      retry = setTimeout(open, RECONNECT_MS[Math.min(attempt++, RECONNECT_MS.length - 1)])
     }
 
     async function open() {

@@ -10,8 +10,6 @@ export const ONBOARDING_COOKIES = {
 
 export const ONBOARDING_PATH = "/onboarding"
 
-// What there is to choose to be interested in: the themes of stocks that can be researched and bought as tokens, each the
-// id of a category of the market, and the way out for someone who doesn't know yet
 export const NOT_SURE = "not-sure"
 
 export const INTERESTS: { id: string; label: string; icon: IconType }[] = [
@@ -24,6 +22,5 @@ export const INTERESTS: { id: string; label: string; icon: IconType }[] = [
 ]
 
 export const STEPS = ["interests", "name", "checks", "start"] as const
-export type OnboardingStep = (typeof STEPS)[number]
 
 export const NAME_MAX_LENGTH = 40

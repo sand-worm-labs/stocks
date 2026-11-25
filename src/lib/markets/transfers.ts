@@ -40,7 +40,6 @@ const rpc = async (method: string, params: unknown[]): Promise<unknown> => {
 
 const cache = new Map<string, { at: number; transfers: Transfer[] }>()
 
-// The latest transfers of a token, read from the chain's logs: who sent how much to whom, newest first
 export async function getTransfers(address: string, decimals: number): Promise<Transfer[]> {
   const cached = cache.get(address)
   if (cached && Date.now() - cached.at < CACHE_MS) return cached.transfers
@@ -77,8 +76,6 @@ export async function getTransfers(address: string, decimals: number): Promise<T
   }
 }
 
-// Who moved the most in those transfers, with what they took in and gave out. The pool and the zero address are the
-// counterparties of most trades, so they are left out.
 export function activeWallets(transfers: Transfer[], exclude: string[]) {
   const skip = new Set(exclude.map((address) => address.toLowerCase()))
   const wallets = new Map<string, { address: string; transfers: number; received: number; sent: number }>()

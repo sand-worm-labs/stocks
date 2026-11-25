@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from "react"
 import { analyzeBrief } from "@/lib/brief/analyze"
 import { parseBrief } from "@/lib/brief/parse"
 import { applyChange } from "@/lib/brief/patch"
-import type { BriefChange } from "@/lib/brief/types"
+import type { BriefChange } from "@/types/brief"
 
 import { BriefControls } from "./BriefControls"
 import { BriefFeedback } from "./BriefFeedback"

@@ -11,17 +11,13 @@ type WalletStatus = "off" | "idle" | "loading" | "ready"
 // What approving a strategy to trade takes of the wallet that is connected. Neither moves any money. Each fails with a message fit to show:
 // no wallet that can do it, or the person turning the request down.
 export type ApproveWith = {
-  // Moves the wallet to this network
   switchChain: (chainId: number) => Promise<void>
-  // Has the wallet's owner sign some words, to prove the wallet is theirs
   sign: (message: string) => Promise<{ address: `0x${string}`; signature: `0x${string}` }>
 }
 
 export type Published = {
   approve: ApproveWith
   isSignedIn: boolean
-  // A sign-in is under way: the wallet window is open, or it has finished and the session is being made and the page changed. While
-  // it is, asking for another one has nothing to do.
   connecting: boolean
   address?: string
   network?: number | string
@@ -31,7 +27,6 @@ export type Published = {
   signOut: () => Promise<void>
 }
 
-// When to start fetching the SDK: now, or when the browser has nothing better to do
 export type PreloadWhen = "now" | "idle"
 
 export type Wallet = Pick<
@@ -47,7 +42,6 @@ export type Wallet = Pick<
   | "approve"
 > & {
   status: WalletStatus
-  // Starts fetching the SDK, and returns what undoes a wait for idle time
   preload: (when: PreloadWhen) => () => void
 }
 
@@ -68,8 +62,6 @@ const WalletContext = createContext<Wallet>({
 
 export const WalletProvider = WalletContext.Provider
 
-// The wallet as the app sees it. A page that is about the wallet asks for the SDK with `"now"`; one that only shows it
-// when there is one asks for it `"idle"`, and the rest leave it to be fetched when someone reaches for it.
 export function useWallet(load?: PreloadWhen) {
   const wallet = useContext(WalletContext)
   const { preload } = wallet

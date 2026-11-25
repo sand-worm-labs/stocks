@@ -1,4 +1,4 @@
-import type { MarketSummary } from "@/lib/markets/types"
+import type { MarketSummary } from "@/types/markets"
 
 export const marketSummaryMockData: MarketSummary = {
   listed: 379,

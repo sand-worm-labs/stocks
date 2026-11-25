@@ -1,22 +1,17 @@
 export type Body = { x: number; y: number; vx: number; vy: number; r: number }
 export type Size = { w: number; h: number }
 
-// The share of the box the bubbles cover between them, so there is room left to move in
 const FILL = 0.4
 const MIN_RADIUS = 20
-// No bubble is wider than this much of the box's shorter side
 const MAX_RADIUS_SHARE = 0.32
 const GAP = 3
-// A pull to the middle, weaker along the longer side so the swarm spreads to the shape of its box, a little wandering and some friction: nothing is placed, the bubbles settle among themselves
 const PULL = 0.0006
 const WANDER = 0.06
 const FRICTION = 0.9
 const EASE = 0.12
 const PASSES = 2
-// A gain or loss this big shows in the full colour; smaller ones are paler
 const FULL_COLOUR_AT = 0.12
 
-// How wide each bubble wants to be: its area follows what is held, as a share of the box
 export function radii(values: number[], { w, h }: Size): number[] {
   const total = values.reduce((sum, value) => sum + value, 0) || 1
   const widest = MAX_RADIUS_SHARE * Math.min(w, h)
@@ -34,7 +29,6 @@ export function startAt(index: number, { w, h }: Size): Pick<Body, "x" | "y"> {
   return { x: w / 2 + Math.cos(angle) * reach, y: h / 2 + Math.sin(angle) * reach }
 }
 
-// One moment of the swarm. `held` is the bubble someone has hold of, which goes where it is taken and is not pushed.
 export function step(bodies: Body[], targets: number[], { w, h }: Size, held?: number, random = Math.random) {
   bodies.forEach((body, i) => {
     body.r += ((targets[i] ?? body.r) - body.r) * EASE
@@ -78,7 +72,6 @@ export function step(bodies: Body[], targets: number[], { w, h }: Size, held?: n
   })
 }
 
-// The colour of a bubble: green as it gains, red as it loses, stronger the more it has
 export function gainTint(gainRate: number, alpha = 0.14) {
   const strength = alpha + 0.46 * Math.min(Math.abs(gainRate) / FULL_COLOUR_AT, 1)
   return gainRate >= 0 ? `rgba(16, 185, 129, ${strength})` : `rgba(239, 68, 68, ${strength})`

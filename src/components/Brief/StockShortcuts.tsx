@@ -1,6 +1,6 @@
 import { AppLink } from "@/components/AppLink/AppLink"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
-import type { Stock } from "@/lib/markets/types"
+import type { Stock } from "@/types/markets"
 
 export function StockShortcuts({ stocks, total }: { stocks: Stock[]; total: number }) {
   return (

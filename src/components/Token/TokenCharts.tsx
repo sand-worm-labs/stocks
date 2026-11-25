@@ -11,11 +11,9 @@ import { PoolChart } from "./PoolChart"
 type TokenChartsProps = {
   address: string
   symbol: string
-  // The chart of the share the token tracks, or of the token's week where there is no share chart
   other: { label: string; note: string; chart: ReactNode }
 }
 
-// The token's own candles first, a minute each and moving as it trades, and the share's chart behind a tab
 export function TokenCharts({ address, symbol, other }: TokenChartsProps) {
   const pair = useLiveMarketContext().quotes[address.toLowerCase()]?.pair
   const [tab, setTab] = useState<"token" | "other">(pair ? "token" : "other")

@@ -9,7 +9,6 @@ import { saveModelCount } from "@/lib/demo/actions"
 import { SettingRow } from "./SettingRow"
 import { SettingsSection } from "./SettingsSection"
 
-// How many portfolios to try the app with, from none to a thousand. Home, Holdings and Portfolios all follow it.
 export function DemoDataSection({ count }: { count: number }) {
   const [value, setValue] = useState(count)
   const [, startTransition] = useTransition()

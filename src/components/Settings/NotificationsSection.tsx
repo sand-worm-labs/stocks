@@ -1,5 +1,5 @@
 import { Switch } from "@/components/ui/switch"
-import type { Settings } from "@/lib/settings/types"
+import type { Settings } from "@/types/settings"
 
 import { SettingRow } from "./SettingRow"
 import { SettingsSection } from "./SettingsSection"

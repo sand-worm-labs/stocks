@@ -2,14 +2,10 @@
 
 import { useCallback, useRef, useState } from "react"
 
+import { REPLY_DELAY_MS } from "@/constants/hooks/use-agent-conversation"
 import { replyTo } from "@/lib/agent/reply"
-import type { AgentMessage } from "@/lib/agent/types"
+import type { AgentMessage } from "@/types/agent"
 
-// How long the agent is shown at work before its answer. Real replies take as long as they take.
-const REPLY_DELAY_MS = 1600
-
-// The messages on show: the ones a screen opens with, then what is said and answered. Where the agent's answers come
-// from is the one place to change when it is connected.
 export function useAgentConversation(initial: AgentMessage[]) {
   const [messages, setMessages] = useState(initial)
   const [thinking, setThinking] = useState(false)

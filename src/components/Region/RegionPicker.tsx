@@ -15,13 +15,12 @@ import { COUNTRIES, isRegionSupported } from "@/lib/region/countries"
 import { searchBy } from "@/lib/search"
 import { cn } from "@/lib/utils"
 
-// A small label at the end of a row, with a dot, as Dynamic marks a wallet "Last used" or "Installed"
 function RowTag({ children, tone = "info" }: { children: ReactNode; tone?: "info" | "warning" }) {
   return (
     <span className="bg-hover-bg text-ink-200 flex flex-none items-center gap-1.5 rounded-full px-2.5 py-1 text-xs dark:bg-white/10">
       <span
         aria-hidden="true"
-        className={cn("size-1.5 rounded-full", tone === "warning" ? "bg-amber-500" : "bg-[#4779FF]")}
+        className={cn("size-1.5 rounded-full", tone === "warning" ? "bg-amber-500" : "bg-info")}
       />
       {children}
     </span>
@@ -29,15 +28,11 @@ function RowTag({ children, tone = "info" }: { children: ReactNode; tone?: "info
 }
 
 type RegionPickerProps = {
-  // The country now chosen, by ISO code
   region: string
-  // What opens the picker. Left out, it is a "Change" button.
   children?: ReactNode
   className?: string
 }
 
-// Choosing the country you live in, from a window with a search over every country. It saves the choice, so it can be
-// put anywhere it has to be changed from: the checks before a first portfolio, the settings.
 export function RegionPicker({ region, children, className }: RegionPickerProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -69,11 +64,10 @@ export function RegionPicker({ region, children, className }: RegionPickerProps)
       <DialogContent
         aria-label="Where you live"
         aria-describedby={undefined}
-        // The size and shape of Dynamic's wallet window, so the two read as one
-        className="dark:bg-page-surface w-[360px] max-w-[calc(100vw-2rem)] gap-0 rounded-3xl bg-[#F7F7F9] p-0 shadow-[0_24px_32px_-24px_rgba(0,0,0,0.24)] sm:rounded-3xl sm:p-0"
+        className="bg-dialog-surface w-[360px] max-w-[calc(100vw-2rem)] gap-0 rounded-3xl p-0 shadow-[0_24px_32px_-24px_rgba(0,0,0,0.24)] sm:rounded-3xl sm:p-0"
       >
         <div className="relative mt-6 flex h-6 items-center justify-center px-6 pt-0">
-          <DialogTitle className="text-lg font-normal text-[#383C48] dark:text-white">Where do you live?</DialogTitle>
+          <DialogTitle className="text-dialog-ink text-lg font-normal">Where do you live?</DialogTitle>
           <DialogClose
             aria-label="Close"
             className="text-ink-300 hover:text-ink-100 absolute right-6 flex size-6 items-center justify-center rounded-full transition-colors"
@@ -102,7 +96,7 @@ export function RegionPicker({ region, children, className }: RegionPickerProps)
               <button
                 type="button"
                 onClick={() => choose(code, name)}
-                className="bg-block-surface hover:bg-hover-bg flex h-[52px] w-full items-center gap-3 rounded-xl p-3 text-left text-base text-[#383C48] shadow-[0_1px_2px_rgba(24,39,75,0.04)] transition-colors duration-200 ease-out dark:text-white"
+                className="bg-block-surface hover:bg-hover-bg text-dialog-ink flex h-[52px] w-full items-center gap-3 rounded-xl p-3 text-left text-base shadow-[0_1px_2px_rgba(24,39,75,0.04)] transition-colors duration-200 ease-out"
               >
                 <CountryFlag code={code} className="size-7" />
                 <span className="flex-1 truncate">{name}</span>

@@ -1,4 +1,4 @@
-import type { Indicator } from "./types"
+import type { Indicator } from "@/types/strategy"
 
 // Each reads the series as it stood on day `at`, using that day and the days before it and never the days after. With too
 // few days behind it there is no reading yet, and that is `undefined`, not a guess.
@@ -14,7 +14,6 @@ export function sma(series: number[], at: number, days: number) {
 export function ema(series: number[], at: number, days: number) {
   if (days <= 0 || at < days - 1) return undefined
   const k = 2 / (days + 1)
-  // Starts from the plain average of the first `days`, then leans on each day after
   let value = series.slice(0, days).reduce((sum, price) => sum + price, 0) / days
   for (let i = days; i <= at; i++) value = (series[i] ?? value) * k + value * (1 - k)
   return value

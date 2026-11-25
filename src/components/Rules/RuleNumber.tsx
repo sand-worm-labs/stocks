@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils"
 
-// A rule's number: a small violet outline with the number in it, and no fill
 export function RuleNumber({ children, className }: { children: number; className?: string }) {
   return (
     <span

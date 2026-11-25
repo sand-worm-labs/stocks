@@ -4,7 +4,7 @@ import { ConnectWalletButton } from "@/components/Wallet/ConnectWalletButton"
 import { UsdcBalance } from "@/components/Wallet/UsdcBalance"
 import { WalletAddress } from "@/components/Wallet/WalletAddress"
 import { FAUCET_URL } from "@/constants/settings"
-import type { Session } from "@/lib/session/types"
+import type { Session } from "@/types/session"
 
 import { SettingRow } from "./SettingRow"
 import { SettingsSection } from "./SettingsSection"

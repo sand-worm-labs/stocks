@@ -4,18 +4,13 @@ import { cn } from "@/lib/utils"
 
 type PillProps = {
   children: string
-  // A figure after the name, e.g. how it did
   detail?: string
-  // A small dot before it, e.g. the colour of its line on a chart
   dot?: string
   title?: string
-  // Given, the pill gets a button to take it away
   onRemove?: () => void
   className?: string
 }
 
-// A small tag in the web app's reference-pill style: a soft violet fill and a grey label, with a button to remove it.
-// There is no icon, because what it names (a theme, a stock) has no kind to tell apart.
 export function Pill({ children, detail, dot, title, onRemove, className }: PillProps) {
   return (
     <span

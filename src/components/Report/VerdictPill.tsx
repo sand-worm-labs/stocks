@@ -1,15 +1,13 @@
 import { Badge } from "@/components/ui/badge"
 import { TONE_DOT_CLASSNAME, TONE_TEXT_CLASSNAME } from "@/constants/tone"
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 type VerdictPillProps = {
   verdict: Report["verdict"]
   prefix?: string
-  // Only the dot and the words, with no pill around them
   plain?: boolean
 }
 
-// The verdict on a report: whether it is edge or gambling
 export function VerdictPill({ verdict: { tone, label }, prefix, plain }: VerdictPillProps) {
   const content = (
     <>

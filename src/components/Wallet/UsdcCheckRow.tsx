@@ -19,7 +19,6 @@ const FAUCET = (
   </a>
 )
 
-// The check of whether there is any USDC to buy with: what the connected wallet holds, read from the chain it is on
 export function UsdcCheckRow() {
   const { connected, chain, onUnsupportedNetwork, reading, isWaiting } = useWalletUsdc()
   let row: Row

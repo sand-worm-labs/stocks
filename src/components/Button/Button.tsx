@@ -24,7 +24,6 @@ export const buttonVariants = cva(
           "dark:bg-transparent",
           "dark:border-border-tertiary",
         ],
-        // The main app's "Invite user" button: violet, with a tinted pill and a soft shadow in dark mode.
         create: [
           "rounded-xl",
           "bg-primary",
@@ -43,7 +42,6 @@ export const buttonVariants = cva(
           "dark:bg-white",
           "dark:text-black",
         ],
-        // For what can't be taken back, like selling everything
         danger: ["bg-red-600", "text-white", "border-transparent", "hover:opacity-85"],
         secondary: [
           "bg-transparent",

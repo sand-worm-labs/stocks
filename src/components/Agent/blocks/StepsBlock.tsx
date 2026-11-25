@@ -1,15 +1,12 @@
 import { PiCheckBold } from "react-icons/pi"
 
+import { RING } from "@/constants/components/agent/blocks/steps-block"
 import { SANDWORM_APP_URL } from "@/constants/flow"
-import type { AgentBlock } from "@/lib/agent/types"
 import { cn } from "@/lib/utils"
+import type { AgentBlock } from "@/types/agent"
 
 type StepsBlockProps = { block: Extract<AgentBlock, { type: "steps" }> }
 
-const RING = "size-4 rounded-full border-2 border-border-secondary dark:border-border-tertiary border-t-primary"
-
-// A tool-call list: what the agent has done, what it is doing and what is left. A finished step shows the ring turning
-// until the motion ticks it into a violet check, so the list reads as work happening. A finished step opens its notebook.
 export function StepsBlock({ block: { steps } }: StepsBlockProps) {
   return (
     <ol data-block className="border-border-secondary dark:border-border-tertiary rounded-xl border px-3.5 py-1.5">

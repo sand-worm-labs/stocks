@@ -2,7 +2,7 @@ import { SectionHeader } from "@/components/SectionHeader/SectionHeader"
 import { SourceLink } from "@/components/SourceLink/SourceLink"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardRow } from "@/components/ui/card"
-import type { Knowledge } from "@/lib/markets/types"
+import type { Knowledge } from "@/types/markets"
 
 export function KnowledgeCard({ knowledge }: { knowledge: Knowledge[] }) {
   return (

@@ -18,7 +18,6 @@ export const metadata: Metadata = { title: "Activity" }
 
 type PortfolioActivityPageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ filter?: string }> }
 
-// What happened to this portfolio alone: its trades with their receipts, the checks and refusals of the agent, its alerts
 export default async function PortfolioActivityPage({ params, searchParams }: PortfolioActivityPageProps) {
   const [{ id }, query] = await Promise.all([params, searchParams])
   const portfolio = await getPortfolio(id)

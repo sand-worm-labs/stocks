@@ -11,12 +11,11 @@ import { formatDay } from "@/lib/dates"
 import { formatPercent } from "@/lib/format"
 import { returnOnDeposit } from "@/lib/portfolios/performance"
 import { portfolioValue } from "@/lib/portfolios/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Session } from "@/lib/session/types"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
-// One portfolio as a strategy card, the way the ready-made ones are: its week, its line, what it holds and its name
 export function PortfolioPreviewCard({
   portfolio,
   index,

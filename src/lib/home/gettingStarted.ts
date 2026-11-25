@@ -1,4 +1,4 @@
-export type GettingStartedStep = {
+type GettingStartedStep = {
   id: "joined" | "wallet" | "portfolio" | "buy"
   title: string
   description: string
@@ -8,7 +8,6 @@ export type GettingStartedStep = {
 
 type Progress = { walletConnected: boolean; hasPortfolio: boolean; hasBought: boolean }
 
-// The first steps of a new account, in the order they are meant to be done. The one to do next is the first not done.
 export function buildGettingStarted({ walletConnected, hasPortfolio, hasBought }: Progress): GettingStartedStep[] {
   const steps = [
     { id: "joined", title: "Joined Sandworm", description: "Your account is ready.", done: true },

@@ -1,15 +1,12 @@
 import { SellDialog } from "@/components/PortfolioDetail/SellDialog"
 import { RuleLine, StepLine } from "@/components/Strategy/RuleLines"
 import { Card } from "@/components/ui/card"
-import type { Portfolio } from "@/lib/portfolios/types"
 import { isExitRule } from "@/lib/rules/readings"
-import type { Rule } from "@/lib/rules/types"
 import { explainStrategy } from "@/lib/strategy/explain"
-import type { Strategy } from "@/lib/strategy/types"
+import type { Portfolio } from "@/types/portfolios"
+import type { Rule } from "@/types/rules"
+import type { Strategy } from "@/types/strategy"
 
-// How the strategy gets out of a stock, in the same lines as the Rules tab: the stop-loss and take-profit it was given, and the
-// rebalance that keeps what it holds on target. Limits (budget, most in one stock, and the like) are not exits and stay on the
-// Rules tab. Each line is read from the strategy's own rules, so a strategy with no stop-loss shows none.
 export function ExitsCard({ portfolio, rules, strategy }: { portfolio: Portfolio; rules: Rule[]; strategy: Strategy }) {
   const exits = rules.filter(isExitRule)
   const [first] = explainStrategy(strategy).steps

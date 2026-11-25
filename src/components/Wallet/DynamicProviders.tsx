@@ -1,17 +1,23 @@
 "use client"
 
-import { type ComponentType, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type ComponentType,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
+import { IDLE_FALLBACK_MS, IDLE_TIMEOUT_MS } from "@/constants/components/wallet/dynamic-providers"
 import { env } from "env.mjs"
 
 import { type PreloadWhen, type Published, type Wallet, WalletProvider } from "./WalletContext"
 
 type Intent = "signIn" | "linkWallet" | "profile"
 type SdkProps = { publish: (value: Published | undefined) => void }
-
-const IDLE_TIMEOUT_MS = 3000
-// For a browser without requestIdleCallback
-const IDLE_FALLBACK_MS = 1500
 
 const noWallet = async () => Promise.reject(new Error("Connect your wallet first"))
 
@@ -30,7 +36,9 @@ export function DynamicProviders({ children }: { children: ReactNode }) {
   const requested = useRef(false)
   const pending = useRef<Intent>(undefined)
   const liveRef = useRef(live)
-  liveRef.current = live
+  useLayoutEffect(() => {
+    liveRef.current = live
+  })
 
   const load = useCallback(() => {
     if (!environmentId || requested.current) return
@@ -40,7 +48,6 @@ export function DynamicProviders({ children }: { children: ReactNode }) {
     import("./DynamicSdk")
       .then(({ DynamicSdk }) => setSdk(() => DynamicSdk))
       .catch(() => {
-        // Asked for again the next time it is wanted
         requested.current = false
         setIsRequested(false)
       })

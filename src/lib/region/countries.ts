@@ -2,13 +2,12 @@ import { getAlpha2Codes } from "i18n-iso-countries"
 
 import { RESTRICTED_REGIONS } from "@/constants/region"
 
-export type Country = { code: string; name: string }
+type Country = { code: string; name: string }
 
 const names = new Intl.DisplayNames("en", { type: "region" })
 
 export const countryName = (code: string) => names.of(code) ?? code
 
-// Every country by its ISO code and name, in alphabetical order
 export const COUNTRIES: Country[] = Object.keys(getAlpha2Codes())
   .map((code) => ({ code, name: countryName(code) }))
   .sort((a, b) => a.name.localeCompare(b.name))

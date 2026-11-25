@@ -5,12 +5,12 @@ import { useState } from "react"
 import { ActivityList } from "@/components/Activity/ActivityList"
 import {
   NotificationsEmpty,
-  type NotificationTab,
   NotificationTabs,
   NotificationToolbar,
 } from "@/components/Notifications/NotificationControls"
 import { useNotifications } from "@/components/Notifications/NotificationsProvider"
-import type { Activity } from "@/lib/activity/types"
+import type { Activity } from "@/types/activity"
+import type { NotificationTab } from "@/types/ui"
 
 type AlertsViewProps = {
   activity: Activity[]
@@ -18,8 +18,6 @@ type AlertsViewProps = {
   portfolioNames?: Record<string, string>
 }
 
-// The alerts as the notifications they are: the ones to read, and the ones put away, to be read, put away or brought back.
-// The bell shows the latest few of the same.
 export function AlertsView({ activity, now, portfolioNames }: AlertsViewProps) {
   const { inbox, archived } = useNotifications()
   const [tab, setTab] = useState<NotificationTab>("inbox")

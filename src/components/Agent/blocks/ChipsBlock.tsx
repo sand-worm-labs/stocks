@@ -1,9 +1,8 @@
 "use client"
 
-import type { AgentBlock } from "@/lib/agent/types"
+import type { AgentBlock } from "@/types/agent"
 import { useAgent } from "../AgentContext"
 
-// Things the person can say with one press
 export function ChipsBlock({ block: { label, chips } }: { block: Extract<AgentBlock, { type: "chips" }> }) {
   const { send } = useAgent()
 

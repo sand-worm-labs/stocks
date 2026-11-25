@@ -5,14 +5,11 @@ import { useRef, useState } from "react"
 import { PiPencilSimple } from "react-icons/pi"
 import { toast } from "sonner"
 
+import { TITLE } from "@/constants/components/workspace/editable-name"
 import { errorMessage, renameStrategy } from "@/lib/strategies/client"
 import { NAME_MAX_LENGTH } from "@/lib/strategies/service"
 import { cn } from "@/lib/utils"
 
-const TITLE = "text-2xl font-medium md:text-[32px] md:leading-10"
-
-// A strategy's name, which its owner can change: press the pencil or the name, type, and Enter or leaving the box keeps it, Escape
-// puts it back. The new name shows at once and goes back if it can't be saved.
 export function EditableName({ id, name }: { id: string; name: string }) {
   const router = useRouter()
   const [shown, setShown] = useState(name)

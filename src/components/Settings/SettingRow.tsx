@@ -6,9 +6,7 @@ import { CardRow } from "@/components/ui/card"
 type SettingRowProps = {
   title: string
   description: ReactNode
-  // A short tag beside the title, e.g. the rule it sets
   tag?: string
-  // The control on the right: a switch, a menu, a button
   children: ReactNode
 }
 

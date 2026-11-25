@@ -1,16 +1,12 @@
 export type AmountReading = {
-  // The amount, once it is a number that can be used
   amount?: number
-  // How much of the most it is, from 0 to 1
   fraction: number
-  // What is wrong with it, for the person typing
   error?: string
 }
 
 type AmountRules = {
   min: number
   max: number
-  // What to say when it is under the least or over the most
   under?: (least: number) => string
   over?: (most: number) => string
 }

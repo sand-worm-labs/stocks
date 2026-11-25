@@ -3,13 +3,10 @@ import { NewPortfolioButton } from "@/components/Portfolios/NewPortfolioButton"
 import { Card } from "@/components/ui/card"
 import { SUMMARY_CARD_SURFACE } from "@/constants/cards"
 
+import { ROWS } from "@/constants/components/skeleton/portfolios-skeleton"
 import { Skeleton, SkeletonAvatar, SkeletonPill, SkeletonText } from "./Skeleton"
 import { type SkeletonColumn, SkeletonTable, SkeletonTableFooter } from "./SkeletonTable"
 
-const ROWS = 10
-
-// The same columns as the portfolios' table, with the same ones left out on a small screen
-// Each is as wide as the real column is at the page's usual width, which the table sizes by what is in it
 const COLUMNS: SkeletonColumn[] = [
   { width: "w-20", lead: true, className: "w-[37%]" },
   { width: "w-24", className: "w-[14%]" },
@@ -19,8 +16,6 @@ const COLUMNS: SkeletonColumn[] = [
   { width: "w-20", className: "hidden w-[9%] lg:table-cell" },
 ]
 
-// The page of portfolios before its data: the title and the button are real, and the totals, the controls and the table
-// have the shape they will have
 export function PortfoliosSkeleton() {
   return (
     <div className="flex flex-col gap-6">

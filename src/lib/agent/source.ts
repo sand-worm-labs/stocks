@@ -1,10 +1,9 @@
 import { agentMockData } from "@/_mockdata/agent"
 import { routeHref } from "@/config/routes"
 import { RESEARCH_STEPS } from "@/constants/flow"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Rule, StrategyRow } from "@/lib/rules/types"
-
-import type { AgentMessage, AgentScript, AgentStep } from "./types"
+import type { AgentMessage, AgentScript, AgentStep } from "@/types/agent"
+import type { Portfolio } from "@/types/portfolios"
+import type { Rule, StrategyRow } from "@/types/rules"
 
 const brief = ({ brief, id }: Portfolio): AgentMessage => ({
   id: `${id}-brief`,

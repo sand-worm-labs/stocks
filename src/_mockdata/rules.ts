@@ -1,14 +1,13 @@
 import type { RuleSpec } from "@/lib/rules/spec"
-import type { Rule, StrategyRow } from "@/lib/rules/types"
+import type { Rule, StrategyRow } from "@/types/rules"
 
-export const rulesMockData: Rule[] = [
+const rulesMockData: Rule[] = [
   { id: 1, label: "Budget 6,000 USDC", state: "holds", kind: "budget", limit: 6_000 },
   { id: 2, label: "Max 20% in any one stock", state: "holds", kind: "max-weight", limit: 0.2 },
   { id: 3, label: "Liquidity ≥ $100K on Base", state: "holds", kind: "liquidity", limit: 100_000 },
   { id: 4, label: "Ask before buying", state: "holds", kind: "approval" },
 ]
 
-// The rules of a brief that can't be met: 8 stocks at 15% need 120% of the money, and few have token supply.
 export const unmeetableRulesMockData: Rule[] = [
   rulesMockData[0] as Rule,
   { id: 2, label: "Max 20% in any one stock", state: "holds", detail: "8 × 15% = 120%" },
@@ -27,7 +26,6 @@ export const strategyMockData: StrategyRow[] = [
 export const assumptionMockData =
   "“Robotics” includes big companies with a robotics business, not only pure robotics companies."
 
-// What each hand-made strategy is held to, in the terms of its own brief: the rest get theirs worked out from their id
 export const rulesByPortfolioMockData: Record<
   string,
   { rules: RuleSpec[]; strategy: StrategyRow[]; assumption: string }

@@ -1,9 +1,8 @@
 import { StarterCard } from "@/components/Onboarding/StarterCard"
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader"
 import { routeHref } from "@/config/routes"
-import type { Starter } from "@/lib/onboarding/types"
+import type { Starter } from "@/types/onboarding"
 
-// Briefs ready to start from, each opening the new portfolio with its brief already written
 export function StarterPortfolios({ starters }: { starters: Starter[] }) {
   return (
     <section className="flex flex-col gap-3">

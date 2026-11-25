@@ -1,13 +1,11 @@
 import { analyzeBrief } from "@/lib/brief/analyze"
 import { isBuyable } from "@/lib/markets/stock"
-import type { Stock } from "@/lib/markets/types"
-import type { Report } from "@/lib/report/types"
 import type { RuleSpec } from "@/lib/rules/spec"
-import type { Strategy } from "@/lib/strategy/types"
+import type { Stock } from "@/types/markets"
+import type { Design, Market, Pipeline, Research } from "@/types/pipeline"
+import type { Report } from "@/types/report"
+import type { Strategy } from "@/types/strategy"
 
-import type { Design, Market, Pipeline, Research } from "./types"
-
-// What is assumed when the idea doesn't say
 const DEFAULT_BUDGET = 500
 const DEFAULT_LOSS_LIMIT = 25
 const DEFAULT_MAX_SHARE = 0.35
@@ -23,7 +21,6 @@ const norm = (text: string) =>
     .trim()
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
-// The stocks an idea names: a theme it asks for ("robotics"), or a company by its ticker or name ("Tesla")
 function named(items: string[], { stocks, categories }: Market) {
   return items.flatMap((item) => {
     const wanted = norm(item)
@@ -35,8 +32,6 @@ function named(items: string[], { stocks, categories }: Market) {
   })
 }
 
-// Which stocks to hold: what the idea asks for, less what it wants kept out, that can be bought; and when it names none, the most
-// liquid there are. Enough of them that none has to be bigger than the cap.
 export function pickStocks(include: string[], avoid: string[], market: Market, maxShare: number) {
   const buyable = market.stocks.filter(isBuyable)
   const byLiquidity = (a: Stock, b: Stock) => (b.liquidity ?? 0) - (a.liquidity ?? 0)
@@ -49,7 +44,6 @@ export function pickStocks(include: string[], avoid: string[], market: Market, m
   return pool.toSorted(byLiquidity).slice(0, want)
 }
 
-// Each stock's share: equal, none past the cap; what that leaves is cash
 export function shares(count: number, maxShare: number) {
   return Array.from({ length: count }, () => Math.min(1 / count, maxShare))
 }
@@ -61,8 +55,6 @@ function nameFor(brief: string, theme: string | undefined, maxShare: number | un
   return `${base}${maxShare ? `, capped at ${Math.round(maxShare * 100)}%` : ""}`.slice(0, 60)
 }
 
-// The strategy for the stocks picked: once a month, hold the strongest few by their last six months, the steadier given more, and
-// trade back to those shares only when one has drifted. The same design as Steady leaders, for whatever was picked.
 function designStrategy(name: string, symbols: string[]): Strategy {
   return {
     name,
@@ -87,8 +79,6 @@ function designStrategy(name: string, symbols: string[]): Strategy {
 const percent = (fraction: number) => `${Math.round(fraction * 100)}%`
 const usdc = (amount: number) => amount.toLocaleString("en-US", { maximumFractionDigits: 0 })
 
-// The local stand-in for the agent. It reads the idea with the app's own parser, picks stocks from the market, and builds the rules
-// and the orders from that. It runs no backtest, so the numbers in its report are a template, and the report says so.
 export function createLocalPipeline(template: Report): Pipeline {
   return {
     async design(brief, market) {

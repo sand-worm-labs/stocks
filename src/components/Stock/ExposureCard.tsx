@@ -13,7 +13,6 @@ import { formatAmount, formatPercent, formatSignedAmount } from "@/lib/format"
 import type { exposureTo } from "@/lib/portfolios/portfolio"
 import { changeTone } from "@/lib/tone"
 
-// The strategies that hold a stock, a page at a time: a stock held by many would otherwise run down the page
 export function ExposureCard({ exposures }: { exposures: ReturnType<typeof exposureTo> }) {
   const [requested, setPage] = useState(0)
   const top = useRef<HTMLElement>(null)

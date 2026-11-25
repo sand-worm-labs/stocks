@@ -17,7 +17,6 @@ import {
   PiShoppingCart,
 } from "react-icons/pi"
 
-// An icon for a portfolio from what it is about: the first theme named in its name or brief gives the icon
 export const PORTFOLIO_ICONS: { pattern: RegExp; icon: IconType }[] = [
   { pattern: /robot|autonom|automation/i, icon: PiRobot },
   { pattern: /chip|semi|memory|silicon|compute|hardware/i, icon: PiCpu },

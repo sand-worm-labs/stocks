@@ -15,7 +15,6 @@ beforeAll(() => {
 })
 afterEach(() => vi.unstubAllEnvs())
 
-// A request for a path, as someone who is signed out, or signed in as `userId`, with the first run done for `onboardedAs`
 async function go(path: string, { userId, onboardedAs }: { userId?: string; onboardedAs?: string } = {}) {
   const cookies = [
     userId && `${SESSION_COOKIE}=${await signSession(userId)}`,
@@ -23,7 +22,6 @@ async function go(path: string, { userId, onboardedAs }: { userId?: string; onbo
   ].filter(Boolean)
   const response = await middleware(new NextRequest(`${ORIGIN}${path}`, { headers: { cookie: cookies.join("; ") } }))
   const to = response.headers.get("location")
-  // Where it sends them, as a path, or nothing when it lets the page through
   return to ? new URL(to).pathname + new URL(to).search : "pass"
 }
 

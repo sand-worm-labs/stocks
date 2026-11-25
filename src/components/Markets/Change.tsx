@@ -5,7 +5,6 @@ import { formatPercent } from "@/lib/format"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
-// A move with an arrow, the way a market list shows it
 export function Change({ value }: { value?: number }) {
   if (value === undefined) return <span className="text-ink-400">—</span>
 

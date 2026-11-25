@@ -1,10 +1,6 @@
 import { useId } from "react"
+import { HEIGHT, PAD, WIDTH } from "@/constants/components/onboarding/starter-chart"
 
-const WIDTH = 300
-const HEIGHT = 90
-const PAD = 6
-
-// A year of a backtest as a line, green where it is above where it started and red where it is below
 export function StarterChart({ series }: { series: number[] }) {
   const id = useId()
   const min = Math.min(...series)

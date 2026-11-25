@@ -4,17 +4,16 @@ import { AgentWorkspace } from "@/components/Agent/AgentWorkspace"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { PortfolioBreadcrumb } from "@/components/Flow/PortfolioBreadcrumb"
 import { getLiveScript } from "@/lib/agent/source"
-import type { Portfolio } from "@/lib/portfolios/types"
 import { maxWeightOf } from "@/lib/rules/readings"
 import { getRules } from "@/lib/rules/source"
 import { getSession } from "@/lib/session/source"
+import type { Portfolio } from "@/types/portfolios"
 
+import type { PortfolioTab } from "@/types/ui"
 import { AddFundsDialog } from "./AddFundsDialog"
 import { PortfolioHeader } from "./PortfolioHeader"
-import type { PortfolioTab } from "./PortfolioTabs"
 import { SellDialog } from "./SellDialog"
 
-// Everything around a live portfolio's pages: where it sits, who it is, the tabs between its pages and the agent
 export async function PortfolioShell({
   portfolio,
   current,

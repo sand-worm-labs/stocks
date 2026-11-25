@@ -2,7 +2,6 @@ import { AppLink } from "@/components/AppLink/AppLink"
 import { TOKEN_TABS, type TokenTabId } from "@/constants/token"
 import { cn } from "@/lib/utils"
 
-// The sections of a token's page, the way a block explorer lays them out
 export function TokenTabs({ tokenId, current }: { tokenId: string; current: TokenTabId }) {
   return (
     <nav

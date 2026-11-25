@@ -15,10 +15,10 @@ Written 2026-11-24. The app behaves the way production will: nothing opens witho
 
 ## Providers (`src/lib/auth/providers.ts`, `identity.ts`)
 
-| Provider | State |
-| --- | --- |
-| Wallet (Dynamic: wallet or email) | Works. Needs `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` and `AUTH_SECRET`. |
-| Sandworm | Button shown as "Soon". `available: false`; `identify("sandworm", ...)` refuses. |
+| Provider                          | State                                                                            |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| Wallet (Dynamic: wallet or email) | Works. Needs `NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID` and `AUTH_SECRET`.             |
+| Sandworm                          | Button shown as "Soon". `available: false`; `identify("sandworm", ...)` refuses. |
 
 **To switch Sandworm on:** (1) make the button start the sign-in on the main app and bring a token back; (2) check that token in
 `identify` (the `sandworm` case) and return the account id; (3) set `available: true`; (4) have the browser POST

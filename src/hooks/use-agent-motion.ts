@@ -1,18 +1,13 @@
 "use client"
 
 import { type RefObject, useEffect } from "react"
+import { THINKING_MS } from "@/constants/hooks/use-agent-motion"
 
 // Started when this file is first loaded in the browser, so the library is usually there by the time it is needed
 const gsapReady = typeof window === "undefined" ? undefined : import("gsap")
 
-// How long the agent is shown at work before the first thing it says
-const THINKING_MS = 1.1
-
 const all = <T extends Element>(root: ParentNode, selector: string) => Array.from(root.querySelectorAll<T>(selector))
 
-// The agent's entrance: each message rises in, the agent "thinks" for a moment, then its blocks follow one by one, text
-// is written out, rows file in and checks pop. GSAP is loaded when the first message needs it, so it is never part of the
-// page's first load, and everything it moves is transform and opacity, which the browser can draw without redoing layout.
 export function useAgentMotion(stream: RefObject<HTMLElement | null>, messageCount: number) {
   useEffect(() => {
     const root = stream.current
@@ -26,7 +21,7 @@ export function useAgentMotion(stream: RefObject<HTMLElement | null>, messageCou
     if (isCalm) {
       all<HTMLElement>(root, "[data-thinking]").forEach((thinking) => (thinking.style.display = "none"))
       reveal()
-      root.scrollTop = root.scrollHeight
+      root.scrollTo({ top: root.scrollHeight })
       return
     }
 
@@ -49,7 +44,6 @@ export function useAgentMotion(stream: RefObject<HTMLElement | null>, messageCou
             timeline.to(message, { autoAlpha: 1, y: 0, duration: 0.4 }).call(follow)
             if (message.dataset.from !== "agent") return
 
-            // The agent thinks first
             const thinking = message.querySelector<HTMLElement>("[data-thinking]")
             if (thinking) {
               timeline
@@ -59,7 +53,6 @@ export function useAgentMotion(stream: RefObject<HTMLElement | null>, messageCou
             }
 
             let previousLength = 0
-            // Each block starts while the one before is still finishing, so the whole reply lands in a few seconds
             let previous = ""
             all<HTMLElement>(message, "[data-block]").forEach((block, index) => {
               const items = all(block, "[data-item]")
@@ -131,7 +124,6 @@ export function useAgentMotion(stream: RefObject<HTMLElement | null>, messageCou
           timeline.call(follow)
         }, root)
       })
-      // If the animation library can't load, the conversation is still there
       .catch(reveal)
 
     return () => {

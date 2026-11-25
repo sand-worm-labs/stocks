@@ -17,32 +17,24 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ALL } from "@/constants/components/portfolio-detail/sell-dialog"
+import { TRIGGER_CLASSNAME } from "@/constants/components/portfolio-detail/shared"
 import { DEFAULT_SLIPPAGE, MIN_SELL_AMOUNT, QUICK_FRACTIONS, SELL_PRICE_IMPACT } from "@/constants/trade"
 import { formatAmount, formatPercent, pluralize } from "@/lib/format"
 import { readAmount } from "@/lib/portfolios/amount"
 import { quoteSale } from "@/lib/portfolios/sell"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Session } from "@/lib/session/types"
 import { cn } from "@/lib/utils"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
 type SellDialogProps = {
   portfolio: Portfolio
-  // The stock to sell. Without one, everything is sold.
   symbol?: string
-  // Instead of a fixed stock, the person picks what to sell inside the window: a stock, or everything
   pickable?: boolean
   className?: string
-  // Whether the sale is paper trading, to say so in the window
   mode?: Session["network"]["mode"]
 }
 
-// The picker's value for selling all of it
-const ALL = "all"
-
-const TRIGGER_CLASSNAME =
-  "border-border-secondary dark:border-border-tertiary hover:bg-hover-bg hover:border-hover-border rounded-lg border px-3 py-1 text-xs font-medium transition-colors"
-
-// The button that opens a sale over the page: one stock, in part or whole, or everything
 export function SellDialog({ portfolio, symbol: fixed, pickable, className, mode }: SellDialogProps) {
   const [open, setOpen] = useState(false)
   const [picked, setPicked] = useState(pickable ? portfolio.holdings[0]?.symbol : fixed)
@@ -77,7 +69,6 @@ export function SellDialog({ portfolio, symbol: fixed, pickable, className, mode
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        // Each time it opens it starts on selling the whole of it
         if (next) setText(held.toFixed(2))
       }}
     >

@@ -4,8 +4,6 @@ import { cn } from "@/lib/utils"
 
 type SparkleAIProps = { size?: number; className?: string }
 
-// The web app's AI mark: a sparkle in a rounded tile with a rainbow edge. The tile and the sparkle take their colours from
-// --icon-bg and --icon-stroke, so they follow the theme.
 export function SparkleAI({ size = 32, className }: SparkleAIProps) {
   // Every mark on a page needs an id of its own, or one mark's gradient would paint another's. The colons React puts in an
   // id are left out, as they do not belong in a url(#...)

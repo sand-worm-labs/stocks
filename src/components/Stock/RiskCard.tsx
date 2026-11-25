@@ -2,7 +2,7 @@ import { SectionHeader } from "@/components/SectionHeader/SectionHeader"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { formatDecimal, formatPercent } from "@/lib/format"
-import type { StockDetail } from "@/lib/markets/types"
+import type { StockDetail } from "@/types/markets"
 
 export function RiskCard({ risk }: { risk: NonNullable<StockDetail["risk"]> }) {
   return (

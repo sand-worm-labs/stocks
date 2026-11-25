@@ -2,9 +2,6 @@ import Image from "next/image"
 
 import { SandwormLogo } from "@/components/SandwormLogo/SandwormLogo"
 
-// The other half of the sign-in page, as the main Sandworm app draws it: a soft aurora, still for anyone who has asked for less
-// motion, with the logo and what the product is for under it. Decorative; the page works the same without it, and on a phone it
-// isn't drawn at all.
 export function AuraPanel() {
   return (
     <div className="relative hidden h-full w-full md:block">
@@ -29,7 +26,7 @@ export function AuraPanel() {
           <h2 className="font-body mt-3 mb-1 text-center text-3xl font-medium text-white">
             Welcome to Sandworm Stocks
           </h2>
-          <div className="font-body mt-2 text-center font-medium text-[#B4CACE]">
+          <div className="font-body text-aura-ink mt-2 text-center font-medium">
             <p className="text-lg md:text-base">Research an idea. Design the rules.</p>
             <p className="mt-0.5 text-lg md:text-base">Test it on history. Trade it on Base.</p>
           </div>

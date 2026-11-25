@@ -19,8 +19,6 @@ import { getOwnStrategy } from "@/lib/strategies/source"
 
 export const metadata: Metadata = { title: "Trade" }
 
-// Buying is a review over the report of the version being bought, so this is that report with the review already open.
-// Closing it goes back to the version.
 export default async function BuyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const [portfolio, report, orders, session] = await Promise.all([

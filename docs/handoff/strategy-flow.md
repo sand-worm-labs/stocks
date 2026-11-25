@@ -11,7 +11,7 @@ person typed, and every piece that will be replaced sits behind one small seam.
    (`POST .../confirm`) locks them and starts the research.
 3. **Research**: the progress plays, then `POST .../ready` marks the results ready. A reload mid-way picks it up again.
 4. **Results**: the report from that research. Also on the strategy's Results tab (`/strategies/<id>/report`) afterwards.
-5. **Review and trade** (`POST .../trade`): *Paper trading* saves it as live with nothing involved. *My wallet* is **non-custodial**: no money is
+5. **Review and trade** (`POST .../trade`): _Paper trading_ saves it as live with nothing involved. _My wallet_ is **non-custodial**: no money is
    sent to us or to any wallet of ours. The person signs an approval that names the strategy, the most it may use of their own USDC, and
    when it ends; the server checks the signature and reads the wallet's balance on Base Sepolia (read-only), then the strategy goes live.
    The USDC never leaves their wallet. This test version records the approval; the on-chain trades from the wallet come next.
@@ -20,13 +20,13 @@ The step bar (Idea, Rules, Research, Results, Trade) shows on every one of these
 
 ## Where things live
 
-| What | Where | To replace it |
-| --- | --- | --- |
-| Storage | `src/lib/store` (`getStore`) | A file by default, Postgres when `DATABASE_URL` is set. One table, `schema.ts`; move it by running that on another Postgres and copying rows. Or write a `StrategyStore` that calls the main app's API. |
-| The agent | `src/lib/pipeline` (`getPipeline`) | Write a `Pipeline` (`design`, `research`) that calls Sandworm and return it from `source.ts`. |
-| Rules of the flow | `src/lib/strategies/service.ts` | Owner checks, allowed steps, filling the plan. Tested; independent of storage and the agent. |
-| Browser to API | `src/lib/strategies/client.ts`, `src/app/api/strategies` | Point the client at another API; the routes are thin. |
-| Approving from a wallet | `src/lib/trade/authorize.ts`, `BuyReview` | The server checks the signature and the balance on the chain; the browser's word is never taken. |
+| What                    | Where                                                    | To replace it                                                                                                                                                                                                                                                                                   |
+| ----------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Storage                 | `src/lib/store` (`getStore`)                             | A file by default, Postgres when `DATABASE_URL` is set: the tables in `src/db/schema.ts` (design: `docs/design/database-schema.md`), made by `pnpm db:migrate`. A strategy is spread over them and put back together as one record by `postgres.ts`; what it holds is its ledger (`ledger.ts`). |
+| The agent               | `src/lib/pipeline` (`getPipeline`)                       | Write a `Pipeline` (`design`, `research`) that calls Sandworm and return it from `source.ts`.                                                                                                                                                                                                   |
+| Rules of the flow       | `src/lib/strategies/service.ts`                          | Owner checks, allowed steps, filling the plan. Tested; independent of storage and the agent.                                                                                                                                                                                                    |
+| Browser to API          | `src/lib/strategies/client.ts`, `src/app/api/strategies` | Point the client at another API; the routes are thin.                                                                                                                                                                                                                                           |
+| Approving from a wallet | `src/lib/trade/authorize.ts`, `BuyReview`                | The server checks the signature and the balance on the chain; the browser's word is never taken.                                                                                                                                                                                                |
 
 The pages read through `lib/<area>/source.ts`: a strategy made here comes first, and the made-up ones fill out the rest (their number is the
 "demo data" setting).
@@ -53,7 +53,7 @@ template's, and the report says so in a banner, in the verdict ("Example results
 ## To switch on
 
 - `DATABASE_URL`: a Postgres (Neon works). Without it strategies live in `.data/strategies.json` locally and in a temp folder on Vercel, which
-  is lost. The table is created on first use.
+  is lost. Make the tables once with `pnpm db:migrate`. Owners must be account ids (uuids), which Dynamic's and the main app's are; with sign-in switched off the one local person has `LOCAL_USER_ID`.
 - Test USDC: https://faucet.circle.com (Base Sepolia).
 
 ## Known gaps

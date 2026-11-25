@@ -1,7 +1,7 @@
 import { getBaseTokens } from "@/lib/markets/tokens"
 
+import type { Portfolio } from "@/types/portfolios"
 import { heldSymbols } from "./portfolio"
-import type { Portfolio } from "./types"
 
 // Each stock held, and its contract on Base: where its live price comes from. A stock the market has no token for is left out.
 export async function getHeldAddresses(portfolios: Portfolio[]): Promise<Record<string, string>> {

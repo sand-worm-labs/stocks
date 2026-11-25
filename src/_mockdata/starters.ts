@@ -1,12 +1,10 @@
-import type { Starter } from "@/lib/onboarding/types"
+import type { Starter } from "@/types/onboarding"
 
 import { makeGrowth } from "./series"
 
-// A year in 60 steps, ending on a given return
 const year = (seed: number, volatility: number, annualReturn: number) =>
   makeGrowth(seed, volatility, 1 + annualReturn, 1, 60, 0)
 
-// Briefs worth starting from, each for a theme of the market, with how its backtest did over the last year
 export const startersMockData: Starter[] = [
   {
     id: "robotics-20",

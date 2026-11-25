@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { Portfolio } from "@/lib/portfolios/types"
+import type { Portfolio } from "@/types/portfolios"
 
 import { buildAllocation } from "./allocation"
 

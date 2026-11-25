@@ -1,8 +1,7 @@
+import { HEIGHT } from "@/constants/components/sparkline/sparkline"
 import { cn } from "@/lib/utils"
 
 type SparklineProps = { series: number[]; className?: string }
-
-const HEIGHT = 24
 
 export function Sparkline({ series, className }: SparklineProps) {
   if (series.length < 2) return null

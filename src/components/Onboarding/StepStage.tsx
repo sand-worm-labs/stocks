@@ -3,17 +3,9 @@
 import { gsap } from "gsap"
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 
+import { IN_SECONDS, OUT_SECONDS, SHIFT } from "@/constants/components/onboarding/step-stage"
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 
-// How long the step that is leaving takes to go, how long the next takes to arrive, and how far each slides. Going is quick and
-// arriving is slower and settles, so the answer to a press is felt at once and the new step still has time to land.
-const OUT_SECONDS = 0.14
-const IN_SECONDS = 0.4
-const SHIFT = 28
-
-// Where the steps are shown. When the step changes, the one on show slides a little the way you are going and fades, the next takes its
-// place, and slides in from that side. It is opacity and transform only, which the browser can do without the page's own work, and
-// the step cannot be pressed or typed in while it is going (it is inert), so a second press cannot skip one. Without motion the step just changes.
 export function StepStage({ step, children }: { step: number; children: (step: number) => ReactNode }) {
   const stage = useRef<HTMLDivElement>(null)
   const reduced = usePrefersReducedMotion()
@@ -21,6 +13,8 @@ export function StepStage({ step, children }: { step: number; children: (step: n
   // Which way the last change went: 1 forward, -1 back
   const way = useRef(1)
   const arrived = useRef(false)
+
+  if (reduced && shown !== step) setShown(step)
 
   useEffect(() => {
     const element = stage.current
@@ -34,10 +28,7 @@ export function StepStage({ step, children }: { step: number; children: (step: n
     }
 
     way.current = Math.sign(step - shown) || 1
-    if (reduced) {
-      setShown(step)
-      return
-    }
+    if (reduced) return
 
     element.inert = true
     gsap.to(element, {
@@ -50,7 +41,6 @@ export function StepStage({ step, children }: { step: number; children: (step: n
     return () => void gsap.killTweensOf(element)
   }, [step, shown, reduced])
 
-  // The next step is in place, out of sight, and comes in from the side it is on
   useLayoutEffect(() => {
     const element = stage.current
     if (!element || !arrived.current) {

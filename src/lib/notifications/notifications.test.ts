@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { Activity } from "@/lib/activity/types"
+import type { Activity } from "@/types/activity"
 
 import {
   archive,
@@ -37,7 +37,6 @@ describe("notifications", () => {
   it("count what has not been read, in the inbox", () => {
     expect(unreadCount(items, NO_NOTIFICATION_STATE)).toBe(3)
     expect(unreadCount(items, { read: ["a"], archived: [] })).toBe(2)
-    // One put away is no longer something to read
     expect(unreadCount(items, { read: [], archived: ["b"] })).toBe(2)
   })
 
@@ -64,7 +63,6 @@ describe("notifications", () => {
     const state = archive(NO_NOTIFICATION_STATE, "a")
     expect(state).toEqual({ read: ["a"], archived: ["a"] })
     expect(archive(state, "a")).toEqual(state)
-    // One put away while it was still unread no longer counts as something to read
     expect(unreadCount(items, state)).toBe(2)
   })
 
@@ -73,7 +71,6 @@ describe("notifications", () => {
     const back = unarchive(away, "a")
     expect(back).toEqual({ read: ["a"], archived: [] })
     expect(inboxOf(items, back).map(({ id }) => id)).toEqual(["a", "b", "c"])
-    // One that was never put away is left as it is
     expect(unarchive(back, "a")).toBe(back)
   })
 
@@ -89,7 +86,6 @@ describe("notifications", () => {
       expect(parseNotificationState(bad).read).toEqual([])
     }
     expect(parseNotificationState('{"read":"a","archived":[1,"b"]}').archived).toEqual(["b"])
-    // As the cookie holds it, encoded
     expect(parseNotificationState(serializeNotificationState(kept))).toEqual(kept)
     expect(parseNotificationState("%E0%A4%A")).toEqual(NO_NOTIFICATION_STATE)
   })

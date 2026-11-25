@@ -6,16 +6,14 @@ import { ChartFrame } from "@/components/Charts/ChartFrame"
 import { ChartTooltip } from "@/components/Charts/ChartTooltip"
 import { ResponsiveChart } from "@/components/Charts/ResponsiveChart"
 import { CHART_ANIMATION, CHART_COLORS } from "@/constants/chart"
+import { MONTH_TICKS } from "@/constants/components/report/charts/fan-chart"
 import { formatPercent } from "@/lib/format"
-import type { FanPoint } from "@/lib/report/types"
-
-const MONTH_TICKS = [0, 3, 6, 9, 12]
+import type { FanPoint } from "@/types/report"
 
 type Row = FanPoint & { range: [number, number] }
 
 const percent = (value: number) => formatPercent(value, { signed: true })
 
-// Where the next year could land: the middle outcome, and the band that 9 in 10 outcomes fall inside
 export function FanChart({ fan }: { fan: FanPoint[] }) {
   const rows: Row[] = fan.map((point) => ({ ...point, range: [point.low, point.high] }))
 

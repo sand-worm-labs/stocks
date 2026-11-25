@@ -2,7 +2,7 @@ import { Money } from "@/components/Money/Money"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { CardRow } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import type { Stock } from "@/lib/markets/types"
+import type { Stock } from "@/types/markets"
 
 type StockPickRowProps = {
   stock: Stock

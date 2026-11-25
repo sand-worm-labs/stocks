@@ -9,8 +9,6 @@ import { DEFAULT_TOKEN_TAB, TOKEN_TABS, type TokenTabId } from "@/constants/toke
 import { Skeleton, SkeletonAvatar, SkeletonText } from "./Skeleton"
 import { TabSkeleton } from "./TabSkeleton"
 
-// A token's page before its data: the way back and the tabs are real, set from the address, and the token's name, price
-// and the tab's body are where they will be
 export function TokenSkeleton() {
   const { symbol } = useParams<{ symbol: string }>()
   const tab = useSearchParams().get("tab")

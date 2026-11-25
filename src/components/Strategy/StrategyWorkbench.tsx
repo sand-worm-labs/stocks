@@ -4,11 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { Section } from "@/components/Rules/Section"
 import { SegmentedControl } from "@/components/ui/segmented-control"
-import type { Stock } from "@/lib/markets/types"
-import type { Portfolio } from "@/lib/portfolios/types"
 import { exitsFirst } from "@/lib/rules/readings"
 import { checkRules } from "@/lib/rules/spec"
 import type { ModelDoc } from "@/lib/strategy/document"
+import type { Stock } from "@/types/markets"
+import type { Portfolio } from "@/types/portfolios"
 
 import { ModelRules } from "./ModelRules"
 import { StrategyCanvas } from "./StrategyCanvas"
@@ -19,17 +19,13 @@ type StrategyWorkbenchProps = {
   initial: ModelDoc
 }
 
-// The model, said two ways that never disagree because they are both drawn from the same data: one set of rules, in plain
-// words or as a diagram.
 export function StrategyWorkbench({ portfolio, stocks, initial }: StrategyWorkbenchProps) {
   const [doc, setDoc] = useState(initial)
   const [view, setView] = useState<"words" | "diagram">("words")
-  // What the diagram has changed, so a change can be taken back: the models before it, and the ones taken back from
   const [past, setPast] = useState<ModelDoc[]>([])
   const [future, setFuture] = useState<ModelDoc[]>([])
 
   const symbols = useMemo(() => stocks.map(({ symbol }) => symbol), [stocks])
-  // How it gets out of a stock comes first, in the words and on the board
   const readings = useMemo(() => exitsFirst(checkRules(portfolio, doc.rules, stocks)), [portfolio, doc.rules, stocks])
 
   const change = (next: ModelDoc) => {
@@ -52,8 +48,6 @@ export function StrategyWorkbench({ portfolio, stocks, initial }: StrategyWorkbe
     setDoc(next)
   }, [future, doc])
 
-  // Ctrl or Cmd Z takes back the last change made in the diagram, and with Shift (or Ctrl Y) puts it back. Inside a field the
-  // keys are left to the field, which has its own undo.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.altKey) return

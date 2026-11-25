@@ -10,7 +10,6 @@ import { AGENT_PROMPTS } from "@/constants/flow"
 import { cn } from "@/lib/utils"
 
 type AgentComposerProps = {
-  // Called with the message when it is sent. Left out, sending only clears the box.
   onSend?: (message: string) => void
   className?: string
 }

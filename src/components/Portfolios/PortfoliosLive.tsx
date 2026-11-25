@@ -1,7 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { PiList, PiSquaresFour } from "react-icons/pi"
+import { useState } from "react"
 
 import { CountUp } from "@/components/Home/CountUp"
 import { ProfitLine } from "@/components/Money/ProfitLine"
@@ -11,9 +10,10 @@ import { Card } from "@/components/ui/card"
 import { SegmentedControl } from "@/components/ui/segmented-control"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
 import { SUMMARY_CARD_SURFACE } from "@/constants/cards"
+import { LAYOUT_KEY, LAYOUTS, SORTING } from "@/constants/components/portfolios/portfolios-live"
+import { useStoredChoice } from "@/hooks/use-stored-choice"
 import { deposited, profit } from "@/lib/portfolios/performance"
 import { isLive, portfolioValue } from "@/lib/portfolios/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
 import {
   countsByView,
   inView,
@@ -23,53 +23,30 @@ import {
   type PortfolioView,
   sortPortfolios,
 } from "@/lib/portfolios/views"
-import type { Session } from "@/lib/session/types"
 import { cn } from "@/lib/utils"
 import { filterPillClassName } from "@/styles/interactive"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
 import { PortfolioBoxes } from "./PortfolioBoxes"
+import { PortfoliosEmpty } from "./PortfoliosEmpty"
 import { PortfolioTable } from "./PortfolioTable"
 
 type Layout = "list" | "boxes"
-const LAYOUT_KEY = "sw.portfolios.layout"
-const LAYOUTS = [
-  { id: "boxes", label: "Boxes", icon: PiSquaresFour },
-  { id: "list", label: "List", icon: PiList },
-] as const
-
-// The order each sort starts the table in
-const SORTING = {
-  profit: [{ id: "return", desc: true }],
-  value: [{ id: "value", desc: true }],
-  newest: [{ id: "created", desc: true }],
-} as const
 
 type PortfoliosLiveProps = {
   portfolios: Portfolio[]
   addresses: Record<string, string>
   mode: Session["network"]["mode"]
+  // Whether the list was narrowed by a search: no strategies then is a search with no matches, not a new account
+  searching?: boolean
 }
 
-// The list of portfolios at the prices the market is making: what they are worth, what each has made and how many are up or
-// down all move with it. Narrow it to the ones winning or losing, and order it by what has made the most.
-export function PortfoliosLive({ portfolios, addresses, mode }: PortfoliosLiveProps) {
+export function PortfoliosLive({ portfolios, addresses, mode, searching = false }: PortfoliosLiveProps) {
   const live = useLivePortfolios(portfolios, addresses)
   const [view, setView] = useState<PortfolioView>("all")
   const [sort, setSort] = useState<PortfolioSort>("profit")
-  // List to begin with; the choice is kept in the browser, and read once the page is there so the two agree on first show
-  const [layout, setLayout] = useState<Layout>("list")
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LAYOUT_KEY)
-      if (saved === "boxes" || saved === "list") setLayout(saved)
-    } catch {}
-  }, [])
-  const chooseLayout = (next: Layout) => {
-    setLayout(next)
-    try {
-      localStorage.setItem(LAYOUT_KEY, next)
-    } catch {}
-  }
+  const [layout, chooseLayout] = useStoredChoice<Layout>(LAYOUT_KEY, ["list", "boxes"], "list")
 
   const running = live.filter(isLive)
   const value = running.reduce((sum, portfolio) => sum + (portfolioValue(portfolio) ?? 0), 0)
@@ -77,6 +54,8 @@ export function PortfoliosLive({ portfolios, addresses, mode }: PortfoliosLivePr
   const put = running.reduce((sum, portfolio) => sum + deposited(portfolio), 0)
   const counts = countsByView(live)
   const shown = live.filter((portfolio) => inView(portfolio, view))
+
+  if (live.length === 0 && !searching) return <PortfoliosEmpty />
 
   return (
     <>
@@ -92,7 +71,6 @@ export function PortfoliosLive({ portfolios, addresses, mode }: PortfoliosLivePr
           <ProfitLine profit={gained} put={put} className="pb-1" />
         </div>
 
-        {/* The controls, under the figures in the same card */}
         <div className="border-border-secondary dark:border-border-tertiary flex flex-wrap items-center gap-x-3 gap-y-2.5 border-t px-4 py-3 md:px-5">
           <SearchInput
             param="q"

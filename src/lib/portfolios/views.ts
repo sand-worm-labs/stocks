@@ -1,8 +1,7 @@
+import type { Portfolio } from "@/types/portfolios"
 import { returnOnDeposit } from "./performance"
 import { isLive, portfolioValue } from "./portfolio"
-import type { Portfolio } from "./types"
 
-// The ways to narrow the list of portfolios, and how to order what is left
 export const PORTFOLIO_VIEWS = [
   { id: "all", label: "All" },
   { id: "live", label: "Live" },
@@ -27,7 +26,6 @@ export const inView = (portfolio: Portfolio, view: PortfolioView) => {
   return true
 }
 
-// How many each view would show, for the number on its chip
 export const countsByView = (portfolios: Portfolio[]) =>
   Object.fromEntries(PORTFOLIO_VIEWS.map(({ id }) => [id, portfolios.filter((p) => inView(p, id)).length])) as Record<
     PortfolioView,

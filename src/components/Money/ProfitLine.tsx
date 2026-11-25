@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils"
 
 type ProfitLineProps = { profit: number; put: number; className?: string }
 
-// What has been made, said as it is: the share of what was put in, the amount, and what both are measured against
 export function ProfitLine({ profit, put, className }: ProfitLineProps) {
   const tone = changeTone(profit)
   const Trend = profit >= 0 ? PiTrendUp : PiTrendDown

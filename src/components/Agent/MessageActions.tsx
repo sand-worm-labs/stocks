@@ -4,14 +4,11 @@ import { useState } from "react"
 import { PiCheck, PiCopy, PiThumbsDown, PiThumbsUp } from "react-icons/pi"
 
 import { Tooltip } from "@/components/Tooltip/Tooltip"
+import { BUTTON } from "@/constants/components/agent/message-actions"
 import { cn } from "@/lib/utils"
 
 type Rating = "up" | "down" | null
 
-const BUTTON =
-  "text-ink-300 hover:text-ink-400 hover:bg-hover-bg flex size-6 items-center justify-center rounded-md transition-colors"
-
-// Copy what the agent said, and say whether it helped
 export function MessageActions({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   const [rating, setRating] = useState<Rating>(null)

@@ -2,13 +2,10 @@
 
 import { PiArchive, PiArrowCounterClockwise, PiChecks } from "react-icons/pi"
 
-import { buttonVariants } from "@/components/Button/Button"
 import { useNotifications } from "@/components/Notifications/NotificationsProvider"
 import { Badge } from "@/components/ui/badge"
+import { BUTTON } from "@/constants/components/activity/notification-mark"
 
-const BUTTON = buttonVariants({ intent: "outline", size: "sm", className: "min-h-8 min-w-0 gap-1.5 px-3 text-xs" })
-
-// Beside the title of an alert: a dot while it is still to be read, and a tag once it is put away
 export function NotificationDot({ id }: { id: string }) {
   const { isUnread, isArchived } = useNotifications()
 
@@ -23,7 +20,6 @@ export function NotificationDot({ id }: { id: string }) {
   )
 }
 
-// What can be done to one alert: read it, put it away, or when it is put away, bring it back
 export function NotificationActions({ id }: { id: string }) {
   const { isUnread, isArchived, read, archive, unarchive } = useNotifications()
 

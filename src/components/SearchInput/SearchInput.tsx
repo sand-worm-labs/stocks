@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils"
 
 type SearchInputProps = { param: string; label: string; placeholder: string; className?: string }
 
-// A search field whose text lives in the page's address
 export function SearchInput({ param, label, placeholder, className }: SearchInputProps) {
   const [value, setValue] = useSearchParam(param)
 

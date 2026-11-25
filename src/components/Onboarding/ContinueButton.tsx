@@ -12,7 +12,6 @@ type ContinueButtonProps = {
   children?: ReactNode
 }
 
-// The one way forward on every step: a black pill 96 by 40, as it is in the reference
 export function ContinueButton({ onClick, disabled, type = "button", children = "Continue" }: ContinueButtonProps) {
   return (
     <button

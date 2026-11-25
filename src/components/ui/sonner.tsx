@@ -4,7 +4,6 @@ import { useTheme } from "next-themes"
 import { PiCheckCircle, PiInfo, PiSpinnerGap, PiWarning, PiXCircle } from "react-icons/pi"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 
-// The web app's toaster, with this app's icons
 export function Toaster(props: ToasterProps) {
   const { theme = "system" } = useTheme()
 

@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { formatMetric } from "@/lib/report/format"
-import type { Metric } from "@/lib/report/types"
 import { cn } from "@/lib/utils"
+import type { Metric } from "@/types/report"
 
 function note({ benchmark, was, note, kind }: Metric) {
   if (benchmark !== undefined) return `S&P 500 ${formatMetric({ value: benchmark, kind })}`

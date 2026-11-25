@@ -9,7 +9,6 @@ type StatusDefinition = {
   label: string
   tone: Tone
   icon: IconType
-  // The page a portfolio in this status opens
   route: RouteId
 }
 
@@ -26,13 +25,11 @@ export const PORTFOLIO_STATUS = {
 
 export type PortfolioStatus = keyof typeof PORTFOLIO_STATUS
 
-// What the agent is waiting on, for a portfolio that isn't live.
 export const PORTFOLIO_PENDING_TEXT = {
   draft: "Waiting for you to confirm rules",
   unbuildable: "Can't be built",
 } as const satisfies Partial<Record<PortfolioStatus, string>>
 
-// How far a draft has got, and what it is waiting for
 export const DRAFT_STAGE = {
   rules: { label: "Rules to confirm", detail: "Read the rules, then confirm them" },
   researching: { label: "Researching", detail: "The agent is working on it" },
@@ -43,7 +40,6 @@ export type DraftStage = keyof typeof DRAFT_STAGE
 
 export const TRADING_MODE_LABEL = { paper: "Paper", live: "Live" } as const
 
-// Where the person's choice between paper trading and their wallet is kept
 export const TRADING_MODE_COOKIE = "sw_trading_mode"
 
 export const TRADING_MODE_OPTIONS = [

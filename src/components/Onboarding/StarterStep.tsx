@@ -1,6 +1,6 @@
 "use client"
 
-import type { Starter } from "@/lib/onboarding/types"
+import type { Starter } from "@/types/onboarding"
 
 import { ContinueButton } from "./ContinueButton"
 import { StarterCard } from "./StarterCard"
@@ -15,8 +15,6 @@ type StarterStepProps = {
   pending: boolean
 }
 
-// Briefs to start from, for what they said they like. Choosing one opens the new portfolio with it already written; or
-// they can look at the stocks themselves.
 export function StarterStep({ starters, selected, onSelect, onContinue, onExplore, pending }: StarterStepProps) {
   return (
     <div className="flex w-full max-w-[960px] flex-col items-center gap-3">

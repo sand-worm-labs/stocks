@@ -9,12 +9,10 @@ type SearchFieldProps = {
   onChange: (value: string) => void
   label: string
   placeholder: string
-  // "filled" for a bar in a toolbar, "raised" for a search that is the point of the page, "card" for one in a window
   appearance?: "filled" | "raised" | "card"
   className?: string
 }
 
-// The web app's search field: a soft fill, a magnifier, and a button to clear what was typed
 export function SearchField({
   value,
   onChange,
@@ -43,7 +41,7 @@ export function SearchField({
           appearance === "filled" &&
             "bg-base-600 focus:ring-primary dark:bg-base-400 dark:border-border-tertiary h-10 rounded-lg border border-transparent pr-9 pl-9 focus:ring",
           appearance === "card" &&
-            "bg-block-surface focus:border-primary dark:border-border-tertiary h-[42px] rounded-2xl border border-[#EEEEF1] pr-9 pl-10 text-xs",
+            "bg-block-surface focus:border-primary border-field h-[42px] rounded-2xl border pr-9 pl-10 text-xs",
           appearance === "raised" &&
             "bg-block-surface border-hover-border focus:border-primary dark:bg-chat-input-bg dark:border-chat-input-border h-12 rounded-full border-[1.5px] pr-11 pl-11 text-base shadow-[0_3.5px_24px_rgba(120,147,208,0.09)] dark:shadow-none"
         )}

@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import type { Portfolio } from "@/lib/portfolios/types"
-
 import { markToMarket } from "@/lib/portfolios/valuation"
+import type { Portfolio } from "@/types/portfolios"
 
 import { buildKpis } from "./kpis"
 

@@ -7,15 +7,15 @@ import { HoldingsViewTabs } from "@/components/Holdings/HoldingsViewTabs"
 import { PageHeader } from "@/components/PageHeader/PageHeader"
 import { SearchInput } from "@/components/SearchInput/SearchInput"
 import { Card } from "@/components/ui/card"
+import {
+  FOLDED_MODELS,
+  OPEN_MODELS,
+  ROWS_IN_MODEL,
+  STOCK_ROWS,
+} from "@/constants/components/skeleton/holdings-skeleton"
 import { cn } from "@/lib/utils"
 
 import { Skeleton, SkeletonAvatar, SkeletonText } from "./Skeleton"
-
-// The models shown open at the top of the list, and the ones folded shut under them
-const OPEN_MODELS = 2
-const FOLDED_MODELS = 3
-const ROWS_IN_MODEL = 3
-const STOCK_ROWS = 12
 
 function StockRowSkeleton({ className }: { className?: string }) {
   return (
@@ -37,7 +37,6 @@ function StockRowSkeleton({ className }: { className?: string }) {
   )
 }
 
-// One model as the list has it: its stripe, its name and what it is worth, and when it is open, the stocks it holds
 function ModelSkeleton({ open }: { open: boolean }) {
   return (
     <Card className="relative overflow-hidden">
@@ -84,8 +83,6 @@ function PagesSkeleton() {
   )
 }
 
-// The holdings before their data. The title, the tabs and the search are the real ones, set from the address, so they
-// don't change when the page comes; only what is held is waiting.
 export function HoldingsSkeleton() {
   const params = useSearchParams()
   const tab = params.get("tab") === "summary" ? "summary" : "list"

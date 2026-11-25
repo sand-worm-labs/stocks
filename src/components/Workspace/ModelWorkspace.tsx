@@ -9,53 +9,35 @@ import { buttonVariants } from "@/components/Button/Button"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { StepProgress } from "@/components/Flow/StepProgress"
 import { Badge } from "@/components/ui/badge"
-import { type FlowStepId } from "@/constants/flow"
+
+import { STATUS, STEP } from "@/constants/components/workspace/model-workspace"
 import { RESEARCH_EVENT } from "@/constants/research"
-import { type Tone, TONE_DOT_CLASSNAME } from "@/constants/tone"
+import { TONE_DOT_CLASSNAME } from "@/constants/tone"
 import { confirmRules, errorMessage, finishResearch } from "@/lib/strategies/client"
 import { cn } from "@/lib/utils"
 
+import type { WorkspacePhase } from "@/types/ui"
 import { DraftFlowProvider } from "./DraftFlow"
 import { EditableName } from "./EditableName"
 import { LeaveNotice } from "./LeaveNotice"
 import { ResearchProgress } from "./ResearchProgress"
 
-// Where a model is: its rules waiting to be confirmed, the agent at work, or results ready to read and trade from
-type Phase = "rules" | "researching" | "ready"
-
-const STATUS: Record<Phase, { label: string; tone: Tone }> = {
-  rules: { label: "Draft", tone: "warning" },
-  researching: { label: "Researching", tone: "info" },
-  ready: { label: "Results ready", tone: "positive" },
-}
-
-// Where each phase is in the five steps of making a strategy
-const STEP: Record<Phase, FlowStepId> = { rules: "rules", researching: "research", ready: "report" }
-
 type ModelWorkspaceProps = {
   id: string
-  // When the research began and is due to end, for a strategy made here: so coming back to it shows where it really is
   research?: { startedAt: string; readyAt?: string }
-  // Made here, so it is kept: confirming and finishing are saved, and its name can be changed. The made-up ones are only shown.
   real: boolean
-  // How far the draft has got, which is where the page opens
-  stage?: Phase
-  // The agent in the side panel, for each point the page can be at: a text box to change the rules and the rest by
-  agents: Record<Phase, ReactNode>
+  stage?: WorkspacePhase
+  agents: Record<WorkspacePhase, ReactNode>
   breadcrumb: ReactNode
   name: string
-  // What was asked for, in the owner's words
   brief: string
   rules: ReactNode
   plan: string
   verdict: ReactNode
   report: ReactNode
-  // The button that opens the review of buying
   buy: ReactNode
 }
 
-// A model on one page that builds itself as it goes: its rules first, then the agent's research as it runs, then the report,
-// then the way to buy. There is no step to pick; the page grows, and one button always says what comes next.
 export function ModelWorkspace({
   id,
   real,
@@ -72,7 +54,7 @@ export function ModelWorkspace({
   buy,
 }: ModelWorkspaceProps) {
   const router = useRouter()
-  const [phase, setPhase] = useState<Phase>(stage ?? "rules")
+  const [phase, setPhase] = useState<WorkspacePhase>(stage ?? "rules")
   const [confirming, setConfirming] = useState(false)
   const [skipping, setSkipping] = useState(false)
   const shown = useRef(false)
@@ -112,7 +94,6 @@ export function ModelWorkspace({
     }
   }
 
-  // "Skip to the results", from the agent's panel: the research is finished now instead of when its progress has played out
   const skip = async () => {
     if (phase !== "researching" || skipping) return
     setSkipping(true)
@@ -123,7 +104,6 @@ export function ModelWorkspace({
     }
   }
 
-  // Bring what has just appeared into view
   useEffect(() => {
     // Not on the first showing: a page that opens part way along starts at its top
     if (!shown.current) return void (shown.current = true)

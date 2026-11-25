@@ -6,14 +6,14 @@ import { ResearchWatcher } from "@/components/Research/ResearchWatcher"
 import { AppShell } from "@/components/Shell/AppShell"
 import { ProductTour } from "@/components/Tour/ProductTour"
 import { Toaster } from "@/components/ui/sonner"
+import { TICKER_TOKENS } from "@/constants/markets"
 import { getActivity } from "@/lib/activity/source"
 import { getAllPoolQuotes } from "@/lib/markets/pools"
 import { getBaseTokens } from "@/lib/markets/tokens"
 import { notificationsOf } from "@/lib/notifications/notifications"
 import { getNotificationState } from "@/lib/notifications/source"
+import { marketUrl } from "@/lib/realtime/url"
 import { getSession } from "@/lib/session/source"
-
-const TICKER_TOKENS = 30
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const [session, tokens, activity, notificationState] = await Promise.all([
@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const pools = await getAllPoolQuotes(tokens.map(({ address }) => address))
 
   return (
-    <LiveMarketProvider initialPools={pools}>
+    <LiveMarketProvider initialPools={pools} url={marketUrl()}>
       <AppShell
         session={session}
         notifications={notificationsOf(activity)}

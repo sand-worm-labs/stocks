@@ -10,7 +10,6 @@ export const FLOW_STEPS = [
 
 export type FlowStepId = (typeof FLOW_STEPS)[number]["id"]
 
-// What the agent does while it researches, each step in its own Sandworm notebook
 export const RESEARCH_STEPS = [
   "Read the idea",
   "Research",
@@ -24,7 +23,6 @@ export const RESEARCH_STEPS = [
 
 export const SANDWORM_APP_URL = "https://app.sandwormlab.xyz/"
 
-// What the message box suggests while it is empty
 export const AGENT_PROMPTS = [
   "Cap each stock at 15%",
   "Swap Tesla for Apple",

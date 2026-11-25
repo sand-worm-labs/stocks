@@ -8,11 +8,9 @@ type FilterPillsProps = {
   label: string
   route: RouteId
   slug?: string
-  // The search param the choice lives in, so a choice is a link and survives a reload
   param: string
   options: { value: string; label: ReactNode }[]
   active: string
-  // Other params to keep when a choice is made, e.g. a search
   keep?: Record<string, string>
 }
 

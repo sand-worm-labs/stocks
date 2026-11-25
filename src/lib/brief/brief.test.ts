@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest"
 
+import type { BriefChange } from "@/types/brief"
 import { analyzeBrief } from "./analyze"
 import { parseBrief } from "./parse"
 import { applyChange } from "./patch"
-import type { BriefChange } from "./types"
 
 const READY =
   "Grow 500 USDC with robotics over 3+ years. Max 20% in any one stock, only stocks with $100K+ liquidity on Base. I'd panic at −20%. Ask before buying."

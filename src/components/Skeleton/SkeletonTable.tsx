@@ -6,13 +6,9 @@ import { cn } from "@/lib/utils"
 import { Skeleton, SkeletonAvatar, SkeletonText } from "./Skeleton"
 
 export type SkeletonColumn = {
-  // How wide the header's label and the cell's figure are
   width: string
-  // The cell that names the row: an avatar with two lines of text beside it
   lead?: boolean
-  // Classes for the column's header and cells, e.g. to hide it on a phone, the same as the real table's
   className?: string
-  // What a cell holds instead of a line of text
   cell?: ReactNode
 }
 
@@ -58,7 +54,6 @@ export function SkeletonTable({ columns, rows, avatar = "size-10" }: SkeletonTab
   )
 }
 
-// What sits under a table that has pages: where you are in them, and the buttons for the others. As tall as the real one.
 export function SkeletonTableFooter({ className }: { className?: string }) {
   return (
     <div

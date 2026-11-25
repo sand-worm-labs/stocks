@@ -26,6 +26,7 @@ import { TokenPriceCard } from "@/components/Token/TokenPriceCard"
 import { TokenTabs } from "@/components/Token/TokenTabs"
 import { TokenTrades } from "@/components/Token/TokenTrades"
 import { TransfersTable } from "@/components/Token/TransfersTable"
+import { FACT_ICON } from "@/constants/markets"
 import { DEFAULT_TOKEN_TAB, TOKEN_TABS } from "@/constants/token"
 import { getChartSymbol } from "@/lib/markets/chart-symbol"
 import { getEthPrice, getTokenContract, getTokenSupply } from "@/lib/markets/onchain"
@@ -70,7 +71,6 @@ export default async function TokenPage({ params, searchParams }: TokenPageProps
       <TokenHeader token={token} />
       <TokenTabs tokenId={token.id} current={tab as (typeof TOKEN_TABS)[number]["id"]} />
 
-      {/* A tab that reads the chain streams in after the header and tabs, so a click on one is answered at once */}
       <Suspense key={tab} fallback={<TabSkeleton />}>
         {tab === "overview" && <OverviewTab token={token} />}
 
@@ -121,7 +121,6 @@ async function OverviewTab({ token }: TabProps) {
   )
 }
 
-// The numbers behind the token, and what its contract and market say about it
 async function StatsTab({ token, total }: TabProps & { total: number }) {
   const [supply, ethUsd] = await Promise.all([getTokenSupply(token.address), getEthPrice()])
 
@@ -156,8 +155,6 @@ async function TransfersTab({ token, view, pair }: TabProps & { view: "holders" 
   )
 }
 
-const ICON = "text-ink-400"
-
 function InfoTab({ token, pair }: TabProps & { pair?: string }) {
   const { id, issuer, company, symbol, address, image } = token
   const ticker = shareTicker(token)
@@ -172,7 +169,7 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
             value: symbol,
             icon: <TokenAvatar image={image} symbol={symbol} className="size-5 text-[9px]" />,
           },
-          { label: "Issuer", value: issuer, icon: <PiBuildings size={18} className={ICON} aria-hidden="true" /> },
+          { label: "Issuer", value: issuer, icon: <PiBuildings size={18} className={FACT_ICON} aria-hidden="true" /> },
           {
             label: "Tracks",
             value: ticker ? `${company} (${ticker})` : company,
@@ -182,14 +179,14 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
           {
             label: "Contract",
             value: <Address value={address} kind="token" length="long" />,
-            icon: <PiFileCode size={18} className={ICON} aria-hidden="true" />,
+            icon: <PiFileCode size={18} className={FACT_ICON} aria-hidden="true" />,
           },
           ...(pair
             ? [
                 {
                   label: "Pool",
                   value: <Address value={pair} length="long" href={`https://dexscreener.com/base/${pair}`} />,
-                  icon: <PiDrop size={18} className={ICON} aria-hidden="true" />,
+                  icon: <PiDrop size={18} className={FACT_ICON} aria-hidden="true" />,
                 },
               ]
             : []),
@@ -200,7 +197,7 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
         rows={[
           {
             label: "CoinGecko",
-            icon: <PiCoins size={18} className={ICON} aria-hidden="true" />,
+            icon: <PiCoins size={18} className={FACT_ICON} aria-hidden="true" />,
             value: (
               <a href={`https://www.coingecko.com/en/coins/${id}`} {...external} className={link}>
                 Open ↗
@@ -220,7 +217,7 @@ function InfoTab({ token, pair }: TabProps & { pair?: string }) {
             ? [
                 {
                   label: "Pool chart",
-                  icon: <PiChartLine size={18} className={ICON} aria-hidden="true" />,
+                  icon: <PiChartLine size={18} className={FACT_ICON} aria-hidden="true" />,
                   value: (
                     <a href={`https://dexscreener.com/base/${pair}`} {...external} className={link}>
                       Open ↗
@@ -257,7 +254,7 @@ async function ContractTab({ token }: TabProps) {
       rows={[
         {
           label: "Address",
-          icon: <PiFileCode size={18} className={ICON} aria-hidden="true" />,
+          icon: <PiFileCode size={18} className={FACT_ICON} aria-hidden="true" />,
           value: <Address value={token.address} kind="token" length="full" />,
         },
         { label: "Name", value: contract?.name ?? "—" },

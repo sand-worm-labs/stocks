@@ -1,6 +1,6 @@
+import type { Condition, Indicator, Node, Schedule, Side, Strategy, Via, Weighting } from "@/types/strategy"
 import { editorHeight } from "../condition"
 import { describeCondition, describeIndicator } from "../describe"
-import type { Condition, Indicator, Node, Schedule, Side, Strategy, Via, Weighting } from "../types"
 
 // A strategy drawn as boxes and lines, for React Flow. The strategy is the one thing that is kept: the boxes are made from it,
 // and it can be made again from them. Each box carries everything it is (`spec`) and each line where it sits among its
@@ -8,8 +8,7 @@ import type { Condition, Indicator, Node, Schedule, Side, Strategy, Via, Weighti
 
 export type BlockKind = "start" | "asset" | "cash" | "group" | "if" | "filter" | "rebalance"
 
-// What a block is, apart from what it leads to: this is what is saved
-export type BlockSpec =
+type BlockSpec =
   | { type: "start"; name: string; schedule: Schedule }
   | { type: "asset"; symbol: string; side?: Side; via?: Via }
   | { type: "cash" }
@@ -26,32 +25,24 @@ export type BlockSpec =
       days?: number
     }
 
-// A stock a block draws from, shown as a small tag, with something said beside it such as its share
-export type Chip = { symbol: string; note?: string; percent?: number }
+type Chip = { symbol: string; note?: string; percent?: number }
 
 export type BlockData = {
   block: BlockKind
   title: string
   detail?: string
-  // How a group or filter weights what it holds: equal, set by you, or by inverse volatility
   weightType?: string
   chips?: Chip[]
-  // The path to this block in the strategy, which is how an edit finds it
   path: string
   spec: BlockSpec
-  // Only in a drawing that can be folded: whether this block has blocks inside it to fold, whether they are folded, and how
-  // many there are
   foldable?: boolean
   folded?: boolean
   hidden?: number
 }
 
-export type EdgeData = {
-  // Its place among the lines from the same block
+type EdgeData = {
   order: number
-  // What a group was told to give what this leads to, as it was given
   weight?: number
-  // Its share of a group that splits by shares, as a percentage
   share?: number
 }
 
@@ -65,10 +56,8 @@ export type FlowEdge = {
   data: EdgeData
 }
 
-// How far a block is set in for each level it is nested, and how wide a block is: a bar across the page, as Composer draws it
 export const INDENT = 44
 export const BLOCK_WIDTH = 780
-// Space left between one block and the next down the page
 const GAP = 14
 
 const WEIGHTING = {
@@ -77,7 +66,6 @@ const WEIGHTING = {
   "inverse-volatility": "Steadier gets more",
 } as const
 
-// The kind of weighting a block uses, as a tag on the block
 const WEIGHT_TYPE = {
   equal: "Equal weight",
   specified: "Set weights",
@@ -85,21 +73,15 @@ const WEIGHT_TYPE = {
 } as const
 
 const percent = (share: number) => `${Math.round(share * 100)}%`
-// The same, as a number with a tenth of a point kept, for a field to be edited in
 const points = (share: number) => Math.round(share * 1000) / 10
 
-// A spec with only what is there, so a block with no name has no `name` rather than a name of nothing
 const defined = <T extends object>(spec: T): T =>
   Object.fromEntries(Object.entries(spec).filter(([, value]) => value !== undefined)) as T
 
-// How tall a block is drawn, worked out from how much it says: a block is one line, its name and what it decides read across,
-// and runs onto another only when it says more than fits. Tags go in a row under it.
 const BAR = 52
 const LINE_LETTERS = 90
 const TAGS_PER_ROW = 8
 
-// A filter that can be changed has room for a tag to add a stock and for the weighting beside them, and its tags are wider with
-// a logo and a way to take each out
 const EDITABLE_TAGS_PER_ROW = 6
 const EDITABLE_EXTRA_TAGS = 2
 
@@ -107,28 +89,21 @@ const heightOf = ({ title, detail, chips }: Omit<BlockData, "path" | "spec">, ro
   const base = BAR + (Math.ceil((title.length * 1.2 + (detail?.length ?? 0)) / LINE_LETTERS) - 1) * 18
   if (!chips) return base
   if (!roomy) return base + 17 + Math.ceil(chips.length / TAGS_PER_ROW) * 26
-  // A row of logos is 34 tall with the switch in it, 8 between rows, and 21 of padding and rule around them
   const rows = Math.ceil((chips.length + EDITABLE_EXTRA_TAGS) / EDITABLE_TAGS_PER_ROW)
   return base + 21 + rows * 34 + (rows - 1) * 8
 }
 
-export type GraphView = {
-  // Drawn to be changed, so a filter is given the room its fields and tags need
+type GraphView = {
   editable?: boolean
-  // A group of nothing but stocks is one block with the stocks as tags, instead of a block for each
   tidy?: boolean
-  // Blocks, by path, that are folded shut: what is inside them is left out
   folded?: ReadonlySet<string>
-  // A rebalance that wraps the whole strategy is drawn as a block of its own after what the strategy decides, not as the first
-  // block everything hangs from: it keeps what is held on target, it does not decide what to hold
   separateRebalance?: boolean
 }
 
-export type FlowGraph = { nodes: FlowNode[]; edges: FlowEdge[]; size: { width: number; height: number } }
+type FlowGraph = { nodes: FlowNode[]; edges: FlowEdge[]; size: { width: number; height: number } }
 
 const onlyStocks = (node: Node) => node.type === "group" && node.children.every((child) => child.node.type === "asset")
 
-// How many blocks a node is made of, itself included
 const blocksIn = (node: Node): number => {
   switch (node.type) {
     case "group":
@@ -142,7 +117,6 @@ const blocksIn = (node: Node): number => {
   }
 }
 
-// The paths of the blocks that can be folded in a view: the ones with blocks inside them that are drawn
 export function foldablePaths(strategy: Strategy, { tidy }: GraphView = {}): string[] {
   const paths: string[] = []
   const walk = (node: Node, path: string) => {
@@ -174,15 +148,12 @@ const rebalanceDisplay = (node: Extract<Node, { type: "rebalance" }>) => {
   }
 }
 
-// Straight down, the way Composer reads: a block, then what is in it a step further in, one after another, so the whole
-// strategy is one column that is read from the top
 export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
   const nodes: FlowNode[] = []
   const edges: FlowEdge[] = []
   let cursor = 0
   let widest = 0
 
-  // `id` names the block on the canvas, and `path` is the way to it in the strategy
   const place = (id: string, path: string, depth: number, display: Omit<BlockData, "path">): string => {
     const x = depth * INDENT
     nodes.push({ id, type: "block", position: { x, y: cursor }, data: { ...display, path } })
@@ -317,7 +288,6 @@ export function toGraph(strategy: Strategy, view: GraphView = {}): FlowGraph {
     spec: { type: "start", name: strategy.name, schedule: strategy.schedule },
   })
   if (view.separateRebalance && strategy.root.type === "rebalance") {
-    // What the strategy decides first, then the rebalance after it. The rebalance keeps its path, "root", so an edit still finds it.
     const inside = add(strategy.root.child, "root.child", 1)
     edges.push({ id: `${start}>${inside}`, source: start, target: inside, data: { order: 0 } })
     const apart = place("root", "root", 1, rebalanceDisplay(strategy.root))

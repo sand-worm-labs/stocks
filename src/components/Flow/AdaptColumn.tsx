@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 import { AllocationSection } from "../Report/sections/AllocationSection"
 import { ComparisonSection } from "../Report/sections/ComparisonSection"
@@ -11,7 +11,6 @@ import { ToleranceSection } from "../Report/sections/ToleranceSection"
 
 type AdaptColumnProps = { report: Report; portfolioId: string; actions?: ReactNode }
 
-// The less-risk version of a report: what changed, whether it fits, and how it compares with before
 export function AdaptColumn({ report, portfolioId, actions }: AdaptColumnProps) {
   return (
     <>

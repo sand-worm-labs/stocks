@@ -4,7 +4,6 @@ import { Flash } from "@/components/Markets/Flash"
 import { useLiveMarketContext } from "@/components/Markets/LiveMarket"
 import { Money } from "@/components/Money/Money"
 
-// The token's price in its pool, moving on each trade
 export function LivePrice({ address, initial }: { address: string; initial: number }) {
   const { quotes } = useLiveMarketContext()
   const price = quotes[address.toLowerCase()]?.price ?? initial

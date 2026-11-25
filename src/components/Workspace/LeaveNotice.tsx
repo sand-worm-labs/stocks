@@ -1,20 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { PiBellRinging, PiCheck } from "react-icons/pi"
 
 import { AppLink } from "@/components/AppLink/AppLink"
 import { buttonVariants } from "@/components/Button/Button"
 import { Card } from "@/components/ui/card"
+import { useNotificationPermission } from "@/hooks/use-notification-permission"
 
-// Said while Sandworm does the research, which takes a while: nobody has to stay. It says where they will be told, takes them to their
-// strategies if they want to go, and offers to tell them on this device too, which is asked for here, in answer to a click, and not before.
 export function LeaveNotice() {
-  const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default")
-
-  useEffect(() => {
-    setPermission("Notification" in window ? Notification.permission : "unsupported")
-  }, [])
+  const { permission, ask } = useNotificationPermission()
 
   return (
     <Card className="flex gap-3.5 p-4 md:p-5">
@@ -38,7 +32,7 @@ export function LeaveNotice() {
           {permission === "default" && (
             <button
               type="button"
-              onClick={() => Notification.requestPermission().then(setPermission)}
+              onClick={ask}
               className="text-accent dark:text-primary text-sm font-medium hover:underline"
             >
               Also notify me on this device

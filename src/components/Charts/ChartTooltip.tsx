@@ -4,7 +4,6 @@ export type TooltipRow = { label: string; value: string; color: string; dashed?:
 
 type ChartTooltipProps = { title: string; rows: TooltipRow[]; footer?: ReactNode }
 
-// The card that follows the pointer over a chart
 export function ChartTooltip({ title, rows, footer }: ChartTooltipProps) {
   return (
     <div className="border-border-secondary bg-block-surface dark:border-border-tertiary min-w-44 rounded-xl border px-3 py-2.5 text-sm shadow-lg">

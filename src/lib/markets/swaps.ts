@@ -13,7 +13,6 @@ const WORD = 64
 const TWO_96 = 2 ** 96
 
 export type Swap = {
-  // Tells one swap from another, however alike they are
   id: string
   // The token traded, lowercase
   token: string
@@ -30,13 +29,10 @@ export type SwapLog = { address: string; topics: string[]; data: string }
 const word = (data: string, index: number) => BigInt(`0x${data.slice(2 + index * WORD, 2 + (index + 1) * WORD)}`)
 const signed = (value: bigint) => Number(BigInt.asIntN(256, value))
 
-// Reads one swap. The pool's two tokens are ordered by address, so which of them is the stock token decides which way
-// the numbers point.
 export function decodeSwap(log: SwapLog, pool: PoolQuote, now = Date.now()): Swap | undefined {
   const stockIsToken0 = pool.address < pool.quote
   const [topic] = log.topics
 
-  // The token's amounts and the price of token1 in token0, in the units the contract counts in
   let stock: number
   let quote: number
   let ratio: number
@@ -45,7 +41,6 @@ export function decodeSwap(log: SwapLog, pool: PoolQuote, now = Date.now()): Swa
     const [amount0, amount1] = [signed(word(log.data, 0)), signed(word(log.data, 1))]
     ratio = (Number(word(log.data, 2)) / TWO_96) ** 2
     ;[stock, quote] = stockIsToken0 ? [amount0, amount1] : [amount1, amount0]
-    // The pool's amounts are from its side: negative is what it paid out
     stock = -stock
     quote = -quote
   } else if (topic === V2_SWAP) {
@@ -64,8 +59,6 @@ export function decodeSwap(log: SwapLog, pool: PoolQuote, now = Date.now()): Swa
   const swap: Swap = { id: String(++sequence), token: pool.address, side: stock > 0 ? "buy" : "sell", at: now }
   if (pool.quote !== USDC || !ratio || pool.price <= 0) return swap
 
-  // The token's price in USDC, from the pool's own numbers. The token's decimals aren't known here, so they are read
-  // off the last price: the difference is always a power of ten.
   const raw = stockIsToken0 ? ratio : 1 / ratio
   const decimals = Math.round(Math.log10(pool.price / raw))
 

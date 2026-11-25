@@ -9,11 +9,9 @@ import { MoreCategories } from "./MoreCategories"
 type CategoryChipsProps = {
   tokens: BaseToken[]
   active: string
-  // Other choices to keep when one is made, e.g. a search
   keep: Record<string, string>
 }
 
-// A row to narrow the list to a group: everything, the highlights, the hot themes, and the rest under "More"
 export function CategoryChips({ tokens, active, keep }: CategoryChipsProps) {
   const categories = categoryCounts(tokens)
   const hot = categories.filter(({ isHot }) => isHot)

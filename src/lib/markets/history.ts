@@ -14,14 +14,12 @@ export type HistoryWindow = "day" | "week" | "month"
 const HOUR_MS = 60 * 60 * 1000
 const DAY_MS = 24 * HOUR_MS
 
-// The shortest window that reaches back to `sinceMs`
 export const windowFor = (sinceMs: number, nowMs: number): HistoryWindow => {
   const age = nowMs - sinceMs
   return age <= 22 * HOUR_MS ? "day" : age <= 6 * DAY_MS ? "week" : "month"
 }
 
 const COINGECKO_DAYS = { day: 1, week: 7, month: 30 } as const
-// What the feed is asked for to get a fund's prices: how far back, and in what step
 const YAHOO = { day: ["1d", "5m"], week: ["5d", "15m"], month: ["1mo", "1h"] } as const
 
 const KEPT_FOR_SECONDS = 300
@@ -41,8 +39,6 @@ const fundSchema = z.object({
   }),
 })
 
-// A tokenized stock's price over the window, five minutes apart over a day, an hour apart over longer. Empty if the feed can't be
-// reached, which the caller treats as no history rather than an error.
 export async function getTokenHistory(tokenId: string, window: HistoryWindow): Promise<PricePoint[]> {
   try {
     const url = `${COINGECKO_URL}/coins/${encodeURIComponent(tokenId)}/market_chart?vs_currency=usd&days=${COINGECKO_DAYS[window]}`
@@ -61,7 +57,6 @@ export async function getTokenHistory(tokenId: string, window: HistoryWindow): P
   }
 }
 
-// A fund's price over the window, while its market was open
 export async function getFundHistory(ticker: string, window: HistoryWindow): Promise<PricePoint[]> {
   try {
     const [range, interval] = YAHOO[window]

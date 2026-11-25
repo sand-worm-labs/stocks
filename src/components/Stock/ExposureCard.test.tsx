@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeAll, describe, expect, it, vi } from "vitest"
 
-import type { Portfolio } from "@/lib/portfolios/types"
+import type { Portfolio } from "@/types/portfolios"
 
 import { ExposureCard } from "./ExposureCard"
 
@@ -14,7 +14,6 @@ const exposure = (n: number) => ({
 })
 
 describe("ExposureCard", () => {
-  // The page scrolls back to the top of the list on a new page; the test browser has nothing to scroll
   beforeAll(() => {
     Element.prototype.scrollIntoView = vi.fn()
   })

@@ -11,11 +11,9 @@ import { BuyReview, type BuyReviewProps } from "./BuyReview"
 type ReviewAndBuyProps = BuyReviewProps & {
   label?: string
   intent?: "dark" | "outline"
-  // Open as soon as the page shows, and go here when it is closed
   startOpen?: { closeHref: string }
 }
 
-// The button that opens the review of a purchase over the page it was pressed on
 export function ReviewAndBuy({ label = "Review and trade", intent = "dark", startOpen, ...review }: ReviewAndBuyProps) {
   const router = useRouter()
   const [open, setOpen] = useState(Boolean(startOpen))

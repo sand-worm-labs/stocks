@@ -26,7 +26,6 @@ export async function POST(request: Request) {
 
   try {
     const userId = await identify(parsed.data.provider, parsed.data.token)
-    // Whether this account has been through the first run, so the browser knows where to send them
     const { done } = await readOnboarding(userId)
     const response = NextResponse.json({ ok: true, onboarded: done }, { headers: { "Cache-Control": "no-store" } })
     response.cookies.set(SESSION_COOKIE, await signSession(userId), {

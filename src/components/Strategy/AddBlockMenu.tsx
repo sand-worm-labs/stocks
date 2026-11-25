@@ -6,34 +6,23 @@ import { PiCaretLeft, PiCaretRight, PiPlus } from "react-icons/pi"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SearchField } from "@/components/ui/search-field"
+import { MATCHES, ROW } from "@/constants/components/strategy/add-block-menu"
 import { BLOCKS, WEIGHTINGS } from "@/lib/strategy/catalog"
 import { NEEDS_STOCK, type NewBlock, newBlock } from "@/lib/strategy/edit"
-import type { Node } from "@/lib/strategy/types"
 import { cn } from "@/lib/utils"
+import type { Node } from "@/types/strategy"
 
 import { MENU_STYLE } from "./blocks"
 
 type AddBlockMenuProps = {
-  // What it adds to, for the label of the button
   to: string
-  // Stocks to start a decision from: the ones the strategy already uses first
   seed: string[]
-  // Every stock that can be held
   symbols: string[]
   onAdd: (node: Node) => void
 }
 
 type Step = "kinds" | "stock" | "weight" | "any-all"
 
-const ROW =
-  "hover:bg-hover-bg focus-visible:bg-hover-bg flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors outline-none disabled:opacity-40 disabled:hover:bg-transparent"
-const MATCHES = [
-  { match: "all" as const, label: "All must hold", description: "Every condition has to be true." },
-  { match: "any" as const, label: "Any one will do", description: "One true condition is enough." },
-]
-
-// The add menu, after Composer's: a list of what can go in, each with its tile. Stock, Weight and Any / all ask one thing more
-// before they add.
 export function AddBlockMenu({ to, seed, symbols, onAdd }: AddBlockMenuProps) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>("kinds")

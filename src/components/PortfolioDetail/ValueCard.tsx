@@ -1,13 +1,13 @@
 import { TradingChart } from "@/components/Charts/TradingChart"
 import { Card } from "@/components/ui/card"
 import { benchmarkLines } from "@/lib/benchmarks/compare"
-import type { Benchmark } from "@/lib/benchmarks/types"
 import { formatPercent } from "@/lib/format"
 import type { ChartData } from "@/lib/portfolios/chart"
 import { withLiveEnd } from "@/lib/portfolios/history"
 import { holdPeriod, valueOverWeek } from "@/lib/portfolios/performance"
 import { portfolioValue } from "@/lib/portfolios/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
+import type { Benchmark } from "@/types/benchmarks"
+import type { Portfolio } from "@/types/portfolios"
 
 // `chart` holds the real prices this strategy's line is worked out from; without it, the line is the made-up one
 type ValueCardProps = { portfolio: Portfolio; benchmarks: Benchmark[]; now: string; chart?: ChartData }

@@ -3,13 +3,11 @@ import { PiCaretDown } from "react-icons/pi"
 
 import { isExit, type RuleReading } from "@/lib/rules/readings"
 import { explainStrategy, termsOf } from "@/lib/strategy/explain"
-import type { Strategy } from "@/lib/strategy/types"
 import { cn } from "@/lib/utils"
+import type { Strategy } from "@/types/strategy"
 
 import { RuleLine, StepLine } from "./RuleLines"
 
-// A part of the rules that folds away: its name and how many lines it holds stay on the bar, and pressing the bar shows or hides
-// the lines under it
 function Fold({
   title,
   count,
@@ -20,7 +18,6 @@ function Fold({
   title: string
   count?: number
   open?: boolean
-  // Names it for the guided tour, which points at it
   tour?: string
   children: ReactNode
 }) {
@@ -49,18 +46,11 @@ function Fold({
   )
 }
 
-// The whole model as one list of rules, each starting with a lead word: how it gets out of a stock, then Never, Only and Always
-// for what it can't do, then If, Then and Otherwise for what it holds. A rule that can be broken says whether it holds. Every rule has a line under it. Nothing here is
-// kept; it is all read from the strategy and the readings.
 export function ModelRules({ strategy, readings }: { strategy: Strategy; readings: RuleReading[] }) {
   const { steps } = explainStrategy(strategy)
   const terms = termsOf(strategy)
-  // An exit past its line sells; it is not a rule a trade waits on
   const broken = readings.some((reading) => !isExit(reading) && reading.rule.state === "broken")
 
-  // The order down the page: how it gets out of a stock first, then a rebalance if the whole strategy is kept on target, then the
-  // rest of the rules, then what the strategy decides. A rebalance at the top is lifted out of the list of steps, and what was
-  // inside it moves back out to the margin.
   const exits = readings.filter(isExit)
   const others = readings.filter((reading) => !isExit(reading))
   const [first] = steps

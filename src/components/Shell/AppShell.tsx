@@ -1,8 +1,9 @@
 import type { ReactNode } from "react"
 
 import { NotificationsProvider } from "@/components/Notifications/NotificationsProvider"
+import { NO_NOTIFICATIONS } from "@/constants/components/shell/app-shell"
 import { NO_NOTIFICATION_STATE, type Notification, type NotificationState } from "@/lib/notifications/notifications"
-import type { Session } from "@/lib/session/types"
+import type { Session } from "@/types/session"
 
 import { AppHeader } from "./AppHeader"
 import { BottomNav } from "./BottomNav"
@@ -14,8 +15,6 @@ type AppShellProps = {
   notifications?: Notification[]
   notificationState?: NotificationState
 }
-
-const NO_NOTIFICATIONS: Notification[] = []
 
 export function AppShell({
   session,

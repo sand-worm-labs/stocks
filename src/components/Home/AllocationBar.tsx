@@ -7,14 +7,12 @@ import { AppLink } from "@/components/AppLink/AppLink"
 import { Money } from "@/components/Money/Money"
 import type { RouteId } from "@/config/routes"
 import { ALLOCATION_FILLS, CASH_FILL, OTHER_FILL } from "@/constants/cards"
+import { CASH_ID, FLAT_BELOW } from "@/constants/components/home/allocation-bar"
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import { formatPercent } from "@/lib/format"
 import { type AllocationSlice, OTHER_MODELS_ID } from "@/lib/home/allocation"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
-
-const CASH_ID = "cash"
-const FLAT_BELOW = 0.0005
 
 const fillOf = ({ id, index }: AllocationSlice) =>
   index === undefined
@@ -23,11 +21,9 @@ const fillOf = ({ id, index }: AllocationSlice) =>
       : CASH_FILL
     : (ALLOCATION_FILLS[index % ALLOCATION_FILLS.length] ?? CASH_FILL)
 
-// Where each one goes: a model to its page, the rest of them and the cash to the list of portfolios
 const linkOf = ({ id }: AllocationSlice): { route: RouteId; slug?: string } =>
   id === OTHER_MODELS_ID || id === CASH_ID ? { route: "portfolios" } : { route: "portfolio", slug: id }
 
-// Which way a model is going: up or down, and by how much, in green or red. Cash has no way to go, so it is left blank.
 function Direction({ change }: { change?: number }) {
   if (change === undefined) return <span className="w-20" />
   // Too small to say which way it is going: it would be shown as 0%, so it is shown as flat
@@ -43,8 +39,6 @@ function Direction({ change }: { change?: number }) {
   )
 }
 
-// Where the money is, as a bar of what each model holds and the cash, with each one named and counted under it. Each
-// is a link, and pointing at one in the bar or the list lights it and dims the rest.
 export function AllocationBar({ slices }: { slices: AllocationSlice[] }) {
   const [active, setActive] = useState<string>()
   const total = slices.reduce((sum, { value }) => sum + value, 0)

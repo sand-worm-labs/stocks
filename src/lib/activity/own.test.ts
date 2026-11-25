@@ -2,9 +2,9 @@
 import { describe, expect, it } from "vitest"
 
 import { notificationsOf } from "@/lib/notifications/notifications"
-import type { StrategyRecord } from "@/lib/store/types"
+import type { StrategyRecord } from "@/types/store"
 
-import { activityOf } from "./source"
+import { activityOf } from "./own"
 
 const record = {
   id: "robotics-1",

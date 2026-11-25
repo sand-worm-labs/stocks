@@ -9,27 +9,25 @@ import { useWallet } from "./WalletContext"
 
 type Reading = { balance: number } | "loading" | "failed"
 
-// The USDC in the connected wallet, on the network it is on. `isWaiting` is until the wallet's SDK has arrived and said
-// whether there is a wallet at all.
 export function useWalletUsdc() {
   const { status, address: connected, network } = useWallet("now")
   const address = connected as `0x${string}` | undefined
   const chain = appChainById(network)
-  const [reading, setReading] = useState<Reading>("loading")
+  const [done, setDone] = useState<{ for: string; reading: Exclude<Reading, "loading"> }>()
+  const key = address && chain ? `${chain.id}:${address}` : undefined
 
   useEffect(() => {
-    if (!address || !chain) return
+    if (!address || !chain || !key) return
     let current = true
-    setReading("loading")
     readUsdcBalance(chain, address)
-      .then((balance) => current && setReading({ balance }))
-      .catch(() => current && setReading("failed"))
+      .then((balance) => current && setDone({ for: key, reading: { balance } }))
+      .catch(() => current && setDone({ for: key, reading: "failed" }))
     return () => {
       current = false
     }
-  }, [address, chain])
+  }, [address, chain, key])
+  const reading: Reading = done && done.for === key ? done.reading : "loading"
 
-  // `network` is the wallet's own, and may be one we don't work on
   const onUnsupportedNetwork = Boolean(address) && network !== undefined && !chain
 
   return {

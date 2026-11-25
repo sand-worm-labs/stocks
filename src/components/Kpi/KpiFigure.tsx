@@ -1,6 +1,6 @@
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
-import type { Kpi } from "@/lib/home/types"
 import { cn } from "@/lib/utils"
+import type { Kpi } from "@/types/home"
 
 export function KpiFigure({ kpi: { label, value, caption, tone = "neutral" } }: { kpi: Kpi }) {
   return (

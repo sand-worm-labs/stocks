@@ -3,12 +3,10 @@
 import Link from "next/link"
 import { PiSparkle, PiX } from "react-icons/pi"
 
-import type { AgentScript } from "@/lib/agent/types"
+import type { AgentScript } from "@/types/agent"
 
 import { useAgentPanel } from "./AgentPanelContext"
 
-// Who is here, a way to everything it has done, and a way to close it where it can be closed. There is one conversation
-// for a portfolio, so no threads to choose between.
 export function AgentHeader({ activityHref }: Pick<AgentScript, "activityHref">) {
   const { close } = useAgentPanel()
 

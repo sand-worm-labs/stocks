@@ -1,4 +1,3 @@
-// What the agent says on each screen of the flow. Real replies come from the agent itself.
 export const agentMockData = {
   rules: {
     status: "Waiting for you",

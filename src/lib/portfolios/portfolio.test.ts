@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import type { Portfolio } from "@/types/portfolios"
 import { exposureTo, heldSymbols, portfolioValue, statusText } from "./portfolio"
-import type { Portfolio } from "./types"
 
 const live: Portfolio = {
   id: "a",

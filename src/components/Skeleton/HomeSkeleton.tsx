@@ -4,18 +4,11 @@ import { SectionHeader } from "@/components/SectionHeader/SectionHeader"
 import { Card } from "@/components/ui/card"
 import { displayFont } from "@/config/fonts"
 import { SUMMARY_CARD_SURFACE } from "@/constants/cards"
+import { ACTIVITY, BOXES, DRAFTS, LEGEND_ROWS, STOCKS, TILES } from "@/constants/components/skeleton/home-skeleton"
 import { cn } from "@/lib/utils"
 
 import { Skeleton, SkeletonAvatar, SkeletonPill, SkeletonText } from "./Skeleton"
 
-const TILES = ["w-28", "w-24", "w-24"]
-const LEGEND_ROWS = 7
-const BOXES = 6
-const DRAFTS = 4
-const STOCKS = 6
-const ACTIVITY = 4
-
-// The stat tile under the total: an icon and two lines, in the real tile's border and shape
 function StatTile({ width }: { width: string }) {
   return (
     <div className="border-border-secondary bg-block-surface/70 dark:border-border-tertiary flex items-center gap-3 rounded-2xl border py-2.5 pr-4 pl-2.5">
@@ -28,7 +21,6 @@ function StatTile({ width }: { width: string }) {
   )
 }
 
-// What the total, the bar of where the money sits and the week's chart are before they come
 function SummarySkeleton() {
   return (
     <Card className={SUMMARY_CARD_SURFACE}>
@@ -87,7 +79,6 @@ function SummarySkeleton() {
   )
 }
 
-// A portfolio as a card, in the card's own corners, border and shadow
 function BoxSkeleton() {
   return (
     <div className="border-border-secondary dark:border-border-tertiary bg-block-surface flex h-72 w-full flex-col overflow-hidden rounded-[28px] border shadow-[0_10px_40px_-18px_rgba(24,39,75,0.25)]">
@@ -114,7 +105,6 @@ function BoxSkeleton() {
   )
 }
 
-// The title and, at its right, the link to the rest, of a card that sits in the side column
 function CardHeaderSkeleton() {
   return (
     <div className="flex items-center justify-between p-5 pb-3">
@@ -180,8 +170,6 @@ function RailSkeleton() {
   )
 }
 
-// The home before its data comes: the greeting's first word is real, and the name, the figures and the cards are where
-// they will be
 export function HomeSkeleton() {
   return (
     <div className="flex flex-col gap-8">

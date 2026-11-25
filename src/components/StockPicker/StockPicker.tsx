@@ -11,8 +11,8 @@ import { Pill } from "@/components/ui/pill"
 import { SearchField } from "@/components/ui/search-field"
 import { briefFromPicks } from "@/lib/brief/fromPicks"
 import { filterPicker, pickedWith } from "@/lib/markets/picker"
-import type { Stock, StockCategory } from "@/lib/markets/types"
 import { cn } from "@/lib/utils"
+import type { Stock, StockCategory } from "@/types/markets"
 
 import { CategoryCard } from "./CategoryCard"
 import { StockPickRow } from "./StockPickRow"
@@ -20,7 +20,6 @@ import { StockPickRow } from "./StockPickRow"
 type StockPickerProps = {
   stocks: Stock[]
   categories: StockCategory[]
-  // How many stocks can be bought, for the search box to say
   buyableCount: number
   initialCategoryIds: string[]
 }
@@ -31,8 +30,6 @@ const toggle = <T,>(set: Set<T>, item: T) => {
   return next
 }
 
-// Where categories and single stocks are picked to build around. Search narrows both lists, a picked category brings
-// its stocks in, and what is picked is kept in view above them.
 export function StockPicker({ stocks, categories, buyableCount, initialCategoryIds }: StockPickerProps) {
   const { start, busy } = useStartStrategy()
   const [query, setQuery] = useState("")
@@ -41,7 +38,6 @@ export function StockPicker({ stocks, categories, buyableCount, initialCategoryI
 
   const view = useMemo(() => filterPicker(query, stocks, categories), [query, stocks, categories])
   const pickCount = pickedCategories.size + pickedStocks.size
-  // What was picked, by the names it is shown under
   const pickedLabels = [
     ...categories.filter(({ id }) => pickedCategories.has(id)).map(({ label }) => label),
     ...[...pickedStocks].map((symbol) => stocks.find((stock) => stock.symbol === symbol)?.name ?? symbol),

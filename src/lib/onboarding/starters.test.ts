@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import type { Starter } from "@/types/onboarding"
 import { pickStarters } from "./starters"
-import type { Starter } from "./types"
 
 const starter = (id: string, themes: string[]): Starter => ({
   id,

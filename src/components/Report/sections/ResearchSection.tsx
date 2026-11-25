@@ -1,11 +1,10 @@
 import { SourcePill } from "@/components/SourceLink/SourcePill"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { Badge } from "@/components/ui/badge"
-import type { Report } from "@/lib/report/types"
+import { LABEL_TONE } from "@/constants/components/report/sections/research-section"
+import type { Report } from "@/types/report"
 
 import { ReportSection, SectionIntro } from "../ReportSection"
-
-const LABEL_TONE = { Fact: "info", Assumption: "warning", Opinion: "neutral" } as const
 
 type ResearchSectionProps = { research: Report["research"]; note?: Report["researchNote"] }
 

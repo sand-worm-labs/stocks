@@ -10,19 +10,17 @@ import { IconTile } from "@/components/ui/icon-tile"
 import { Tag } from "@/components/ui/tag"
 import { UsdcMark } from "@/components/UsdcMark/UsdcMark"
 import { ACTIVITY_KIND, explorerTxUrl } from "@/constants/activity"
-import type { Activity, TradeReceipt } from "@/lib/activity/types"
 import { formatTime } from "@/lib/dates"
 import { formatAmount } from "@/lib/format"
+import type { Activity, TradeReceipt } from "@/types/activity"
 
 import { NotificationActions, NotificationDot } from "./NotificationMark"
 
 type ActivityRowProps = {
   activity: Activity
-  // The portfolio it belongs to, shown when the list mixes portfolios
   portfolioName?: string
 }
 
-// What a trade came to, so it can be checked against the receipt on the explorer
 function Receipt({ trade }: { trade: TradeReceipt }) {
   const { symbol, side, spend, units, price, fee, impact, tx } = trade
   const facts = [
@@ -69,7 +67,6 @@ function Receipt({ trade }: { trade: TradeReceipt }) {
 export function ActivityRow({ activity, portfolioName }: ActivityRowProps) {
   const { kind, title, detail, at, action, rule, request, trade, checks } = activity
   const { icon, category } = ACTIVITY_KIND[kind]
-  // An alert is a notification: it can be read, put away and brought back
   const isNotification = category === "alerts"
 
   return (

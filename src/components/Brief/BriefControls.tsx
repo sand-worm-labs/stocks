@@ -6,16 +6,12 @@ import { Card } from "@/components/ui/card"
 import { SegmentedControl } from "@/components/ui/segmented-control"
 import { Slider } from "@/components/ui/slider"
 import { BRIEF_BUDGETS, BRIEF_GOALS, BRIEF_HORIZONS, CUSTOM_BUDGET, MAX_LOSS } from "@/constants/brief"
-import type { BriefChange, BriefFields } from "@/lib/brief/types"
+import { BUDGET_OPTIONS } from "@/constants/components/brief/brief-controls"
+import type { BriefChange, BriefFields } from "@/types/brief"
 
 import { ChipInput } from "./ChipInput"
 
 const asOptions = <T extends string>(values: readonly T[]) => values.map((value) => ({ value, label: value }))
-
-const BUDGET_OPTIONS = [
-  ...BRIEF_BUDGETS.map((value) => ({ value: String(value), label: value.toLocaleString("en-US") })),
-  { value: CUSTOM_BUDGET, label: "Custom" },
-]
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -32,8 +28,6 @@ type BriefControlsProps = {
   onChange: (change: BriefChange) => void
 }
 
-// What the agent read in the brief, as choices to change. A change is written back into the brief, so the words and
-// the controls can't disagree.
 export function BriefControls({
   fields: { goal, horizon, loss, budget, include, avoid },
   onChange,

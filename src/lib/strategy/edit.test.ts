@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
+import type { Strategy } from "@/types/strategy"
 import { addChild, canRemove, newBlock, removeAt, setFilter, setShare, symbolsIn } from "./edit"
 import { strategySchema } from "./schema"
-import type { Strategy } from "./types"
 
 const strategy: Strategy = {
   name: "Test",

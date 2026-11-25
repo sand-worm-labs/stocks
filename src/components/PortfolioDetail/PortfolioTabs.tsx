@@ -1,14 +1,7 @@
 import { AppLink } from "@/components/AppLink/AppLink"
-import type { RouteId } from "@/config/routes"
 
-export type PortfolioTab = "overview" | "rules" | "activity"
-
-const TABS: { id: PortfolioTab | "report"; route: RouteId; label: string }[] = [
-  { id: "overview", route: "portfolio", label: "Overview" },
-  { id: "rules", route: "rules", label: "Rules" },
-  { id: "activity", route: "portfolioActivity", label: "Activity" },
-  { id: "report", route: "report", label: "Results" },
-]
+import { TABS } from "@/constants/components/portfolio-detail/portfolio-tabs"
+import type { PortfolioTab } from "@/types/ui"
 
 export function PortfolioTabs({ portfolioId, current }: { portfolioId: string; current: PortfolioTab }) {
   return (

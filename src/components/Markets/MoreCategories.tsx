@@ -13,7 +13,6 @@ type MoreCategoriesProps = {
   keep: Record<string, string>
 }
 
-// The groups that don't have a chip of their own. When one of them is chosen the button says which.
 export function MoreCategories({ categories, active, keep }: MoreCategoriesProps) {
   const chosen = categories.find(({ id }) => id === active)
 

@@ -10,7 +10,6 @@ type CheckboxProps = {
   className?: string
 }
 
-// The web app's checkbox: a small square with a violet outline, and a violet tick when it is checked
 export function Checkbox({ checked, onChange, disabled, className, ...rest }: CheckboxProps) {
   return (
     <span className={cn("relative inline-flex size-4 shrink-0 items-center justify-center", className)}>
@@ -27,7 +26,7 @@ export function Checkbox({ checked, onChange, disabled, className, ...rest }: Ch
         className={cn(
           "bg-block-surface flex size-4 items-center justify-center rounded-[4px] border transition-colors duration-150",
           "peer-focus-visible:outline-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2",
-          checked ? "border-mark" : "dark:border-border-tertiary border-[#D0D5DD]",
+          checked ? "border-mark" : "border-control",
           disabled && "opacity-60"
         )}
       >

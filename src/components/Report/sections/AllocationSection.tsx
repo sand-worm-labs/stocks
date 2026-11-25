@@ -1,6 +1,6 @@
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { formatPercent } from "@/lib/format"
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 import { ReportSection } from "../ReportSection"
 

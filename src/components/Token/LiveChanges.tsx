@@ -7,7 +7,6 @@ import type { BaseToken } from "@/lib/markets/tokens"
 
 const toFraction = (percent?: number) => (percent === undefined ? undefined : percent / 100)
 
-// The moves over the last five minutes, hour, day and week, the first three from the pool as it trades
 export function LiveChanges({ token: { address, change1h, change24h, change7d } }: { token: BaseToken }) {
   const pool = useLiveMarketContext().quotes[address.toLowerCase()]
 

@@ -14,7 +14,6 @@ const clientFor = (chain: AppChain) => {
   return created
 }
 
-// How much USDC a wallet holds on a chain, read from the token's own contract
 export async function readUsdcBalance(chain: AppChain, address: `0x${string}`) {
   const raw = await clientFor(chain).readContract({
     address: USDC_ADDRESS[chain.id],

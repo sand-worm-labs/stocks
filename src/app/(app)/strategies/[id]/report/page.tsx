@@ -30,7 +30,6 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     getOwnStrategy(id),
   ])
   if (!portfolio) notFound()
-  // A strategy made here has results once its research has finished; until then its own page shows where it is up to
   if (own && own.status === "draft" && own.stage !== "ready") redirect(`/strategies/${id}`)
 
   const script = await getReportScript(portfolio)

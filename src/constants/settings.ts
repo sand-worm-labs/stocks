@@ -12,7 +12,6 @@ export const HORIZON_OPTIONS: Option[] = [
   { value: "3y+", label: "3+ years" },
 ]
 
-// Choices for the numbers a setting takes, shown with the formatter that matches them
 export const MAX_DRAWDOWN_CHOICES = [-0.1, -0.2, -0.3]
 export const MAX_PER_STOCK_CHOICES = [0.1, 0.2, 0.25, 0.3]
 export const MIN_LIQUIDITY_CHOICES = [50_000, 100_000, 250_000]

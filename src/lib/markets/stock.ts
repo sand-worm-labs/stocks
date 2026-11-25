@@ -1,4 +1,4 @@
-import type { Stock } from "./types"
+import type { Stock } from "@/types/markets"
 
 export const isBuyable = (stock: Stock) => stock.liquidity !== undefined
 

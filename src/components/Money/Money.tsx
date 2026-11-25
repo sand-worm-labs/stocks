@@ -4,19 +4,13 @@ import { cn } from "@/lib/utils"
 
 type MoneyProps = {
   value: number
-  // With a plus or a minus in front
   signed?: boolean
-  // The USDC coin before it, which says what money it is
   coin?: boolean
-  // The word as well, where the coin alone would not be clear
   unit?: boolean
-  // 10.09M, for a figure too big to write out
   compact?: boolean
   className?: string
 }
 
-// An amount of USDC written as money, the same wherever it is: the USDC coin, the whole part, and the cents small and
-// quiet. It takes the colour and size of what it sits in.
 export function Money({ value, signed, coin = true, unit = false, compact, className }: MoneyProps) {
   const written = compact ? formatCompactAmount(value) : signed ? formatSignedAmount(value) : formatAmount(value)
   const sign = /^[+−-]/.test(written) ? written.slice(0, 1) : ""

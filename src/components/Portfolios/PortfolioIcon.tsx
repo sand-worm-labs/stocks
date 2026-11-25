@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils"
 
 type PortfolioIconProps = { name: string; brief?: string; className?: string; size?: number }
 
-// A portfolio's own mark: the icon for what it is about, in a soft tile, the same wherever the portfolio is shown
 export function PortfolioIcon({ name, brief, className, size = 20 }: PortfolioIconProps) {
   const Icon = iconFor(name, brief)
 

@@ -19,8 +19,6 @@ type OnboardingShellProps = {
   children: ReactNode
 }
 
-// The frame of every step: the name at the top with a way back and a way out, the step in the middle, and at the bottom
-// where it is in the four and the way to skip the rest. No card, no chrome: one question at a time.
 export function OnboardingShell({ step, onBack, onSkip, skipping, children }: OnboardingShellProps) {
   const router = useRouter()
 

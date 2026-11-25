@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 
+import type { Strategy } from "@/types/strategy"
 import { fromGraph } from "./flow/from-graph"
 import { toGraph } from "./flow/graph"
 import { parseStrategy, serializeStrategy } from "./schema"
 import { getStrategy } from "./source"
-import type { Strategy } from "./types"
 
 const everything: Strategy = {
   name: "Every block",

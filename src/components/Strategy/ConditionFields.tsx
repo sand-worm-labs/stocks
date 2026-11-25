@@ -1,13 +1,14 @@
 import { Fragment } from "react"
 import { PiPlus, PiX } from "react-icons/pi"
 
+import { DEFAULT_DAYS, FIELD, INDICATORS } from "@/constants/components/strategy/filter-fields"
 import { fromList, JOINER, type Match, newComparison, toList } from "@/lib/strategy/condition"
 import { describeCondition } from "@/lib/strategy/describe"
 import { FRACTIONS } from "@/lib/strategy/explain"
-import type { Comparison, Condition, Indicator, Reading } from "@/lib/strategy/types"
 import { cn } from "@/lib/utils"
+import type { Comparison, Condition, Indicator, Reading } from "@/types/strategy"
 
-import { DecimalField, DEFAULT_DAYS, FIELD, INDICATORS, WholeField } from "./FilterFields"
+import { DecimalField, WholeField } from "./FilterFields"
 
 type Change = (condition: Condition) => void
 
@@ -70,7 +71,6 @@ function ReadingFields({
   )
 }
 
-// The line between two conditions, with AND (all must hold) or OR (any one will do) sitting on it; pressing it flips the two
 function Joiner({ match, onToggle }: { match: Match; onToggle: () => void }) {
   const word = match === "all" ? "And" : "Or"
   return (
@@ -103,7 +103,6 @@ function Row({
 }) {
   const n = index + 1
   const against = "value" in row.right ? "number" : "stock"
-  // What a percentage-like measure is typed as: 5 for 5%, though it is kept as 0.05
   const percent = FRACTIONS.has(row.left.indicator.kind)
 
   return (
@@ -178,8 +177,6 @@ function Row({
   )
 }
 
-// What an if reads, as rows that can be changed: each comparison with every part a field, whether all of them or any one must
-// hold, and a way to add and take out. A condition with a group inside a group is shown in words and left to the JSON.
 export function ConditionFields({
   condition,
   choices,

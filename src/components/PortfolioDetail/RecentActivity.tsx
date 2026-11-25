@@ -6,16 +6,14 @@ import { Card } from "@/components/ui/card"
 import { EmptyResults } from "@/components/ui/empty-results"
 import { IconTile } from "@/components/ui/icon-tile"
 import { ACTIVITY_KIND } from "@/constants/activity"
-import type { Activity } from "@/lib/activity/types"
+import { SHOWN } from "@/constants/components/portfolio-detail/recent-activity"
 import { formatActivityTime } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import { listItemHoverClassName } from "@/styles/interactive"
-
-const SHOWN = 4
+import type { Activity } from "@/types/activity"
 
 type RecentActivityProps = { portfolioId: string; activity: Activity[]; now: string }
 
-// The latest of what happened to this portfolio, with the way to all of it
 export function RecentActivity({ portfolioId, activity, now }: RecentActivityProps) {
   return (
     <Card className="flex flex-col gap-3 rounded-[14px] p-4 md:px-6 md:py-[22px]">

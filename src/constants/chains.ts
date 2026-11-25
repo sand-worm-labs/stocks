@@ -1,6 +1,5 @@
 import { base, baseSepolia } from "viem/chains"
 
-// The networks the app works on, in the order they are offered: Base Sepolia, where paper trading's USDC is free, then Base
 export const APP_CHAINS = [baseSepolia, base] as const
 
 export const appChainById = (id: number | string | undefined) => APP_CHAINS.find((chain) => chain.id === Number(id))

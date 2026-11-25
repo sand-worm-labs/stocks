@@ -1,4 +1,3 @@
-// Each strategy card in its own soft colour, fading out at the bottom
 export const CARD_TINTS = [
   "from-rose-100 via-rose-50 to-rose-50/40 dark:from-rose-950/50 dark:via-rose-950/20 dark:to-transparent",
   "from-emerald-100 via-emerald-50 to-emerald-50/40 dark:from-emerald-950/50 dark:via-emerald-950/20 dark:to-transparent",
@@ -11,7 +10,6 @@ export const CARD_TINTS = [
 export const CARD_SURFACE =
   "animate-fade-up bg-gradient-to-b text-left border-border-secondary dark:border-border-tertiary flex w-full flex-col overflow-hidden rounded-[28px] border shadow-[0_10px_40px_-18px_rgba(24,39,75,0.25)] transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5"
 
-// The same colours as the cards, as solid fills, so a portfolio is the same colour in the bar above it
 export const ALLOCATION_FILLS = [
   "bg-gradient-to-r from-rose-400 to-rose-500",
   "bg-gradient-to-r from-emerald-400 to-emerald-500",
@@ -23,6 +21,5 @@ export const ALLOCATION_FILLS = [
 export const CASH_FILL = "bg-ink-300"
 export const OTHER_FILL = "bg-ink-200"
 
-// The card that opens a page with its totals: a tint at the corner the figures are at and a green one at the other
 export const SUMMARY_CARD_SURFACE =
   "overflow-hidden bg-[radial-gradient(60%_70%_at_100%_0%,var(--mark-soft),transparent),radial-gradient(45%_50%_at_0%_100%,rgba(16,185,129,0.08),transparent)]"

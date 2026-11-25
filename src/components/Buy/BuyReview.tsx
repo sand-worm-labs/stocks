@@ -16,6 +16,7 @@ import { UsdcBalance } from "@/components/Wallet/UsdcBalance"
 import { useWalletUsdc } from "@/components/Wallet/useWalletUsdc"
 import { useWallet } from "@/components/Wallet/WalletContext"
 import { routeHref } from "@/config/routes"
+import { CELL, FAUCET_URL, STEP_TEXT } from "@/constants/components/buy/buy-review"
 import {
   DEFAULT_SLIPPAGE,
   MIN_BUY_AMOUNT,
@@ -26,12 +27,13 @@ import {
 } from "@/constants/trade"
 import { formatAmount, formatPercent, pluralize } from "@/lib/format"
 import { readAmount } from "@/lib/portfolios/amount"
-import type { Order, Report } from "@/lib/report/types"
-import type { Session } from "@/lib/session/types"
 import { errorMessage, tradeStrategy } from "@/lib/strategies/client"
 import { APPROVAL_WINDOW_MS, approvalMessage } from "@/lib/trade/authorize"
 import { withFee } from "@/lib/trade/fee"
 import { cn } from "@/lib/utils"
+import type { Order, Report } from "@/types/report"
+import type { Session } from "@/types/session"
+import type { BuyStep } from "@/types/ui"
 
 export type BuyReviewProps = {
   orders: Order[]
@@ -42,29 +44,16 @@ export type BuyReviewProps = {
   demo?: boolean
 }
 
-// Where starting a strategy is, when it is approved with a wallet
-type Step = "idle" | "switching" | "signing" | "checking"
-const STEP_TEXT: Record<Exclude<Step, "idle">, string> = {
-  switching: "Switching network…",
-  signing: "Approve in your wallet…",
-  checking: "Checking your approval…",
-}
-const FAUCET_URL = "https://faucet.circle.com"
-
 type BuyReviewViewProps = BuyReviewProps & { onBought: () => void }
 
-const CELL = "border-border-secondary dark:border-border-tertiary border-t py-2.5 text-right tabular-nums"
-
-// What buying would do, to read and agree to before it is done
 export function BuyReview({ orders: planned, report, portfolioId, network, demo, onBought }: BuyReviewViewProps) {
   const router = useRouter()
   const wallet = useWallet()
   const { connected, chain, reading: walletReading, isWaiting } = useWalletUsdc()
-  const [step, setStep] = useState<Step>("idle")
+  const [step, setStep] = useState<BuyStep>("idle")
   const [slippage, setSlippage] = useState(DEFAULT_SLIPPAGE)
   const [understood, setUnderstood] = useState(true)
 
-  // The plan's spend is the most; a smaller amount buys the same stocks in the same shares, only less of each
   const plan = planned.reduce((sum, order) => sum + order.spend, 0)
   const [text, setText] = useState(plan.toFixed(2))
   const reading = readAmount(text, {
@@ -76,7 +65,6 @@ export function BuyReview({ orders: planned, report, portfolioId, network, demo,
   const scale = reading.amount === undefined ? 0 : reading.amount / plan
   const orders = planned.map((order) => ({ ...order, spend: order.spend * scale, receive: order.receive * scale }))
   const spend = reading.amount ?? 0
-  // The most the strategy may use of the wallet. The network fee is paid in ETH, so it isn't part of this.
   const total = withFee(spend)
   const fees = total - spend
   const withWallet = !demo && network.mode === "live"
@@ -108,7 +96,6 @@ export function BuyReview({ orders: planned, report, portfolioId, network, demo,
 
   const buy = async () => {
     if (busy) return
-    // One of the made-up strategies: nothing is saved or paid, it only shows how it would go
     if (demo) {
       onBought()
       toast.success(`Bought ${pluralize(orders.length, "stock")} for ${formatAmount(total)} USDC`, {
@@ -124,8 +111,6 @@ export function BuyReview({ orders: planned, report, portfolioId, network, demo,
         return done("Paper trading")
       }
 
-      // Nothing is sent. The wallet's owner signs an approval that says which strategy, how much and until when, and the server checks
-      // it, and that the wallet holds the USDC. The money stays where it is.
       if (!onTradeChain) {
         setStep("switching")
         await wallet.approve.switchChain(TRADE_CHAIN.id)
@@ -145,9 +130,8 @@ export function BuyReview({ orders: planned, report, portfolioId, network, demo,
     }
   }
 
-  // What the button says and does: with a wallet, getting it ready comes first
   const action = (() => {
-    if (busy) return { label: STEP_TEXT[step as Exclude<Step, "idle">], disabled: true, spin: true }
+    if (busy) return { label: STEP_TEXT[step as Exclude<BuyStep, "idle">], disabled: true, spin: true }
     if (!withWallet)
       return { label: `Buy for ${formatAmount(total)} USDC`, disabled: !understood || reading.amount === undefined }
     if (isWaiting) return { label: "Checking your wallet…", disabled: true }

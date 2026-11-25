@@ -5,26 +5,11 @@ import { AuraPanel } from "./AuraPanel"
 import { SandwormOption } from "./SandwormOption"
 import { WalletOptions } from "./WalletOptions"
 
-const LINKS = [
-  { name: "Home", href: env.NEXT_PUBLIC_LANDING_URL },
-  { name: "Documentation", href: env.NEXT_PUBLIC_DOCS_URL },
-]
-
-// The sign-in page, laid out as the main Sandworm app's is: the way in on one side, an aurora on the other. Home and Documentation
-// sit in the corner, where someone who isn't ready to sign in can still get out.
 export function SignIn() {
   return (
-    <div className="relative h-dvh overflow-hidden bg-white dark:bg-[#141412]">
+    <div className="bg-sign-in-surface relative h-dvh overflow-hidden">
       <div className="grid h-full md:grid-cols-2">
         <main className="font-body relative mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center p-6">
-          <nav aria-label="Site" className="text-ink-400 absolute top-6 right-6 flex gap-5 text-sm font-medium">
-            {LINKS.map(({ name, href }) => (
-              <a key={name} href={href} className="hover:text-ink-100 transition-colors">
-                {name}
-              </a>
-            ))}
-          </nav>
-
           <SandwormLogo size={40} />
           <h1 className="mt-3 text-center text-xl font-[500] xl:text-2xl">Sign in to Sandworm Stocks</h1>
           <p className="text-ink-200 mt-1.5 mb-6 max-w-xs text-center text-sm leading-5 font-medium">

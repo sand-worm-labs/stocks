@@ -1,12 +1,11 @@
 import { MIN_BUY_AMOUNT, SWAP_FEE_RATE } from "@/constants/trade"
 import { analyzeBrief } from "@/lib/brief/analyze"
-import type { Market, Pipeline } from "@/lib/pipeline/types"
-import type { Holding } from "@/lib/portfolios/types"
-import type { Funding, StrategyEvent, StrategyRecord, StrategyStore } from "@/lib/store/types"
 import { withFee } from "@/lib/trade/fee"
+import type { Market, Pipeline } from "@/types/pipeline"
+import type { Holding } from "@/types/portfolios"
+import type { Funding, StrategyEvent, StrategyRecord, StrategyStore } from "@/types/store"
 
 export const NAME_MAX_LENGTH = 60
-// How long research takes the stand-in agent. Sandworm's takes minutes, so the page is built to be left and come back to.
 export const RESEARCH_MS = 45_000
 export const BRIEF_MAX_LENGTH = 2000
 
@@ -28,8 +27,6 @@ const slug = (text: string) =>
     .replace(/^-|-$/g, "")
     .slice(0, 40) || "strategy"
 
-// What buying `amount` of a plan puts in the strategy, and what moves out of the wallet: the stocks at the plan's prices, and the swap
-// fee on top. A smaller amount buys the same stocks in the same shares.
 export function fill(record: Pick<StrategyRecord, "orders">, amount: number) {
   const orders = record.orders ?? []
   const plan = orders.reduce((sum, { spend }) => sum + spend, 0)
@@ -76,7 +73,6 @@ export function createStrategyService({
     return next
   }
 
-  // What has happened, with when
   const happened = (record: StrategyRecord, kind: StrategyEvent["kind"]) => [
     ...(record.events ?? []),
     { kind, at: now().toISOString() },
@@ -92,7 +88,6 @@ export function createStrategyService({
   return {
     owned,
 
-    // From the idea typed: read it, design it, and keep it as a draft waiting for its rules to be confirmed
     async create(ownerId: string, brief: string) {
       const text = brief.trim()
       if (!text) throw new StrategyError("Write what you want this strategy to do", 400)
@@ -127,7 +122,6 @@ export function createStrategyService({
       return save({ ...record, name: next, strategy: { ...record.strategy, name: next } })
     },
 
-    // The rules are locked and the research starts. The agent's answer is kept now; `finishResearch` is when it is shown.
     async confirmRules(ownerId: string, id: string) {
       const record = await owned(ownerId, id)
       if (record.status !== "draft" || record.stage !== "rules")
@@ -147,7 +141,6 @@ export function createStrategyService({
       })
     },
 
-    // Ends the research now, rather than when its time is up: for the person who would rather not wait for the stand-in
     async finishResearch(ownerId: string, id: string) {
       const record = await owned(ownerId, id)
       if (record.stage === "ready") return record
@@ -155,13 +148,11 @@ export function createStrategyService({
       return finish(record)
     },
 
-    // A strategy as it is now: research that has run its time is finished first
     async settle(record: StrategyRecord) {
       const due = record.research?.readyAt && Date.parse(record.research.readyAt) <= now().getTime()
       return isResearching(record) && record.report && due ? finish(record) : record
     },
 
-    // Trading begins, once whatever pays for it has been checked by the caller. `funding.amount` is what left the wallet.
     async goLive(ownerId: string, id: string, spend: number, funding: Omit<Funding, "amount">) {
       const record = await owned(ownerId, id)
       if (record.status !== "draft" || record.stage !== "ready") throw new StrategyError("It isn't ready to trade", 409)

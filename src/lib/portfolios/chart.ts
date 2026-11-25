@@ -1,17 +1,14 @@
-import type { Benchmark } from "@/lib/benchmarks/types"
 import { getFundHistory, getTokenHistory, type HistoryWindow, type PricePoint, windowFor } from "@/lib/markets/history"
 import { getBaseTokens } from "@/lib/markets/tokens"
 import { getOwnStrategies } from "@/lib/strategies/source"
+import type { Benchmark } from "@/types/benchmarks"
 
+import type { Portfolio } from "@/types/portfolios"
 import { valueHistory, type ValuePoint } from "./history"
 import { isLive } from "./portfolio"
-import type { Portfolio } from "./types"
 
-// Something that happened that the chart marks on its line
 export type ChartEvent = { time: number; label: string }
 
-// What the charts are drawn from, for the strategies made here: each one's value over time, how each fund did over the same stretch, and
-// when each started. All of it comes from real prices, over the shortest window that reaches back to the first start.
 export type ChartData = {
   histories: Record<string, ValuePoint[]>
   funds: Record<string, PricePoint[]>

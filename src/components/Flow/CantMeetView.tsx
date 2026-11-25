@@ -7,13 +7,13 @@ import { RulesList } from "@/components/Rules/RulesList"
 import { SourceLink } from "@/components/SourceLink/SourceLink"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import type { AgentScript } from "@/lib/agent/types"
 import { formatAsOf } from "@/lib/dates"
 import { formatPercent } from "@/lib/format"
 import { isBuyable } from "@/lib/markets/stock"
-import type { MarketSummary, Stock } from "@/lib/markets/types"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Rule } from "@/lib/rules/types"
+import type { AgentScript } from "@/types/agent"
+import type { MarketSummary, Stock } from "@/types/markets"
+import type { Portfolio } from "@/types/portfolios"
+import type { Rule } from "@/types/rules"
 
 type CantMeetViewProps = {
   portfolio: Portfolio

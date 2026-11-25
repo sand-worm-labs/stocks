@@ -4,12 +4,10 @@ import { BriefTabs } from "@/components/Brief/BriefTabs"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { StepProgress } from "@/components/Flow/StepProgress"
 import { StockPicker } from "@/components/StockPicker/StockPicker"
+import { DEMO_PICKED_CATEGORY } from "@/constants/demo"
 import { getCategories, getMarketSummary, getStocks } from "@/lib/markets/source"
 
 export const metadata: Metadata = { title: "Stocks or a category" }
-
-// The category the mock starts with picked
-const PICKED_CATEGORY = "robotics"
 
 export default async function StockPickerPage() {
   const [stocks, categories, summary] = await Promise.all([getStocks(), getCategories(), getMarketSummary()])
@@ -25,7 +23,7 @@ export default async function StockPickerPage() {
           stocks={stocks}
           categories={categories}
           buyableCount={summary.buyable}
-          initialCategoryIds={[PICKED_CATEGORY]}
+          initialCategoryIds={[DEMO_PICKED_CATEGORY]}
         />
       </FlowLayout>
     </div>

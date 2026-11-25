@@ -1,10 +1,8 @@
 import { pick } from "@/lib/seed"
-import type { Condition, Node, Schedule, Strategy } from "@/lib/strategy/types"
+import type { Condition, Node, Schedule, Strategy } from "@/types/strategy"
 
 const LEADERS = ["NVDAc", "AMZNc", "GOOGLc", "METAc", "TSLAc", "AAPLc"]
 
-// A strategy of the kind the builder makes: ride the strongest stocks while the market is climbing, buy a dip, and otherwise
-// hold the steadier ones. It is what `getStrategy` gives when no strategy is named; each real one is built below.
 export const sampleStrategyMockData: Strategy = {
   name: "Trend and momentum",
   schedule: "weekly",
@@ -50,18 +48,9 @@ export const sampleStrategyMockData: Strategy = {
   },
 }
 
-// The nine large stocks the Steady leaders strategy picks from
-export const STEADY_UNIVERSE = ["AAPLc", "GOOGLc", "NVDAc", "METAc", "AMZNc", "TSLAc", "NFLXc", "LLYc", "TTWOc"]
+const STEADY_UNIVERSE = ["AAPLc", "GOOGLc", "NVDAc", "METAc", "AMZNc", "TSLAc", "NFLXc", "LLYc", "TTWOc"]
 
-// Designed from a 10-year backtest on real daily prices (Nov 2016 to Nov 2026), and tested on each half of it. What it does:
-// - Picks: once a month, the 4 of the 9 with the best 126-day (about 6-month) return. A stock that falls out of the top 4 is sold
-//   at the next look; that is its main exit.
-// - Sizes: the steadier a pick has been over the last 60 days, the more of it is held (inverse volatility). In the test this took the
-//   worst fall from -38% to -30% at about the same return, and held up in both halves.
-// - Rebalances: held picks are traded back to their share only when they drift more than 5 points, checked weekly. In the test this
-//   cut the orders from 532 to 239 and did not cost return.
-// - Left out on purpose: a market-wide switch to cash, and a take-profit. Both lowered the return per unit of risk in both halves.
-export const steadyLeadersStrategyMockData: Strategy = {
+const steadyLeadersStrategyMockData: Strategy = {
   name: "Steady leaders",
   schedule: "monthly",
   root: {
@@ -80,12 +69,10 @@ export const steadyLeadersStrategyMockData: Strategy = {
   },
 }
 
-// Strategies designed by hand, by the id of the portfolio that runs each
 export const HAND_MADE_STRATEGIES: Record<string, Strategy> = { "steady-leaders": steadyLeadersStrategyMockData }
 
-export type StrategyKind = "trend" | "dip" | "defensive" | "rotation" | "relative" | "calm" | "laggards"
+type StrategyKind = "trend" | "dip" | "defensive" | "rotation" | "relative" | "calm" | "laggards"
 
-// Which kind each hand-made strategy is, to fit what it is for; the rest are given one from their id
 export const STRATEGY_KIND_BY_ID: Record<string, StrategyKind> = {
   "robotics-20": "trend",
   "big-tech-35": "defensive",
@@ -107,8 +94,6 @@ export const STRATEGY_KINDS: readonly StrategyKind[] = [
 const price = (symbol: string) => ({ symbol, indicator: { kind: "price" } as const })
 const asset = (symbol: string): Node => ({ type: "asset", symbol })
 
-// A strategy of one kind over the stocks a portfolio holds, with the numbers (how many days, how steep a dip) taken from its
-// seed so that two strategies of a kind still aren't the same. Needs at least three stocks.
 export function buildStrategyMockData(kind: StrategyKind, symbols: string[], seed: number): Strategy {
   const [a = "", b = a, c = b] = symbols
   const sma = pick([20, 50, 100], seed, 1)

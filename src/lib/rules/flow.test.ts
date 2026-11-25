@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import type { Portfolio } from "@/lib/portfolios/types"
+import type { Portfolio } from "@/types/portfolios"
 
-import type { Condition } from "@/lib/strategy/types"
+import type { Condition } from "@/types/strategy"
 import { toChecks, toExits, toOrders } from "./flow"
 
 import { checkRules, describeRule, explainRule, type RuleSpec, rulesSchema, specOf } from "./spec"
@@ -72,7 +72,6 @@ describe("rules as data", () => {
 })
 
 describe("condition rules", () => {
-  // NVDAc is climbing: its price is above its 3-day average
   const climbing = [{ symbol: "NVDAc", liquidity: 500_000, series: [1, 2, 3, 4, 5] }]
   const above: Condition = {
     left: { symbol: "NVDAc", indicator: { kind: "price" } },
@@ -121,7 +120,6 @@ describe("condition rules", () => {
 })
 
 describe("stop-loss and take-profit", () => {
-  // NVDAc is up 11% on what was paid for it, TSLAc is down 26%
   const read = (spec: RuleSpec) => checkRules(portfolio, [spec], stocks)[0]
 
   it("is broken once a stock has fallen past the stop-loss, and holds before that", () => {
@@ -193,7 +191,6 @@ describe("toChecks", () => {
 
 describe("a portfolio stop", () => {
   const stop: RuleSpec = { type: "portfolio-stop", limit: 0.3, pause: 63 }
-  // Up, then 20% off its high
   const falling: Portfolio = { ...portfolio, series: [100, 120, 110, 96] }
 
   it("is saved, read back and said in words", () => {

@@ -1,4 +1,4 @@
-import type { StockCategory } from "@/lib/markets/types"
+import type { StockCategory } from "@/types/markets"
 
 export const categoriesMockData: StockCategory[] = [
   { id: "ai", label: "AI and chips", symbols: ["NVDAc", "ANTc", "GOOGLc"] },

@@ -1,6 +1,6 @@
 import { DRAFT_STAGE } from "@/constants/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { StrategyRecord } from "@/lib/store/types"
+import type { Portfolio } from "@/types/portfolios"
+import type { StrategyRecord } from "@/types/store"
 
 // A stored strategy as the pages draw one. Its value over time is worked out in the browser from live prices, so the series here is
 // just a start and a now.

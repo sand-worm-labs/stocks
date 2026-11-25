@@ -2,10 +2,8 @@ import type { PricePoint } from "@/lib/markets/history"
 import { fundValues } from "@/lib/portfolios/history"
 import { stretch, type ValuePoint } from "@/lib/portfolios/performance"
 
-import type { Benchmark, BenchmarkGroup } from "./types"
+import type { Benchmark, BenchmarkGroup } from "@/types/benchmarks"
 
-// A benchmark as it would have moved the money put in: from where the portfolio started, to its own change, on the
-// same points as the portfolio so the two can be drawn together
 export type BenchmarkLine = {
   id: string
   name: string
@@ -15,8 +13,6 @@ export type BenchmarkLine = {
   values: number[]
 }
 
-// With `funds` (real prices over the same stretch, by ticker) each fund is drawn from them, and one with no prices is left out rather than
-// drawn from something made up. Without, the funds are the made-up weekly series, for the strategies that are only examples.
 export function benchmarkLines(
   benchmarks: Benchmark[],
   points: ValuePoint[],

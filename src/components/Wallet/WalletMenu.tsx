@@ -3,19 +3,14 @@
 import { PiCaretDown } from "react-icons/pi"
 
 import { BaseMark } from "@/components/BaseMark/BaseMark"
-import { buttonVariants } from "@/components/Button/Button"
+
+import { CONNECT } from "@/constants/components/wallet/wallet-menu"
 import { SIGN_IN_PATH } from "@/lib/auth/config"
 import { shortenAddress } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 import { type PreloadWhen, useWallet } from "./WalletContext"
 
-const CONNECT = cn(buttonVariants({ intent: "dark", size: "compact" }), "hidden lg:inline-flex")
-
-// What the header shows for a wallet is ours, in the shape of the rest of it; what it opens is Dynamic's: the window to
-// sign in with the list of wallets, and for someone signed in, the panel of what they hold and have done. Someone signed in
-// has the SDK fetched once the page is idle, to show their wallet; for anyone else it is fetched as they reach for the
-// button, so the window is ready by the time they have clicked.
 export function WalletMenu({ preload }: { preload?: PreloadWhen }) {
   const { status, isSignedIn, address, openSignIn, linkWallet, openProfile, preload: fetchSdk } = useWallet(preload)
 
@@ -46,7 +41,7 @@ export function WalletMenu({ preload }: { preload?: PreloadWhen }) {
       type="button"
       onClick={openProfile}
       className={cn(
-        "bg-inputBg border-border text-ink-100 hover:bg-hover-bg dark:border-border-tertiary hidden items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 text-sm transition-colors lg:flex dark:bg-[#2E2E2C]"
+        "bg-inputBg border-border text-ink-100 hover:bg-hover-bg dark:border-border-tertiary dark:bg-wallet-button hidden items-center gap-2 rounded-md border py-1 pr-2 pl-2.5 text-sm transition-colors lg:flex"
       )}
     >
       <BaseMark size={14} />

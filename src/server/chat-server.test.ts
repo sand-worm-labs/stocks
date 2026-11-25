@@ -3,25 +3,23 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { WebSocket } from "ws"
 import type { AddressInfo } from "node:net"
 
-
 import { signChatTicket } from "@/lib/auth/token"
 import type { ServerEvent } from "@/lib/chat/protocol"
 
-import { createChatServer } from "./chat-server"
+import { createRealtimeServer } from "./realtime-server"
 
 const ROOM = `0x${"a".repeat(40)}`
-let server: ReturnType<typeof createChatServer>
+let server: ReturnType<typeof createRealtimeServer>
 let port = 0
 
 beforeAll(async () => {
   process.env.AUTH_SECRET = "a-test-secret-that-is-long-enough-to-use"
-  server = createChatServer(0)
+  server = createRealtimeServer(0)
   await new Promise((resolve) => server.once("listening", resolve))
   port = (server.address() as AddressInfo).port
 })
 afterAll(() => server.close())
 
-// A connection with the events it has heard so far, and a way to wait for the next one that matches
 async function join(user: string, { room = ROOM, ticket }: { room?: string; ticket?: string } = {}) {
   const socket = new WebSocket(`ws://localhost:${port}/?room=${room}&ticket=${ticket ?? (await signChatTicket(user))}`)
   const heard: ServerEvent[] = []

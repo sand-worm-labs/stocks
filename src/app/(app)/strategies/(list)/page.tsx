@@ -20,7 +20,12 @@ export default async function PortfoliosPage({ searchParams }: PortfoliosPagePro
   return (
     <div className="flex flex-col gap-6">
       <PageHeader icon="portfolio" title="My strategies" actions={<NewPortfolioButton />} />
-      <PortfoliosLive portfolios={searchPortfolios(portfolios, q)} addresses={addresses} mode={session.network.mode} />
+      <PortfoliosLive
+        portfolios={searchPortfolios(portfolios, q)}
+        addresses={addresses}
+        mode={session.network.mode}
+        searching={q.trim() !== ""}
+      />
     </div>
   )
 }

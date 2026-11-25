@@ -1,4 +1,4 @@
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 import { ChecksSection } from "../Report/sections/ChecksSection"
 import { ConcentrationSection } from "../Report/sections/ConcentrationSection"
@@ -10,7 +10,6 @@ import { SummarySection } from "../Report/sections/SummarySection"
 import { ToleranceSection } from "../Report/sections/ToleranceSection"
 import { VsBenchmarkSection } from "../Report/sections/VsBenchmarkSection"
 
-// Every section of the first version of a report, in reading order
 export function ReportColumn({ report, portfolioId }: { report: Report; portfolioId: string }) {
   const { checks, concentration, liquidity, research, researchNote, sources, summary, tolerance, venue, verdict } =
     report

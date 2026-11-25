@@ -12,14 +12,12 @@ import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import { formatPercent } from "@/lib/format"
 import { deposited, profit } from "@/lib/portfolios/performance"
 import { portfolioValue } from "@/lib/portfolios/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
+import type { Portfolio } from "@/types/portfolios"
 
 type PortfolioHeroLiveProps = { portfolio: Portfolio; addresses: Record<string, string> }
 
-// What the portfolio is worth, at the prices the market is making now: the total with the way it is going, what it has
-// made on what was put in, and where the money is. The figures move with the market.
 export function PortfolioHeroLive({ portfolio, addresses }: PortfolioHeroLiveProps) {
   const [live] = useLivePortfolios([portfolio], addresses)
   const now = live ?? portfolio

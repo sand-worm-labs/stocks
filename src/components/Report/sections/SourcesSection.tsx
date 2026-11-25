@@ -2,13 +2,11 @@ import { PiArrowUpRight } from "react-icons/pi"
 
 import { SourceMark } from "@/components/SourceLink/SourceMark"
 import { Card } from "@/components/ui/card"
+import { STACK } from "@/constants/components/report/sections/sources-section"
 import { SANDWORM_APP_URL } from "@/constants/flow"
-import type { Report } from "@/lib/report/types"
 import { cn } from "@/lib/utils"
 import { listItemHoverClassName } from "@/styles/interactive"
-
-// How many logos sit in the stack by the title
-const STACK = 5
+import type { Report } from "@/types/report"
 
 export function SourcesSection({ sources }: { sources: Report["sources"] }) {
   return (

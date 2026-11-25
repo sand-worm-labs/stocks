@@ -1,10 +1,9 @@
-import { PiCheck, PiExclamationMark, PiX } from "react-icons/pi"
+import { PiExclamationMark } from "react-icons/pi"
 
+import { ICON } from "@/constants/components/report/check-list"
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
-import type { Check } from "@/lib/report/types"
 import { cn } from "@/lib/utils"
-
-const ICON = { positive: PiCheck, negative: PiX } as const
+import type { Check } from "@/types/report"
 
 export function CheckList({ checks }: { checks: Check[] }) {
   return (

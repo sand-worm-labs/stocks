@@ -6,6 +6,7 @@ import { type PointerEvent, useEffect, useRef } from "react"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { Card } from "@/components/ui/card"
 import { routeHref } from "@/config/routes"
+import { CLICK_DISTANCE, HEIGHT, SETTLE_FRAMES, SHOW_NAME_AT } from "@/constants/components/holdings/holdings-swarm"
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import { formatAmount, formatPercent } from "@/lib/format"
 import type { StockRow } from "@/lib/holdings/groups"
@@ -13,18 +14,8 @@ import { type Body, gainTint, radii, type Size, startAt, step } from "@/lib/hold
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 
-const HEIGHT = 480
-// Bubbles at least this wide carry the name and gain as well as the logo
-const SHOW_NAME_AT = 38
-// A press that moves less than this is a click, and opens the stock
-const CLICK_DISTANCE = 5
-// With reduced motion the swarm settles once, and is still
-const SETTLE_FRAMES = 240
-
 type Hold = { symbol: string; moved: number; lastX: number; lastY: number }
 
-// Every stock held, with no grid and no ranking: each takes the room it needs and the others make way. Size is how much you
-// hold, colour is how it is doing, and any of them can be picked up and moved. Click one to open it.
 export function HoldingsSwarm({ stocks }: { stocks: StockRow[] }) {
   const router = useRouter()
   const box = useRef<HTMLDivElement>(null)
@@ -113,7 +104,6 @@ export function HoldingsSwarm({ stocks }: { stocks: StockRow[] }) {
     grabbed.lastY = event.clientY
     body.x += dx
     body.y += dy
-    // Let go mid-swing and it carries on a little
     body.vx = dx * 0.6
     body.vy = dy * 0.6
   }

@@ -3,7 +3,6 @@
 import { useNotifications } from "@/components/Notifications/NotificationsProvider"
 import { ACTIVITY_FILTER_LABEL } from "@/constants/activity"
 
-// The "Alerts" filter, with how many of them are still to be read
 export function AlertsFilterLabel() {
   const { unread } = useNotifications()
 

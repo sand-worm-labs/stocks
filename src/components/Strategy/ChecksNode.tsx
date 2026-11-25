@@ -2,18 +2,13 @@ import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
 import { use } from "react"
 import { PiListChecks, PiSignOut } from "react-icons/pi"
 
+import { RAIL } from "@/constants/components/strategy/checks-node"
+import { HANDLE } from "@/constants/components/strategy/shared"
 import { CHECK_WIDTH, type CheckData } from "@/lib/rules/flow"
 import { cn } from "@/lib/utils"
 
 import { HoverContext, isLit } from "./BlockNode"
 
-const HANDLE = "!size-2.5 !border-2 !border-block-surface !bg-ink-400"
-// How far in from a block's left edge the line to what is under it leaves, as on a strategy block
-const RAIL = 20
-
-// The block of its own kind, Rules, that the rules hang from: every trade is checked against what is under it. The same block is made again for the exits, apart from trades, with its own name. It is made like
-// the strategy's blocks (a tile, a title, what it says, its kind on the right), with how many rules there are and whether any
-// is broken.
 export function ChecksNode({ id, data }: NodeProps<Node<CheckData, "checks">>) {
   const hovered = use(HoverContext)
   const { title, detail, count = 0, brokenCount = 0, tag = "Rules", noun = "rule", exit = false } = data

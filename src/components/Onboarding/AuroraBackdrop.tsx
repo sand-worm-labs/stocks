@@ -3,19 +3,10 @@
 import { useTheme } from "next-themes"
 import { useEffect, useRef } from "react"
 
+import { ROWS } from "@/constants/components/onboarding/aurora-backdrop"
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 import { auroraFrame } from "@/lib/onboarding/aurora"
 
-// The picture is worked out on a grid this many rows tall and drawn up to the size of the page. It is all soft colour, so nothing is lost,
-// and it is a few thousand points a frame, not a million.
-const ROWS = 72
-
-// The glow behind the onboarding steps: the aurora of the main app, a band of violet and a band of glow between two dark caps, breathing
-// and rippling slowly, under fine lines that drift upward. Light and soft on the light page, as it is in the main app on the dark one.
-// Still for anyone who has asked for less motion. Decorative.
-//
-// Made to stay smooth: the picture is worked out small, once per frame, into one buffer that is reused, the browser scales it up on
-// the graphics card, and the lines move by transform alone, so the page's own work never holds them up. A hidden tab draws nothing.
 export function AuroraBackdrop() {
   const canvas = useRef<HTMLCanvasElement>(null)
   const reduced = usePrefersReducedMotion()
@@ -60,7 +51,6 @@ export function AuroraBackdrop() {
       draw(now / 1000)
     }
 
-    // Still: one picture, drawn again when the page changes size
     const resize = new ResizeObserver(() => draw(2))
     if (reduced) resize.observe(element)
     else frame = requestAnimationFrame(run)

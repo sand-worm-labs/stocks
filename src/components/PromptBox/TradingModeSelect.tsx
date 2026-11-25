@@ -1,31 +1,32 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import { PiDotFill } from "react-icons/pi"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { A_YEAR } from "@/constants/components/prompt-box/trading-mode-select"
 import { TRADING_MODE_COOKIE, TRADING_MODE_OPTIONS } from "@/constants/portfolio"
 
 type Mode = (typeof TRADING_MODE_OPTIONS)[number]["value"]
 
-const A_YEAR = 60 * 60 * 24 * 365
+// The choice lives in a cookie, which the server reads too. Reading it is reading the browser, so it is read as an outside source, and
+// a change is announced to everything that is showing it.
+const listeners = new Set<() => void>()
+const subscribe = (listener: () => void) => (listeners.add(listener), () => void listeners.delete(listener))
+const readMode = (): Mode => {
+  const saved = document.cookie.split("; ").find((part) => part.startsWith(`${TRADING_MODE_COOKIE}=`))
+  return saved?.endsWith("=live") ? "live" : "paper"
+}
 
-// Switches between paper trading and the wallet, in the place the chat puts its model picker. The choice is kept, and the pages are
-// asked for again, because what the trade dialog does depends on it.
 export function TradingModeSelect() {
   const router = useRouter()
-  const [mode, setMode] = useState<Mode>("paper")
-
-  useEffect(() => {
-    const saved = document.cookie.split("; ").find((part) => part.startsWith(`${TRADING_MODE_COOKIE}=`))
-    setMode(saved?.endsWith("=live") ? "live" : "paper")
-  }, [])
+  const mode = useSyncExternalStore(subscribe, readMode, (): Mode => "paper")
 
   const change = (value: string) => {
     const next: Mode = value === "live" ? "live" : "paper"
     document.cookie = `${TRADING_MODE_COOKIE}=${next}; path=/; max-age=${A_YEAR}; samesite=lax`
-    setMode(next)
+    listeners.forEach((listener) => listener())
     router.refresh()
   }
 

@@ -5,11 +5,9 @@ import { Card, CardRow } from "@/components/ui/card"
 type Fact = {
   label: string
   value: ReactNode
-  // A small icon or logo before the label, 20px
   icon?: ReactNode
 }
 
-// A card of labelled facts, one to a row
 export function FactList({ title, rows }: { title: string; rows: Fact[] }) {
   return (
     <section className="flex flex-col gap-3">

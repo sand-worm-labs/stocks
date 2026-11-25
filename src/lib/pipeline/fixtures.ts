@@ -1,6 +1,5 @@
-import type { Market } from "./types"
+import type { Market } from "@/types/pipeline"
 
-// A small market, and an idea, for the tests of everything that uses the agent
 const stock = (symbol: string, name: string, liquidity = 500_000, price = 100) => ({ symbol, name, price, liquidity })
 export const market: Market = {
   stocks: [

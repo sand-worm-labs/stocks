@@ -3,7 +3,7 @@ import { PiBriefcase, PiChartLineUp, PiClockCounterClockwise, PiCoins, PiHouse, 
 
 import type { RouteId } from "@/config/routes"
 
-export type NavTab = { route: RouteId; icon: IconType; hasAlertCount?: boolean }
+type NavTab = { route: RouteId; icon: IconType; hasAlertCount?: boolean }
 
 const HOME: NavTab = { route: "home", icon: PiHouse }
 const PORTFOLIOS: NavTab = { route: "portfolios", icon: PiBriefcase }
@@ -13,5 +13,4 @@ const ACTIVITY: NavTab = { route: "activity", icon: PiClockCounterClockwise, has
 
 export const SECTIONS: NavTab[] = [HOME, PORTFOLIOS, HOLDINGS, MARKETS, ACTIVITY]
 
-// On a phone the tab bar puts "new portfolio" in the middle, where the thumb lands.
 export const MOBILE_TABS: NavTab[] = [HOME, PORTFOLIOS, { route: "newPortfolio", icon: PiPlus }, MARKETS, ACTIVITY]

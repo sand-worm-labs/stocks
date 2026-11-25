@@ -2,10 +2,9 @@ import { AppLink } from "@/components/AppLink/AppLink"
 import { Card } from "@/components/ui/card"
 import { IconTile } from "@/components/ui/icon-tile"
 import { ACTIVITY_KIND } from "@/constants/activity"
-import type { Activity } from "@/lib/activity/types"
 import { formatActivityTime } from "@/lib/dates"
+import type { Activity } from "@/types/activity"
 
-// The latest of what the agent did, as a card for the side of the home: what it did, in a line or two, and when
 export function ActivityFeed({ activity, now }: { activity: Activity[]; now: string }) {
   if (!activity.length) return null
 

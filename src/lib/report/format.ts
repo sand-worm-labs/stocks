@@ -1,6 +1,6 @@
 import { formatPercent } from "@/lib/format"
 
-import type { Metric } from "./types"
+import type { Metric } from "@/types/report"
 
 export function formatMetric({ value, kind }: Pick<Metric, "value" | "kind">) {
   if (kind === "percent") return formatPercent(value, { signed: true })

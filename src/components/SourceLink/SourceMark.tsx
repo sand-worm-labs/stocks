@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils"
 
 type SourceMarkProps = { name: string; className?: string }
 
-// The round logo of a source
 export function SourceMark({ name, className }: SourceMarkProps) {
   const { letter, background } = SOURCE_MARKS[name] ?? { ...NEUTRAL_SOURCE_MARK, letter: name.charAt(0).toUpperCase() }
 

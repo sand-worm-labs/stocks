@@ -2,23 +2,19 @@
 
 import { useEffect, useState } from "react"
 
+import { SHOWN_MS } from "@/constants/components/markets/trade-pulse"
 import { cn } from "@/lib/utils"
 
-const SHOWN_MS = 2500
-
-// A dot that pings in the colour of a trade for a moment after one lands
 export function TradePulse({ at, side }: { at?: number; side?: "buy" | "sell" }) {
-  const [isShown, setIsShown] = useState(false)
+  const [over, setOver] = useState<number>()
 
   useEffect(() => {
     if (!at) return
-
-    setIsShown(true)
-    const timer = setTimeout(() => setIsShown(false), SHOWN_MS)
+    const timer = setTimeout(() => setOver(at), SHOWN_MS)
     return () => clearTimeout(timer)
   }, [at])
 
-  if (!isShown) return null
+  if (!at || over === at) return null
 
   const colour = side === "buy" ? "bg-emerald-500" : "bg-red-500"
 

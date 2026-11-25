@@ -1,9 +1,8 @@
 import { SourceMark } from "@/components/SourceLink/SourceMark"
-import type { Source } from "@/lib/markets/types"
+import type { Source } from "@/types/markets"
 
 const hostname = (url: string) => new URL(url).hostname.replace(/^www\./, "")
 
-// A source as a small pill: its logo and the site it lives on
 export function SourcePill({ name, url, title }: Source) {
   return (
     <a

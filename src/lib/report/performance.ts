@@ -1,4 +1,4 @@
-import type { Report } from "./types"
+import type { Report } from "@/types/report"
 
 type Performance = Report["performance"]
 
@@ -35,5 +35,3 @@ export function drawdownRows({ start, portfolio, benchmark }: Performance): Draw
   const market = belowPeak(benchmark)
   return own.map((value, i) => ({ label: monthLabel(start, i), portfolio: value, benchmark: market[i] ?? 0 }))
 }
-
-export const totalReturn = (values: number[]) => (values.at(-1) ?? 100) / (values[0] ?? 100) - 1

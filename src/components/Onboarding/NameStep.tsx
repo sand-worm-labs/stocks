@@ -7,7 +7,6 @@ import { StepHeading } from "./StepHeading"
 
 type NameStepProps = { value: string; onChange: (value: string) => void; onContinue: () => void; pending: boolean }
 
-// What to call them, which the agent uses when it writes to them. Said why, because it is a small thing to ask.
 export function NameStep({ value, onChange, onContinue, pending }: NameStepProps) {
   const ready = value.trim().length > 0
 

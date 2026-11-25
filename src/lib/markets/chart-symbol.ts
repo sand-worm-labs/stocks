@@ -2,7 +2,6 @@ import { z } from "zod"
 
 import { QUOTE_URL } from "@/constants/markets"
 
-// Yahoo's names for the exchanges, and the names TradingView's chart knows them by
 const EXCHANGES: Record<string, string> = {
   NMS: "NASDAQ",
   NGM: "NASDAQ",

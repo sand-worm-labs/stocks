@@ -1,6 +1,7 @@
 // https://github.com/francoismassart/eslint-plugin-tailwindcss/pull/381
 // import eslintPluginTailwindcss from "eslint-plugin-tailwindcss"
 import eslintPluginImport from "eslint-plugin-import"
+import eslintPluginReactHooks from "eslint-plugin-react-hooks"
 import eslintPluginNext from "@next/eslint-plugin-next"
 import eslintPluginStorybook from "eslint-plugin-storybook"
 import typescriptEslint from "typescript-eslint"
@@ -33,6 +34,18 @@ const config = typescriptEslint.config(
     rules: {
       ...eslintPluginNext.configs.recommended.rules,
       ...eslintPluginNext.configs["core-web-vitals"].rules,
+    },
+  },
+  {
+    // React's own rules for components: hooks called the same way every render, effects only for what is outside React, and nothing
+    // read from a ref or changed while drawing
+    plugins: { "react-hooks": eslintPluginReactHooks },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/immutability": "warn",
     },
   },
   {
@@ -98,7 +111,10 @@ const config = typescriptEslint.config(
     // their fixtures from it.
     ignores: ["src/lib/**/source.ts", "src/_mockdata/**", "src/**/*.test.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": ["error", { patterns: [{ group: ["@/_mockdata/*"], message: "Read mock data through a lib/<area>/source.ts file." }] }],
+      "no-restricted-imports": [
+        "error",
+        { patterns: [{ group: ["@/_mockdata/*"], message: "Read mock data through a lib/<area>/source.ts file." }] },
+      ],
     },
   }
 )

@@ -90,7 +90,6 @@ describe("the steps, in order", () => {
 
     await expect(service.confirmRules("u1", draft.id)).rejects.toMatchObject({ status: 409 })
     expect((await service.finishResearch("u1", draft.id)).stage).toBe("ready")
-    // finishing again changes nothing
     expect((await service.finishResearch("u1", draft.id)).stage).toBe("ready")
   })
 
@@ -132,7 +131,6 @@ describe("research that runs for a while", () => {
     const settled = await service.settle(record)
     expect(settled.stage).toBe("ready")
     expect(settled.events.at(-1)).toEqual({ kind: "ready", at: clock.toISOString() })
-    // kept: asking again finds it ready and notes nothing more
     const again = await service.settle((await store.get(record.id))!)
     expect(again.events.filter(({ kind }) => kind === "ready")).toHaveLength(1)
   })

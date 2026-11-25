@@ -4,7 +4,6 @@ export const formatLongDate = (iso: string) => format(new Date(iso), "EEEE d MMM
 export const formatDay = (iso: string) => format(new Date(iso), "d MMM")
 export const formatTime = (iso: string) => format(new Date(iso), "HH:mm")
 
-// "Today", "Yesterday", then the date
 export function formatDayLabel(iso: string, now: string) {
   if (isSameDay(new Date(iso), new Date(now))) return "Today"
   return isSameDay(new Date(iso), subDays(new Date(now), 1)) ? "Yesterday" : formatDay(iso)

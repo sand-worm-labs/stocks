@@ -1,16 +1,13 @@
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader"
+import { SHOWN } from "@/constants/components/home/portfolio-previews"
 import { pluralize } from "@/lib/format"
 import { rankByValue } from "@/lib/portfolios/portfolio"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Session } from "@/lib/session/types"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
 import { NewPortfolioCard } from "./NewPortfolioCard"
 import { PortfolioPreviewCard } from "./PortfolioPreviewCard"
 
-// As many cards as fit two rows beside the "new portfolio" one; the rest are a click away
-const SHOWN = 5
-
-// The biggest models as cards, with how many there are in all, and the drafts waiting counted
 export function PortfolioPreviews({ portfolios, mode }: { portfolios: Portfolio[]; mode: Session["network"]["mode"] }) {
   const ranked = rankByValue(portfolios)
   const drafts = portfolios.filter(({ status }) => status === "draft").length

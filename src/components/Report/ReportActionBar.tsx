@@ -1,14 +1,12 @@
 import type { ReactNode } from "react"
 
-import type { Report } from "@/lib/report/types"
 import { cn } from "@/lib/utils"
+import type { Report } from "@/types/report"
 
 import { VerdictPill } from "./VerdictPill"
 
 type ReportActionBarProps = { plan: string; verdict: Report["verdict"]; children?: ReactNode }
 
-// What the portfolio would do and the verdict on it, with what to do about it. With actions it stays under the header
-// while the report scrolls.
 export function ReportActionBar({ plan, verdict, children }: ReportActionBarProps) {
   return (
     <div

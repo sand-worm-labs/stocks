@@ -1,10 +1,8 @@
 import { PageHeader } from "@/components/PageHeader/PageHeader"
 import { Card } from "@/components/ui/card"
 
+import { SECTIONS } from "@/constants/components/skeleton/settings-skeleton"
 import { Skeleton, SkeletonText } from "./Skeleton"
-
-// How many rows each section of the settings has, in order
-const SECTIONS = [2, 1, 1, 3, 3, 3, 3, 1]
 
 function SettingRowSkeleton() {
   return (
@@ -18,7 +16,6 @@ function SettingRowSkeleton() {
   )
 }
 
-// The settings before their data: the title is real, and each section has its heading, its line and its rows
 export function SettingsSkeleton() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">

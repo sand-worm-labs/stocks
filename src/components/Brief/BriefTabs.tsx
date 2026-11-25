@@ -1,11 +1,7 @@
 import { AppLink } from "@/components/AppLink/AppLink"
 import type { RouteId } from "@/config/routes"
+import { TABS } from "@/constants/components/brief/brief-tabs"
 import { cn } from "@/lib/utils"
-
-const TABS: { route: RouteId; label: string }[] = [
-  { route: "brief", label: "Describe it" },
-  { route: "stockPicker", label: "Stocks or a category" },
-]
 
 export function BriefTabs({ current }: { current: RouteId }) {
   return (

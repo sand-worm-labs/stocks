@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 
+import type { Node, Strategy } from "@/types/strategy"
 import { backtest } from "./backtest"
 import { setAsset } from "./edit"
 import { evaluate } from "./evaluate"
 import { explainStrategy } from "./explain"
 import { strategySchema } from "./schema"
-import type { Node, Strategy } from "./types"
 
 const strategyOf = (root: Node): Strategy => ({ name: "S", schedule: "daily", root })
 const short: Node = { type: "asset", symbol: "AAA", side: "short", via: "perp" }

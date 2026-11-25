@@ -5,10 +5,11 @@ import { PortfolioStatusBadge } from "@/components/Portfolios/PortfolioStatusBad
 import { TradingModeBadge } from "@/components/Trading/TradingModeBadge"
 import { formatDay } from "@/lib/dates"
 import { pluralize } from "@/lib/format"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Session } from "@/lib/session/types"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
-import { type PortfolioTab, PortfolioTabs } from "./PortfolioTabs"
+import type { PortfolioTab } from "@/types/ui"
+import { PortfolioTabs } from "./PortfolioTabs"
 
 type PortfolioHeaderProps = {
   portfolio: Portfolio
@@ -18,8 +19,6 @@ type PortfolioHeaderProps = {
   chain: string
 }
 
-// Who the portfolio is: its icon and name, whether it is live and whether the trading is paper, when it was bought and
-// where, and the tabs between its pages
 export function PortfolioHeader({ portfolio, current, actions, mode, chain }: PortfolioHeaderProps) {
   const { id, name, brief, status, startedAt, holdings } = portfolio
 

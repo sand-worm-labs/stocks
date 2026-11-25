@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react"
 
-// Whether the element has come into view yet, once and for all: for something that should start when it is first seen
 export function useInView<T extends HTMLElement>() {
   const ref = useRef<T>(null)
   const [inView, setInView] = useState(false)

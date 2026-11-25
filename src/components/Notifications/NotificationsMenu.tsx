@@ -9,19 +9,16 @@ import { IconTile } from "@/components/ui/icon-tile"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { routeHref } from "@/config/routes"
 import { ACTIVITY_KIND } from "@/constants/activity"
+import { ALL } from "@/constants/components/notifications/notifications-menu"
 import { formatActivityTime } from "@/lib/dates"
 import { NOTIFICATIONS_SHOWN } from "@/lib/notifications/notifications"
 import { cn } from "@/lib/utils"
 import { headerIconButtonClassName, listItemHoverClassName } from "@/styles/interactive"
 
-import { NotificationsEmpty, type NotificationTab, NotificationTabs, NotificationToolbar } from "./NotificationControls"
+import type { NotificationTab } from "@/types/ui"
+import { NotificationsEmpty, NotificationTabs, NotificationToolbar } from "./NotificationControls"
 import { useNotifications } from "./NotificationsProvider"
 
-// All of them is the activity, narrowed to the alerts
-const ALL = routeHref("activity", { filter: "alerts" }) ?? "/activity"
-
-// The bell, and under it the latest of what the agent raised: the alerts, with the ones not read marked. Read and put away
-// from here; the whole list, with the way to bring one back, is the activity, a click away when there is more than fits.
 export function NotificationsMenu() {
   const { inbox, archived, unread, now, isUnread, read } = useNotifications()
   const [open, setOpen] = useState(false)

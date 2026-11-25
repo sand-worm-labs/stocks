@@ -2,14 +2,13 @@
 
 import { useRef, useSyncExternalStore } from "react"
 
+import { MAX_AGE_SECONDS } from "@/constants/hooks/use-notification-state"
 import {
   NOTIFICATIONS_COOKIE,
   type NotificationState,
   parseNotificationState,
   serializeNotificationState,
 } from "@/lib/notifications/notifications"
-
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
 const listeners = new Set<() => void>()
 // What the cookie last held, and the state made of it, so that the same text is the same object and nothing draws again
@@ -36,8 +35,6 @@ export function saveNotificationState(state: NotificationState) {
   listeners.forEach((listener) => listener())
 }
 
-// Which notifications have been read and which put away, the same in every part of the page. The server draws the page with
-// the cookie's, so it is right from the first paint; `initial` is that, and it is what hydration starts from.
 export function useNotificationState(initial: NotificationState) {
   const server = useRef(initial)
 
@@ -46,7 +43,6 @@ export function useNotificationState(initial: NotificationState) {
     let current = cache
 
     if (!current || current.raw !== raw) {
-      // No cookie yet, or one that is what the page was drawn with: the state is the page's own, not a copy of it
       const isPagesOwn = raw === undefined || raw === serializeNotificationState(server.current)
       current = { raw, state: isPagesOwn ? server.current : parseNotificationState(raw) }
       cache = current

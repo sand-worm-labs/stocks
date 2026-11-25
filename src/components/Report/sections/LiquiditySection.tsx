@@ -1,13 +1,12 @@
 import { Money } from "@/components/Money/Money"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
+import { CELL } from "@/constants/components/report/sections/liquidity-section"
 import { formatPercent } from "@/lib/format"
-import type { Report } from "@/lib/report/types"
+import type { Report } from "@/types/report"
 
 import { ReportSection, SectionIntro } from "../ReportSection"
 
 type LiquiditySectionProps = { liquidity: Report["liquidity"]; venue: Report["venue"] }
-
-const CELL = "border-border-secondary dark:border-border-tertiary border-t py-[9px]"
 
 export function LiquiditySection({ liquidity, venue }: LiquiditySectionProps) {
   return (

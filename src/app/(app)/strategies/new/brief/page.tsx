@@ -20,7 +20,6 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
     getStocks(),
     getMarketSummary(),
   ])
-  // A brief chosen to start from replaces the blank one
   const chosen = await getStarter(starter)
 
   return (

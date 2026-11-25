@@ -5,18 +5,11 @@ import type { IconType } from "react-icons"
 import { PiArchive, PiChecks } from "react-icons/pi"
 
 import { SegmentedControl } from "@/components/ui/segmented-control"
+import { PILL, TABS } from "@/constants/components/notifications/notification-controls"
 import { cn } from "@/lib/utils"
 
+import type { NotificationTab } from "@/types/ui"
 import { useNotifications } from "./NotificationsProvider"
-
-// The pieces the notifications are handled with, the same in the panel under the bell and on the activity page
-
-export type NotificationTab = "inbox" | "archived"
-
-const TABS: { value: NotificationTab; label: string }[] = [
-  { value: "inbox", label: "Inbox" },
-  { value: "archived", label: "Archived" },
-]
 
 export function NotificationTabs({
   value,
@@ -27,8 +20,6 @@ export function NotificationTabs({
 }) {
   return <SegmentedControl label="Show" options={TABS} value={value} onChange={onChange} fullWidth />
 }
-
-const PILL = "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium"
 
 function PillButton({
   icon: Icon,
@@ -59,7 +50,6 @@ function PillButton({
   )
 }
 
-// How many are new, and the two things to do with the lot: read them all, and put away the ones that are read
 export function NotificationToolbar() {
   const { unread, inbox, isUnread, readAll, archiveRead } = useNotifications()
   const hasRead = inbox.some(({ id }) => !isUnread(id))
@@ -81,7 +71,6 @@ export function NotificationToolbar() {
   )
 }
 
-// What a tab shows when it has nothing: a soft card that says what it is for
 export function NotificationsEmpty({ tab }: { tab: NotificationTab }) {
   const { archived } = useNotifications()
   const [title, text] =

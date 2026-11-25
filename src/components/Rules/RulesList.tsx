@@ -2,8 +2,8 @@ import { PiCheckCircle, PiWarningCircle } from "react-icons/pi"
 
 import { RuleNumber } from "@/components/Rules/RuleNumber"
 import { CardRow } from "@/components/ui/card"
-import type { Rule } from "@/lib/rules/types"
 import { cn } from "@/lib/utils"
+import type { Rule } from "@/types/rules"
 
 export function RulesList({ rules }: { rules: Rule[] }) {
   return (

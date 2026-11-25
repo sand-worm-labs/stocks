@@ -1,4 +1,4 @@
-import type { Condition, Node, Schedule, Side, Strategy, Via, Weighting } from "./types"
+import type { Condition, Node, Schedule, Side, Strategy, Via, Weighting } from "@/types/strategy"
 
 // Changing a strategy by hand: adding a block into a group, taking one out. Each returns a new strategy and leaves the old one
 // as it was. A block is found by its path, the way the canvas names it: "root", then a step for each level in, a number for the
@@ -68,7 +68,6 @@ export function setShare(strategy: Strategy, path: string, index: number, percen
   }
 }
 
-// The condition of the if at `path`, as a whole new one
 export function setCondition(strategy: Strategy, path: string, condition: Condition): Strategy {
   return {
     ...strategy,
@@ -98,8 +97,6 @@ export function setAsset(strategy: Strategy, path: string, change: { side?: Side
 export type FilterBlock = Extract<Node, { type: "filter" }>
 export type FilterChange = Partial<Pick<FilterBlock, "pick" | "count" | "by" | "from" | "weighting">>
 
-// A filter changed in any of the things it says: best or worst, how many, by what, from which stocks, and how what it picks is
-// weighted. How many is kept a whole number from one up, and the stocks to choose from never run out.
 export function setFilter(strategy: Strategy, path: string, change: FilterChange): Strategy {
   return {
     ...strategy,
@@ -113,8 +110,6 @@ export function setFilter(strategy: Strategy, path: string, change: FilterChange
   }
 }
 
-// How far a stock may drift from its share before a rebalance trades it back, and how often it looks, for the rebalance at `path`.
-// The drift is a fraction of the portfolio, kept above nothing and no more than half.
 export function setRebalance(strategy: Strategy, path: string, change: { drift?: number; every?: Schedule }): Strategy {
   return {
     ...strategy,
@@ -158,7 +153,6 @@ const readingsOf = (condition: Condition): string[] => {
   return "symbol" in right ? [left.symbol, right.symbol] : [left.symbol]
 }
 
-// Every stock a strategy mentions, first seen first
 export function symbolsIn(strategy: Strategy): string[] {
   const found = new Set<string>()
   const walk = (node: Node) => {
@@ -186,7 +180,6 @@ export function symbolsIn(strategy: Strategy): string[] {
   return [...found]
 }
 
-// What can be added, by what it asks for beyond its kind
 export type NewBlock =
   | { kind: "asset"; symbol: string }
   | { kind: "cash" }
@@ -200,8 +193,6 @@ export type NewBlock =
 // Kinds that need a stock to read from, and so cannot be made when there is none
 export const NEEDS_STOCK: NewBlock["kind"][] = ["if", "any-all", "filter"]
 
-// A block as it starts out, ready to be changed: a decision reads the first of `symbols` (the stocks the strategy already
-// uses, then others), and a group starts with cash in it, since a group is never empty.
 export function newBlock(block: NewBlock, symbols: string[]): Node | undefined {
   const [symbol] = symbols
   const waiting = { node: { type: "cash" } as Node }
@@ -219,7 +210,6 @@ export function newBlock(block: NewBlock, symbols: string[]): Node | undefined {
         weighting: block.weighting,
         children: [block.weighting === "specified" ? { ...waiting, weight: 1 } : waiting],
       }
-    // Keeps an equal group of the first few stocks on target, or cash when there are none
     case "rebalance": {
       const held = symbols.slice(0, 3).map((held): { node: Node } => ({ node: { type: "asset", symbol: held } }))
       return {

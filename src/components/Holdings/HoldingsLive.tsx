@@ -6,6 +6,7 @@ import { useLivePortfolios } from "@/components/Portfolios/useLivePortfolios"
 import { Reveal } from "@/components/Reveal/Reveal"
 import { SearchInput } from "@/components/SearchInput/SearchInput"
 import { Pagination } from "@/components/ui/pagination"
+import { MODELS_PER_PAGE, OPEN_MODELS, STOCKS_PER_PAGE } from "@/constants/components/holdings/holdings-live"
 import { formatAmount, formatPercent, formatSignedAmount } from "@/lib/format"
 import {
   aggregateStocks,
@@ -16,21 +17,17 @@ import {
   summarizeHoldings,
 } from "@/lib/holdings/groups"
 import { buildAllocation } from "@/lib/home/allocation"
-import type { Portfolio } from "@/lib/portfolios/types"
 import { changeTone } from "@/lib/tone"
+import type { Portfolio } from "@/types/portfolios"
 
+import type { HoldingsTab } from "@/types/ui"
 import { AllStocksTable } from "./AllStocksTable"
+import { HoldingsEmpty } from "./HoldingsEmpty"
 import { HoldingsSummary } from "./HoldingsSummary"
 import { HoldingsSwarm } from "./HoldingsSwarm"
-import { type HoldingsTab, HoldingsTabs } from "./HoldingsTabs"
+import { HoldingsTabs } from "./HoldingsTabs"
 import { HoldingsViewTabs } from "./HoldingsViewTabs"
 import { ModelHoldingsCard } from "./ModelHoldingsCard"
-
-// The biggest models are open; with many, the rest fold shut until opened or searched for
-const OPEN_MODELS = 5
-// Models, or stocks, to a page
-const MODELS_PER_PAGE = 10
-const STOCKS_PER_PAGE = 25
 
 type HoldingsLiveProps = {
   portfolios: Portfolio[]
@@ -41,15 +38,14 @@ type HoldingsLiveProps = {
   query: string
 }
 
-// Everything held, at the prices the market is making now: the total, the gain, the heatmap, each model and each stock all
-// follow it as it moves
 export function HoldingsLive({ portfolios, addresses, names, tab, view, query }: HoldingsLiveProps) {
   const live = useLivePortfolios(portfolios, addresses)
   const models = groupHoldingsByModel(live, names)
   const searching = query.trim() !== ""
   const { value, gain, gainRate, ...counts } = summarizeHoldings(models)
-  // Where what is held sits, by model, as the home shows it but without the cash
   const slices = buildAllocation(live).filter(({ id }) => id !== "cash")
+
+  if (models.length === 0 && !searching) return <HoldingsEmpty />
 
   return (
     <>
@@ -84,7 +80,6 @@ export function HoldingsLive({ portfolios, addresses, names, tab, view, query }:
             <HoldingsViewTabs view={view} query={query} />
             <SearchInput param="q" label="Search your portfolio" placeholder="Search stocks you hold..." />
           </div>
-          {/* Keyed by what is shown, so a new view or a new search starts on its first page */}
           <PagedList
             key={`${view}-${query}`}
             view={view}
@@ -107,7 +102,6 @@ type PagedListProps = {
   searching: boolean
 }
 
-// The holdings a page at a time: ten models, or the stocks twenty-five at a time, with the way to the other pages under
 function PagedList({ view, models, stocks, searching }: PagedListProps) {
   const [page, setPage] = useState(0)
   const top = useRef<HTMLDivElement>(null)
@@ -120,7 +114,9 @@ function PagedList({ view, models, stocks, searching }: PagedListProps) {
 
   return (
     <div ref={top} className="flex scroll-mt-[calc(var(--shell-top)+1rem)] flex-col gap-6">
-      {view === "stocks" ? (
+      {total === 0 ? (
+        <p className="text-ink-400 py-20 text-center text-sm">No stocks you hold match.</p>
+      ) : view === "stocks" ? (
         <AllStocksTable stocks={stocks.slice(page * size, (page + 1) * size)} />
       ) : (
         models

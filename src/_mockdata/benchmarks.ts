@@ -1,8 +1,7 @@
-import type { Benchmark, BenchmarkGroup } from "@/lib/benchmarks/types"
+import type { Benchmark, BenchmarkGroup } from "@/types/benchmarks"
 
 import { makeSeries } from "./series"
 
-// [ticker, name, the fund, how it did over the week]
 type Row = [string, string, string, number]
 
 const GROUPS: Record<BenchmarkGroup, Row[]> = {
@@ -55,7 +54,6 @@ export const benchmarksMockData: Benchmark[] = Object.entries(GROUPS).flatMap(([
     fund,
     group: group as BenchmarkGroup,
     weekChange,
-    // Each its own wander, repeatable from its ticker
     series: makeSeries(
       [...id].reduce((sum, letter) => sum * 31 + letter.charCodeAt(0), 7) % 100_000,
       weekChange * 8 + 0.04

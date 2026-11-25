@@ -2,17 +2,15 @@ import { Card } from "@/components/ui/card"
 import { EmptyResults } from "@/components/ui/empty-results"
 import { ACTIVITY_EMPTY, type ActivityFilter } from "@/constants/activity"
 import { groupByDay, summarizeDay } from "@/lib/activity/filter"
-import type { Activity } from "@/lib/activity/types"
 import { formatAmount, pluralize } from "@/lib/format"
+import type { Activity } from "@/types/activity"
 
 import { ActivityRow } from "./ActivityRow"
 
 type ActivityListProps = {
   activity: Activity[]
   now: string
-  // Names of portfolios by id. Given, each event says which portfolio it is from.
   portfolioNames?: Record<string, string>
-  // The filter the list is under, for what to say when it has nothing
   filter?: ActivityFilter
 }
 

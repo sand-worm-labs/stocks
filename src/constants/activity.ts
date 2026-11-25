@@ -29,7 +29,6 @@ export const ACTIVITY_FILTER_LABEL = {
   refusals: "Refusals",
 } as const satisfies Record<ActivityFilter, string>
 
-// What the list says when a filter has nothing in it
 export const ACTIVITY_EMPTY = {
   all: { icon: PiPulse, title: "No activity yet", hint: "Trades, checks and alerts will show up here." },
   trades: {
@@ -53,7 +52,6 @@ export const ACTIVITY_EMPTY = {
 type KindDefinition = { icon: IconType; category: Exclude<ActivityFilter, "all"> }
 
 export const ACTIVITY_KIND = {
-  // What happens as a strategy is made: drafted, researched, ready to read (an alert, so it reaches the bell), and started
   drafted: { icon: PiPencilSimpleLine, category: "agent" },
   researching: { icon: PiMagnifyingGlass, category: "agent" },
   ready: { icon: PiFileText, category: "alerts" },
@@ -72,5 +70,5 @@ export const ACTIVITY_KIND = {
 
 export type ActivityKind = keyof typeof ACTIVITY_KIND
 
-export const BASE_SEPOLIA_EXPLORER_URL = "https://sepolia.basescan.org/"
+const BASE_SEPOLIA_EXPLORER_URL = "https://sepolia.basescan.org/"
 export const explorerTxUrl = (hash: string) => `${BASE_SEPOLIA_EXPLORER_URL}tx/${hash}`

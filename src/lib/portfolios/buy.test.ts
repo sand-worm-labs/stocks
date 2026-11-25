@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest"
 
+import type { Portfolio } from "@/types/portfolios"
 import { buyRoom, quoteBuy } from "./buy"
-import type { Portfolio } from "./types"
 
-// 1,000 in all: 600 cash and 400 of one stock at 100 a unit
 const portfolio: Portfolio = {
   id: "a",
   name: "A",

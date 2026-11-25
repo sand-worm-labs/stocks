@@ -1,5 +1,3 @@
-// The groups a market list lets you narrow to, worked out from the share each token stands for. A hot one is a theme
-// people are watching, and gets a chip of its own; the rest sit under "More".
 export const TOKEN_CATEGORIES = [
   { id: "trump", label: "Trump-Affiliated", isHot: true, tickers: ["DJT", "ABTC", "XXI"] },
   {
@@ -119,8 +117,5 @@ export const TOKEN_CATEGORIES = [
   },
 ] as const satisfies { id: string; label: string; isHot?: true; tickers: string[] }[]
 
-export type TokenCategoryId = (typeof TOKEN_CATEGORIES)[number]["id"]
-
 export const ALL_TOKENS = "all"
-// The tokens the highlight cards are about
 export const HIGHLIGHTED_TOKENS = "highlights"

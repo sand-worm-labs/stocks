@@ -6,10 +6,9 @@ import { ChartFrame } from "@/components/Charts/ChartFrame"
 import { ChartTooltip } from "@/components/Charts/ChartTooltip"
 import { ResponsiveChart } from "@/components/Charts/ResponsiveChart"
 import { CHART_ANIMATION, CHART_COLORS } from "@/constants/chart"
+import { GRADIENT_ID } from "@/constants/components/report/charts/growth-chart"
 import { formatAmount, formatSignedAmount } from "@/lib/format"
 import type { GrowthRow } from "@/lib/report/performance"
-
-const GRADIENT_ID = "growth-fill"
 
 export function GrowthChart({ rows }: { rows: GrowthRow[] }) {
   const held = rows.filter(({ held }) => held)

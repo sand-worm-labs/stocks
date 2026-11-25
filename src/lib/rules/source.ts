@@ -4,15 +4,13 @@ import {
   strategyMockData,
   unmeetableRulesMockData,
 } from "@/_mockdata/rules"
-import type { Portfolio } from "@/lib/portfolios/types"
 import { pick, seedOf } from "@/lib/seed"
 import { getOwnStrategy } from "@/lib/strategies/source"
+import type { Portfolio } from "@/types/portfolios"
 
+import type { StrategyRow } from "@/types/rules"
 import { ruleOf, type RuleSpec } from "./spec"
-import type { StrategyRow } from "./types"
 
-// The rules of a strategy that wasn't made by hand: the budget covers what it holds, and the rest varies from one to the
-// next, so a long list of strategies isn't a long list of the same four rules.
 function generatedProfile(portfolio: Portfolio) {
   const seed = seedOf(portfolio.id)
   const live = portfolio.status === "live"
@@ -46,7 +44,6 @@ function generatedProfile(portfolio: Portfolio) {
 }
 
 export async function getRules(portfolio: Portfolio) {
-  // One that was made here has the rules it was given
   const own = await getOwnStrategy(portfolio.id)
   if (own)
     return { rules: own.rules.map((spec, i) => ruleOf(spec, i + 1)), strategy: own.summary, assumption: own.assumption }

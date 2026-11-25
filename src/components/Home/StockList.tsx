@@ -9,15 +9,13 @@ import { Card, CardRow } from "@/components/ui/card"
 import type { RouteId } from "@/config/routes"
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import { formatPercent, pluralize } from "@/lib/format"
-import type { LiveStock } from "@/lib/home/types"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 import { listItemHoverClassName } from "@/styles/interactive"
+import type { LiveStock } from "@/types/home"
 
 type StockListProps = { title: string; stocks: LiveStock[]; link: { route: RouteId; label: string } }
 
-// A few stocks with what they cost and did today, moving with the market: the ones you hold, or before there are any,
-// the popular ones. The price is the pool's, on each trade; until it has spoken, the one the page came with.
 export function StockList({ title, stocks, link }: StockListProps) {
   const { quotes } = useLiveMarketContext()
 

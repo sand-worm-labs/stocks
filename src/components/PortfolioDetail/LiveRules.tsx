@@ -4,26 +4,22 @@ import { AppLink } from "@/components/AppLink/AppLink"
 import { StrategyWorkbench } from "@/components/Strategy/StrategyWorkbench"
 import { Card } from "@/components/ui/card"
 import { EmptyResults } from "@/components/ui/empty-results"
-import type { Activity } from "@/lib/activity/types"
 import { formatActivityTime } from "@/lib/dates"
-import type { Stock } from "@/lib/markets/types"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { StrategyRow } from "@/lib/rules/types"
 import type { ModelDoc } from "@/lib/strategy/document"
+import type { Activity } from "@/types/activity"
+import type { Stock } from "@/types/markets"
+import type { Portfolio } from "@/types/portfolios"
+import type { StrategyRow } from "@/types/rules"
 
 type LiveRulesProps = {
   portfolio: Portfolio
-  // What the liquidity rule is measured against
   stocks: Pick<Stock, "symbol" | "liquidity" | "series">[]
-  // The strategy and the rules, as data
   doc: ModelDoc
   strategy: StrategyRow[]
   checks: Activity[]
   now: string
 }
 
-// The rules a live portfolio is held to and the strategy it follows, drawn from one piece of JSON that can be edited, and the
-// recent checks
 export function LiveRules({ portfolio, stocks, doc, strategy, checks, now }: LiveRulesProps) {
   const { id } = portfolio
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import type { Stock, StockCategory } from "@/types/markets"
 import { filterPicker, pickedWith } from "./picker"
-import type { Stock, StockCategory } from "./types"
 
 const stocks: Stock[] = [
   { symbol: "NVDAc", name: "NVIDIA Corporation", price: 100, liquidity: 500 },

@@ -11,17 +11,12 @@ type PromptBoxProps = {
   label: string
   value: string
   onChange: (value: string) => void
-  // Enter without Shift
   onSubmit?: () => void
-  // Suggestions typed out while the box is empty
   prompts: readonly string[]
-  // The controls on the right of the bottom bar: a switcher and the button that sends or continues
   controls: ReactNode
   className?: string
 }
 
-// The chat box of the main app: a typed-out suggestion while empty, an attach button on the left, and the
-// switcher and send button on the right.
 export function PromptBox({ id, label, value, onChange, onSubmit, prompts, controls, className }: PromptBoxProps) {
   const placeholder = useTypewriterPlaceholder(prompts, value.length === 0)
 

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest"
 
+import type { Condition, Strategy } from "@/types/strategy"
 import { editorHeight, fromList, JOINER, newComparison, toList } from "./condition"
 import { setCondition } from "./edit"
 import { strategySchema } from "./schema"
-import type { Condition, Strategy } from "./types"
 
 const one = newComparison("AAA")
 const two: Condition = { left: { symbol: "BBB", indicator: { kind: "rsi", days: 14 } }, op: "<", right: { value: 30 } }
@@ -34,7 +34,6 @@ describe("a condition as a list", () => {
   })
 
   it("makes room for the AND / OR divider between conditions", () => {
-    // A second one-line row adds its line, the gap before it, the divider, and the gap after the divider
     expect(editorHeight({ all: [two, two] }) - editorHeight(two)).toBe(32 + 10 + JOINER + 10)
   })
 })

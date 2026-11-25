@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { Portfolio } from "./types"
+import type { Portfolio } from "@/types/portfolios"
 import { markToMarket } from "./valuation"
 
 const base = { brief: "", series: [], cash: 100, createdAt: "2026-11-01T10:00:00" }

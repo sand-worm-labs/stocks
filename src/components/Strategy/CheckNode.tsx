@@ -2,48 +2,17 @@ import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
 import { use } from "react"
 import { PiPaperPlaneTilt, PiShieldCheck, PiShieldWarning } from "react-icons/pi"
 
-import { CHECK_WIDTH, type CheckData, type CheckState } from "@/lib/rules/flow"
+import { EXIT_TONE, TONE } from "@/constants/components/strategy/check-node"
+import { HANDLE } from "@/constants/components/strategy/shared"
+import { CHECK_WIDTH, type CheckData } from "@/lib/rules/flow"
 import { cn } from "@/lib/utils"
 
 import { HoverContext, isLit } from "./BlockNode"
 import { LEADS } from "./leads"
 
-const TONE: Record<CheckState, { tint: string; bar: string; word: string; card: string }> = {
-  holds: {
-    tint: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    bar: "bg-emerald-600",
-    word: "Holds",
-    card: "border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30",
-  },
-  watch: {
-    tint: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    bar: "bg-amber-500",
-    word: "Watch",
-    card: "border-amber-500/40 bg-amber-50 dark:bg-amber-950/30",
-  },
-  broken: {
-    tint: "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400",
-    bar: "bg-red-600",
-    word: "Broken",
-    card: "border-red-500/40 bg-red-50 dark:bg-red-950/40",
-  },
-}
-
-const EXIT_TONE = {
-  tint: "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400",
-  bar: "bg-red-500",
-  word: "Watching",
-  card: "border-red-500/40 bg-red-50 dark:bg-red-950/40",
-}
-
-const HANDLE = "!size-2.5 !border-2 !border-block-surface !bg-ink-400"
-
-// One block of the rules, a bar like a strategy's, on the same board: a rule with how close the portfolio is to its line along
-// the bottom, and the order that goes out last. The block they hang from is `ChecksNode`.
 export function CheckNode({ id, data }: NodeProps<Node<CheckData, "check">>) {
   const hovered = use(HoverContext)
   const { kind, title, detail, lead, state, closeness, word: given, exit } = data
-  // An exit wears the exits colour, red, like the block it hangs from
   const tone = exit ? EXIT_TONE : TONE[state]
   const Icon = kind === "orders" ? PiPaperPlaneTilt : state === "broken" ? PiShieldWarning : PiShieldCheck
   const word =

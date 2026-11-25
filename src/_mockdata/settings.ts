@@ -1,4 +1,4 @@
-import type { Settings } from "@/lib/settings/types"
+import type { Settings } from "@/types/settings"
 
 export const settingsMockData: Settings = {
   risk: { goal: "growth", maxDrawdown: -0.2, horizon: "3y+" },

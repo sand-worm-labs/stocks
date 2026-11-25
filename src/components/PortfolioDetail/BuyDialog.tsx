@@ -16,28 +16,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { TRIGGER_CLASSNAME } from "@/constants/components/portfolio-detail/shared"
 import { MIN_BUY_AMOUNT, QUICK_FRACTIONS, SWAP_FEE_RATE } from "@/constants/trade"
 import { formatAmount, formatPercent } from "@/lib/format"
 import { readAmount } from "@/lib/portfolios/amount"
 import { buyRoom, quoteBuy } from "@/lib/portfolios/buy"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Session } from "@/lib/session/types"
 import { cn } from "@/lib/utils"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
 type BuyDialogProps = {
   portfolio: Portfolio
   symbol: string
-  // The most of the portfolio one stock may be: the rules' cap
   cap: number
   mode?: Session["network"]["mode"]
   className?: string
 }
 
-const TRIGGER_CLASSNAME =
-  "border-border-secondary dark:border-border-tertiary hover:bg-hover-bg hover:border-hover-border rounded-lg border px-3 py-1 text-xs font-medium transition-colors"
-
-// Buying more of a stock the portfolio holds, with the cash it has: how much is typed in, up to the cash and no further than
-// the stock's cap, which is a rule the agent keeps
 export function BuyDialog({ portfolio, symbol, cap, mode, className }: BuyDialogProps) {
   const [open, setOpen] = useState(false)
   const room = buyRoom(portfolio, symbol, cap)

@@ -1,4 +1,4 @@
-import type { Knowledge, Stock, StockDetail } from "@/lib/markets/types"
+import type { Knowledge, Stock, StockDetail } from "@/types/markets"
 
 import { endAt, makeSeries } from "./series"
 
@@ -7,7 +7,6 @@ const SOURCES = [
   { name: "base.org", url: "https://www.base.org/stocks", title: "Base · tokenized stocks" },
 ]
 
-// What the agent has researched. A stock nobody has researched shows none, rather than a made-up line.
 const KNOWLEDGE: Record<string, Pick<StockDetail, "knowledge" | "risk">> = {
   NVDAc: {
     knowledge: [
@@ -34,7 +33,6 @@ const KNOWLEDGE: Record<string, Pick<StockDetail, "knowledge" | "risk">> = {
 export function stockDetailMock({ symbol, price = 100 }: Stock): StockDetail {
   const seed = Array.from(symbol).reduce((sum, char) => sum + char.charCodeAt(0), 0)
   const share = makeSeries(seed, 0.15, 120)
-  // The token trails the share by a fraction of a percent
   const token = share.map((value, i) => value * (1 + 0.004 * Math.sin(i / 3)))
   const scale = price / (token.at(-1) ?? 1)
 

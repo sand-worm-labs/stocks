@@ -4,26 +4,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { PiArrowDown } from "react-icons/pi"
 
 import { AgentComposer } from "@/components/Flow/AgentComposer"
+import { BOTTOM_SLACK_PX } from "@/constants/components/agent/agent-workspace"
 import { useAgentConversation } from "@/hooks/use-agent-conversation"
 import { useAgentMotion } from "@/hooks/use-agent-motion"
-import type { AgentScript } from "@/lib/agent/types"
+import type { AgentScript } from "@/types/agent"
 
 import { AgentContext } from "./AgentContext"
 import { AgentHeader } from "./AgentHeader"
 import { AgentMessageView } from "./AgentMessageView"
 import { AgentThinking } from "./AgentThinking"
 
-// How far from the bottom the conversation can be and still count as at the bottom
-const BOTTOM_SLACK_PX = 48
-
-// The agent beside a flow screen, as a panel and not a card. It fills the height it is given: a header, a conversation that
-// scrolls, and a box to answer in that stays put. What the agent says and shows comes from the script; how it comes in is its motion.
 export function AgentWorkspace({ script }: { script: AgentScript }) {
   const { messages, thinking, send } = useAgentConversation(script.messages)
   const stream = useRef<HTMLDivElement>(null)
   const [atBottom, setAtBottom] = useState(true)
   const context = useMemo(() => ({ send }), [send])
-  // Only the first thing the agent says opens with it at work, so a screen doesn't make people wait through every message
   const firstReply = script.messages.find(({ from }) => from === "agent")?.id
 
   useAgentMotion(stream, messages.length)
@@ -41,7 +36,6 @@ export function AgentWorkspace({ script }: { script: AgentScript }) {
     return () => element.removeEventListener("scroll", onScroll)
   }, [])
 
-  // The agent starting to work is something to see, so the conversation follows it down
   useEffect(() => {
     if (thinking) scrollToBottom()
   }, [thinking, scrollToBottom])

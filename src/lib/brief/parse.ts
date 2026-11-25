@@ -1,10 +1,9 @@
 import { BRIEF_THEMES, NOT_AN_EXCLUSION } from "@/constants/brief"
 
-import type { BriefFields, Found, Goal, Horizon, NamedList, Span } from "./types"
+import type { BriefFields, Found, Goal, Horizon, NamedList, Span } from "@/types/brief"
 
 const FLAGS = "gi"
 
-// A match's span, and a group's span within it
 const spanOf = (match: RegExpMatchArray, group = 0): Span => {
   const text = match[group] ?? ""
   const start = (match.index ?? 0) + (group === 0 ? 0 : (match[0].indexOf(text) ?? 0))
@@ -22,9 +21,7 @@ const toNumber = (digits: string, scale = "") => {
 const NUMBER = String.raw`\d[\d,]*(?:\.\d+)?`
 const SIGN = "[−–-]?"
 const WORD = String.raw`[\w&\-]+`
-// "robotics", "robotics and AI", "robotics, AI and chips"
 const LIST = String.raw`${WORD}(?:(?:\s*,\s*|\s+(?:and|&|or)\s+)${WORD})*`
-// The same for a list of things to avoid, which stops at the next "no" or "avoid" so "No oil, no Tesla" is two clauses
 const AVOIDED = String.raw`(?!(?:no|avoid|without|exclude)\b)${WORD}`
 const AVOID_LIST = String.raw`${AVOIDED}(?:(?:\s*,\s*|\s+(?:and|&|or)\s+)${AVOIDED})*`
 
@@ -41,7 +38,6 @@ function readBudget(text: string): Found<number> | undefined {
   const stated = first(new RegExp(String.raw`budget(?:\s+of)?[:\s]+\$?\s?(${NUMBER})\s?(k|m)?`, FLAGS), text)
   if (stated) return { value: toNumber(stated[1] ?? "", stated[2]), span: spanOf(stated) }
 
-  // A dollar amount that isn't a liquidity floor ("$100K+ liquidity")
   const dollars = first(
     new RegExp(String.raw`\$\s?(${NUMBER})(?:\s?(k|m)\b)?(?![\dkKmM.,])(?!\s?\+|\s+(?:in\s+)?liquidity)`, FLAGS),
     text
@@ -105,7 +101,6 @@ function readGoal(text: string): Found<Goal> | undefined {
     const match = first(pattern, text)
     return match ? [{ value: goal, span: spanOf(match, 1) }] : []
   })
-  // The first thing the person said wins
   return found.sort((a, b) => a.span.start - b.span.start)[0]
 }
 
@@ -129,8 +124,6 @@ const isExclusion = (items: string[]) => !!items[0] && !NOT_AN_EXCLUSION.include
 
 const AVOID_WORDS = ["no", "avoid", "without", "exclude"]
 
-// What the brief wants kept out. A brief can say it more than once ("No oil, no Tesla"): the first clause is the one a
-// control writes to, and what the others name is found as words in the text.
 function readAvoid(text: string): NamedList {
   const pattern = new RegExp(
     String.raw`\b(?:avoid(?:ing)?|exclud(?:e|ing)|without|(?:do not|don't) want|not interested in|no)\s+(?:any\s+)?(?:exposure\s+to\s+)?(${AVOID_LIST})`,
@@ -166,7 +159,6 @@ function readInclude(text: string, avoid: NamedList): NamedList {
     ? { list: spanOf(explicit, 1), whole: spanOf(explicit), items: splitList(explicit[1] ?? "") }
     : undefined
 
-  // Themes named anywhere else, unless the brief is naming them to keep them out
   const hits = BRIEF_THEMES.flatMap((theme) => {
     const match = first(new RegExp(String.raw`\b${theme.replace(" ", String.raw`\s`)}\b`, FLAGS), text)
     if (!match) return []
@@ -185,8 +177,6 @@ function readInclude(text: string, avoid: NamedList): NamedList {
   }
 }
 
-// What the agent can read in a brief. Plain patterns on purpose: it is fast enough to run on every keystroke, it says
-// exactly where it read each thing, and what it reads is the same every time.
 export function parseBrief(text: string): BriefFields {
   const avoid = readAvoid(text)
 

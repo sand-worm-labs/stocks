@@ -1,9 +1,8 @@
 import { SWAP_FEE_RATE } from "@/constants/trade"
 
+import type { History, Schedule, Strategy, Weights } from "@/types/strategy"
 import { type Band, bandsOf, evaluate } from "./evaluate"
-import type { History, Schedule, Strategy, Weights } from "./types"
 
-// Trading days between one look at the strategy and the next
 const EVERY: Record<Schedule, number> = { daily: 1, weekly: 5, monthly: 21 }
 
 // Exits that act on what was paid for a stock, as the stop-loss and take-profit rules do. Once one fires, the stock is sold at that
@@ -20,17 +19,13 @@ export type Exits = {
 }
 
 export type Backtest = {
-  // The portfolio's value each day, from the day it starts
   values: number[]
   // How much it made over the whole of it, as a fraction
   totalReturn: number
   // The deepest it fell from a high, as a fraction below zero
   maxDrawdown: number
-  // Orders placed, each a stock bought or sold
   trades: number
-  // What was paid in fees
   fees: number
-  // Sales forced by a stop-loss or take-profit
   exits: number
 }
 
@@ -63,10 +58,8 @@ export function backtest(
   let trades = 0
   let fees = 0
   let exits = 0
-  // What each stock held cost on average, and the day before which it may not be bought again
   const paid: Record<string, number> = {}
   const blocked: Record<string, number> = {}
-  // The portfolio's high, and the day it may trade again after being stopped out as a whole
   let high = deposit
   let resumeAt = 0
   const values: number[] = []
@@ -96,7 +89,6 @@ export function backtest(
           resumeAt = day + pause
           exits++
         }
-        // Out of the market until the pause is over
         if (day < resumeAt) {
           values.push(worth(day))
           continue

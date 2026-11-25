@@ -5,9 +5,6 @@ import { cn } from "@/lib/utils"
 
 type FancyIconProps = { name: FancyIconName; size?: number; className?: string }
 
-// The web app's designed icon: a rainbow ring, a dark glossy tile, and a purple glyph in it. The frame is the same for
-// every icon (it is the one in the web app's Cautious, Mail and ScheduleIcon), so a new icon is a new glyph in
-// FANCY_ICONS, not a new drawing.
 export function FancyIcon({ name, size = 41, className }: FancyIconProps) {
   const { body: Body, lines: Lines } = FANCY_ICONS[name]
   // Every icon on a page needs ids of its own, or one icon's gradients would paint another's. The colons React puts in
@@ -35,8 +32,6 @@ export function FancyIcon({ name, size = 41, className }: FancyIconProps) {
         <rect x="6.5" y="6.5" width="28" height="28" rx="8.4" fill={`url(#${tile})`} />
         <rect x="6.5" y="6.5" width="28" height="28" rx="8.4" stroke={`url(#${rim})`} strokeWidth="0.7" />
       </g>
-      {/* The glyph is the icon twice: a solid violet body, outlined in a darker violet, and over it the same icon's lines
-          in white, so the shape reads as violet with white marked on it, as the drawn ones do. */}
       <g filter={`url(#${glyphShadow})`}>
         <Body x={10.5} y={10.5} size={20} color="#7D39D0" stroke="#391466" strokeWidth={6} strokeLinejoin="round" />
         <Lines x={10.5} y={10.5} size={20} className="[&_path]:fill-white [&_path[opacity]]:hidden" />

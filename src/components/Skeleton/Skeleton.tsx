@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils"
 
 type SkeletonProps = { className?: string; style?: CSSProperties }
 
-// A placeholder for something still on its way, in the colour and shape of what will be there
 export function Skeleton({ className, style }: SkeletonProps) {
   return <div aria-hidden="true" className={cn("skeleton rounded-lg", className)} style={style} />
 }
@@ -19,12 +18,10 @@ export function SkeletonText({ lineHeight = 20, className }: { lineHeight?: numb
   )
 }
 
-// What the stock and token avatars, and the icons of a portfolio, are while they come
 export function SkeletonAvatar({ className }: { className?: string }) {
   return <Skeleton className={cn("size-10 flex-none rounded-full", className)} />
 }
 
-// A pill, as the filters and chips are: as tall as the real one, the width what the label would be
 export function SkeletonPill({ className }: { className?: string }) {
   return <Skeleton className={cn("h-[34px] w-20 flex-none rounded-full", className)} />
 }

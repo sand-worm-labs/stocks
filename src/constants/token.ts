@@ -14,8 +14,6 @@ export type TokenTabId = (typeof TOKEN_TABS)[number]["id"]
 
 export const DEFAULT_TOKEN_TAB: TokenTabId = "overview"
 
-// Rows to a page of the holders and the transfers
 export const TOKEN_TABLE_PAGE_SIZE = 10
 
-// How many of the strategies that hold a stock are listed on its page at once
 export const EXPOSURES_PER_PAGE = 5

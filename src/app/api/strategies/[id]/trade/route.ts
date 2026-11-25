@@ -5,7 +5,7 @@ import { TRADE_CHAIN } from "@/constants/trade"
 import { respond } from "@/lib/api/respond"
 import { fill, StrategyError } from "@/lib/strategies/service"
 import { getStrategyService } from "@/lib/strategies/source"
-import { verifyApproval } from "@/lib/trade/authorize"
+import { approvalMessage, verifyApproval } from "@/lib/trade/authorize"
 import { readUsdcBalance } from "@/lib/wallet/usdc"
 
 const amount = z.number().positive().finite()
@@ -38,19 +38,24 @@ export const POST = async (request: Request, { params }: Context) =>
     }
 
     const client = createPublicClient({ chain: TRADE_CHAIN, transport: http() })
-    await verifyApproval(
+    const approval = {
+      strategyId: id,
+      address: trade.address as `0x${string}`,
+      limit: fill(record, trade.amount).total,
+      expires: trade.expires,
+    }
+    const balance = await verifyApproval(
       {
         verifyMessage: (args) => client.verifyMessage(args),
         usdcBalance: (address) => readUsdcBalance(TRADE_CHAIN, address),
       },
-      {
-        strategyId: id,
-        address: trade.address as `0x${string}`,
-        limit: fill(record, trade.amount).total,
-        expires: trade.expires,
-        signature: trade.signature as `0x${string}`,
-      }
+      { ...approval, signature: trade.signature as `0x${string}` }
     )
-    await service.goLive(ownerId, id, trade.amount, { mode: "live", chainId: TRADE_CHAIN.id, from: trade.address })
+    await service.goLive(ownerId, id, trade.amount, {
+      mode: "live",
+      chainId: TRADE_CHAIN.id,
+      from: trade.address,
+      approval: { message: approvalMessage(approval), signature: trade.signature, balance, expiresAt: trade.expires },
+    })
     return { id }
   })

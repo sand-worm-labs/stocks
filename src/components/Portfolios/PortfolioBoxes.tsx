@@ -3,13 +3,10 @@
 import { useState } from "react"
 
 import { PortfolioPreviewCard } from "@/components/Home/PortfolioPreviewCard"
-import type { Portfolio } from "@/lib/portfolios/types"
-import type { Session } from "@/lib/session/types"
+import { PAGE } from "@/constants/components/portfolios/portfolio-boxes"
+import type { Portfolio } from "@/types/portfolios"
+import type { Session } from "@/types/session"
 
-// Boxes are tall, so this many are shown and the rest come on request
-const PAGE = 12
-
-// The portfolios as boxes, the way the home shows them: each its own colour, line and icon
 export function PortfolioBoxes({ portfolios, mode }: { portfolios: Portfolio[]; mode: Session["network"]["mode"] }) {
   const [shown, setShown] = useState(PAGE)
   if (!portfolios.length) return <p className="text-ink-400 py-20 text-center text-sm">No strategies match.</p>

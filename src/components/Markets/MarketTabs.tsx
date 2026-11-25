@@ -1,11 +1,7 @@
 import { AppLink } from "@/components/AppLink/AppLink"
 import type { RouteId } from "@/config/routes"
+import { TABS } from "@/constants/components/markets/market-tabs"
 import { cn } from "@/lib/utils"
-
-const TABS: { route: RouteId; label: string }[] = [
-  { route: "markets", label: "Live market" },
-  { route: "marketSummary", label: "Summary" },
-]
 
 export function MarketTabs({ current }: { current: RouteId }) {
   return (

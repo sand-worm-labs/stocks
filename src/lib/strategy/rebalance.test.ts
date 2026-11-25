@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import type { Node, Strategy } from "@/types/strategy"
 import { backtest } from "./backtest"
 import { newBlock, setRebalance, symbolsIn } from "./edit"
 import { evaluate, symbolsOf } from "./evaluate"
@@ -7,7 +8,6 @@ import { explainStrategy } from "./explain"
 import { fromGraph } from "./flow/from-graph"
 import { toGraph } from "./flow/graph"
 import { parseStrategy } from "./schema"
-import type { Node, Strategy } from "./types"
 
 const half: Node = {
   type: "group",
@@ -60,27 +60,21 @@ describe("the rebalance block", () => {
 
     const next = setRebalance(kept(0.02, "monthly", "daily"), "root", { drift: 0.05, every: "weekly" })
     expect(next.root).toMatchObject({ drift: 0.05, every: "weekly" })
-    // Never nothing, and never more than half
     expect(setRebalance(next, "root", { drift: 0 }).root).toMatchObject({ drift: 0.01 })
     expect(setRebalance(next, "root", { drift: 3 }).root).toMatchObject({ drift: 0.5 })
   })
 
   it("trades back only once a stock has drifted past its band, and only on its own check days", () => {
-    // AAA climbs 10% a day and BBB stays put, so an equal split drifts further every day
     const history = {
       AAA: Array.from({ length: 30 }, (_, i) => 100 * 1.1 ** i),
       BBB: Array.from({ length: 30 }, () => 100),
     }
     const options = { deposit: 1000, feeRate: 0 }
-    // The strategy looks monthly, so without a rebalance it trades on day one and again on day 22: two stocks each time
     const plain = backtest({ ...kept(0.02, "daily", "monthly"), root: half }, history, options)
     expect(plain.trades).toBe(4)
 
-    // Tight and checked daily: it trades back between the looks, whenever a stock is 2 points off
     expect(backtest(kept(0.02, "daily", "monthly"), history, options).trades).toBeGreaterThan(plain.trades)
-    // Wide: AAA is only 38 points off its share by day 22, inside half, so nothing is traded back after buying in
     expect(backtest(kept(0.5, "daily", "monthly"), history, options).trades).toBe(2)
-    // Tight but checked only monthly: it cannot trade more often than the monthly look does
     expect(backtest(kept(0.02, "monthly", "monthly"), history, options).trades).toBe(plain.trades)
   })
 })

@@ -9,11 +9,9 @@ type ChoiceChipsProps<T extends string | number> = {
   value: T
   onChange: (value: T) => void
   label: string
-  // Chips share the row between them, instead of being as wide as their words
   fill?: boolean
 }
 
-// A few chips to pick one from, the picked one in the violet tint
 export function ChoiceChips<T extends string | number>({ choices, value, onChange, label, fill }: ChoiceChipsProps<T>) {
   return (
     <div role="radiogroup" aria-label={label} className="flex gap-1.5">

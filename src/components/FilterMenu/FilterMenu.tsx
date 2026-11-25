@@ -12,9 +12,7 @@ type FilterMenuProps = {
   param: string
   options: { value: string; label: string; count?: number }[]
   active: string
-  // The choice that means no filter
   defaultValue: string
-  // Other params to keep when a choice is made, e.g. a search
   keep?: Record<string, string>
 }
 

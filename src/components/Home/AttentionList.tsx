@@ -4,14 +4,10 @@ import { AppLink } from "@/components/AppLink/AppLink"
 import { PortfolioIcon } from "@/components/Portfolios/PortfolioIcon"
 import { SectionHeader } from "@/components/SectionHeader/SectionHeader"
 import { Card, CardRow } from "@/components/ui/card"
+import { SHOWN } from "@/constants/components/home/attention-list"
 import { pluralize } from "@/lib/format"
-import type { AttentionItem } from "@/lib/home/types"
+import type { AttentionItem } from "@/types/home"
 
-// With a long list, this many are shown and the rest are a click away
-const SHOWN = 5
-
-// The models started and not finished, to carry on with: each a plain row that opens where it was left, and not text
-// to select
 export function AttentionList({ items }: { items: AttentionItem[] }) {
   if (!items.length) return null
   const more = items.length - SHOWN

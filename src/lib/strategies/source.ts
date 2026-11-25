@@ -1,6 +1,6 @@
 import { cache } from "react"
 
-import { authRequired } from "@/lib/auth/config"
+import { authRequired, LOCAL_USER_ID } from "@/lib/auth/config"
 import { getSignedInUserId } from "@/lib/auth/session"
 import { getMarket, getPipeline } from "@/lib/pipeline/source"
 import { getStore } from "@/lib/store"
@@ -14,7 +14,7 @@ export const getStrategyService = () =>
 
 // Who is acting. Nobody signed in, with sign-in required, is nobody; with it switched off for local work, everyone is one local person.
 export async function getOwnerId() {
-  return (await getSignedInUserId()) ?? (authRequired() ? undefined : "local")
+  return (await getSignedInUserId()) ?? (authRequired() ? undefined : LOCAL_USER_ID)
 }
 
 // What this person has made. Research that has run its time is finished as it is read, so a strategy left researching is found ready when

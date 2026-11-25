@@ -1,17 +1,10 @@
-export type Rgba = [r: number, g: number, b: number, a: number]
+type Rgba = [r: number, g: number, b: number, a: number]
 
-// The aurora of the main app (abstract.svg there), as a sum. Two very large ellipses, one hanging from the top of the page and one
-// rising from the bottom, each made of three layers: a pale glow, a violet band and a dark core. The layers are not centred on the same
-// point, each sits a little further off the page than the one under it, so what shows of them is a band of each: dark at the edge of
-// the page, then violet, then glow. Where the two ellipses meet in the middle only their glows are left, and add up into the bright band;
-// at the sides the navy behind them shows. Everything is blurred. All of it is measured in the width and height of the page it was drawn on.
 const LAYERS = {
-  // How far across it reaches from the middle of the page, how far down from its own middle, and where its middle is for the one from the top and the one from the bottom
   glow: { across: 0.788, tall: 1.102, middles: [-0.657, 1.374] },
   violet: { across: 0.736, tall: 1.03, middles: [-0.75, 1.467] },
   core: { across: 0.684, tall: 0.957, middles: [-0.851, 1.568] },
 } as const
-// How far an edge is blurred, in widths of the ellipse
 const SOFT = 0.1
 
 // What the layers are, for each theme. On the light page the core is the page itself, and what is drawn is a tint; on the dark page it is
@@ -30,8 +23,6 @@ const PALETTES = {
   },
 } satisfies Record<string, Record<string, Rgba>>
 
-// A layer laid over the colour held in `out` (red, green, blue and strength), at some strength. It changes `out` and makes nothing new, because
-// this runs for every point of every frame.
 function over(out: number[], [lr, lg, lb, la]: Rgba, strength: number) {
   const layer = la * strength
   const [r = 0, g = 0, b = 0, a = 0] = out
@@ -44,7 +35,6 @@ function over(out: number[], [lr, lg, lb, la]: Rgba, strength: number) {
   out[3] = total
 }
 
-// How much of a layer is at a distance from the middle of its ellipse, 1 being its edge: whole inside it, none outside, and eased across the blur
 function inside(radius: number) {
   const k = Math.min(Math.max((radius - (1 - SOFT)) / (2 * SOFT), 0), 1)
   return 1 - k * k * (3 - 2 * k)
@@ -94,7 +84,6 @@ export function auroraFrame(t: number, dark = false) {
   }
 }
 
-// The colour at one point and one moment, for when it isn't drawn a frame at a time
 export function auroraAt(x: number, y: number, t: number, dark = false): Rgba {
   const out = [0, 0, 0, 0]
   auroraFrame(t, dark)(x, y, out)

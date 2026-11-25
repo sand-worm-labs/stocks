@@ -1,26 +1,33 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import {
+  DELETING_SPEED_MS,
+  HOLD_MS,
+  PAUSE_BEFORE_NEXT_MS,
+  TYPING_SPEED_MS,
+} from "@/constants/hooks/use-typewriter-placeholder"
 
-const TYPING_SPEED_MS = 35
-const DELETING_SPEED_MS = 20
-const HOLD_MS = 1400
-const PAUSE_BEFORE_NEXT_MS = 400
-
-// Types each prompt out in full, holds it, deletes it, then moves to the next. Stops and clears while `active` is false.
 export function useTypewriterPlaceholder(prompts: readonly string[], active: boolean) {
   const [promptIndex, setPromptIndex] = useState(0)
   const [text, setText] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
+  const [wasActive, setWasActive] = useState(active)
   const fullText = prompts[promptIndex] ?? ""
 
-  useEffect(() => {
+  // Going quiet clears what was typed, so it starts again from the first prompt. Done while drawing, rather than in an effect, so
+  // nothing is shown that is about to be cleared.
+  if (active !== wasActive) {
+    setWasActive(active)
     if (!active) {
       setText("")
       setPromptIndex(0)
       setIsDeleting(false)
-      return
     }
+  }
+
+  useEffect(() => {
+    if (!active) return
 
     const timeout = setTimeout(
       () => {

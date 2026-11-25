@@ -10,10 +10,10 @@ import {
 } from "@dynamic-labs/sdk-react-core"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
-import { APP_CHAINS } from "@/constants/chains"
+import { APP_CHAIN_IDS } from "@/constants/components/wallet/dynamic-sdk"
 import { ONBOARDING_PATH } from "@/constants/onboarding"
 import { DEFAULT_AFTER_SIGN_IN, SIGN_IN_PATH } from "@/lib/auth/config"
 import { env } from "env.mjs"
@@ -22,10 +22,6 @@ import type { ApproveWith, Published } from "./WalletContext"
 
 // The one file that imports Dynamic's SDK, which is large. It is fetched when a wallet is wanted (see DynamicProviders),
 // so a page doesn't carry it to be shown.
-
-// The networks the app works on, in the order they are offered: Base Sepolia, where paper trading's USDC is free, then
-// Base. Whatever else the dashboard has switched on, Ethereum included, isn't offered, unless none of these is on at all.
-const APP_CHAIN_IDS: number[] = APP_CHAINS.map(({ id }) => id)
 
 const onlyAppNetworks = <N extends { chainId: number | string }>(networks: N[]) => {
   const kept = networks
@@ -45,7 +41,6 @@ function ethereumWallet(wallet: ReturnType<typeof useDynamicContext>["primaryWal
   return wallet
 }
 
-// Inside Dynamic, tells the rest of the app what it says. The app reads plain values, not Dynamic's hooks.
 function Bridge({ publish, resume, signingIn }: { publish: Publish; resume: () => void; signingIn: boolean }) {
   const { user, primaryWallet, network, showAuthFlow, setShowAuthFlow, setShowDynamicUserProfile, handleLogOut } =
     useDynamicContext()
@@ -54,11 +49,13 @@ function Bridge({ publish, resume, signingIn }: { publish: Publish; resume: () =
   // The actions are reached through a ref, so that they are always the latest and a change to one isn't a reason to
   // tell the app again
   const actions = useRef({ setShowAuthFlow, setShowDynamicUserProfile, setShowLinkNewWalletModal, handleLogOut })
-  actions.current = { setShowAuthFlow, setShowDynamicUserProfile, setShowLinkNewWalletModal, handleLogOut }
 
   // What approving uses, reached through a ref so it is always the wallet as it is now
   const wallet = useRef(primaryWallet)
-  wallet.current = primaryWallet
+  useLayoutEffect(() => {
+    actions.current = { setShowAuthFlow, setShowDynamicUserProfile, setShowLinkNewWalletModal, handleLogOut }
+    wallet.current = primaryWallet
+  })
   const approve = useRef<ApproveWith>({
     switchChain: async (chainId) => {
       const current = ethereumWallet(wallet.current)
@@ -94,8 +91,6 @@ function Bridge({ publish, resume, signingIn }: { publish: Publish; resume: () =
 
   useEffect(() => () => publish(undefined), [publish])
 
-  // Sent to sign in while Dynamic still has them signed in (our cookie ended, theirs didn't): there is no sign-in left to do, so the
-  // session is made again from it, rather than leaving them on a page whose button does nothing
   const resumed = useRef(false)
   useEffect(() => {
     if (!isSignedIn || resumed.current || window.location.pathname !== SIGN_IN_PATH) return
@@ -103,19 +98,14 @@ function Bridge({ publish, resume, signingIn }: { publish: Publish; resume: () =
     resume()
   }, [isSignedIn, resume])
 
-  // The panel of what a signed-in person holds and has done
   return isSignedIn ? <DynamicUserProfile /> : null
 }
 
-// Dynamic, which does the signing in and the wallets: email, social, or a wallet from the browser or the phone. When a
-// person signs in there, it hands our server the access token it gave them, and our server turns it into a session.
 export function DynamicSdk({ publish }: { publish: Publish }) {
   const router = useRouter()
   const { resolvedTheme } = useTheme()
   const environmentId = env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID
-  // A sign-in can be reported twice (when it happens, and when the sign-in page finds it already there); once is enough
   const starting = useRef(false)
-  // From Dynamic saying someone has signed in until the page has changed, or it has failed: the wallet button shows it
   const [signingIn, setSigningIn] = useState(false)
 
   if (!environmentId) return null
@@ -127,7 +117,6 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
     setSigningIn(true)
 
     try {
-      // Once the page is on its way somewhere else the button stays busy, so a second click can't start a second sign-in
       const leaving = await makeSession(token).catch(() => false)
       if (!leaving) setSigningIn(false)
     } finally {
@@ -135,7 +124,6 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
     }
   }
 
-  // Makes the session; true when the sign-in page is being left for another page
   const makeSession = async (token: string) => {
     const response = await fetch("/api/auth/session", {
       method: "POST",
@@ -147,8 +135,6 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
       return false
     }
 
-    // On the sign-in page, on to where they were going, or for someone new, to the first run. Anywhere else, the page now
-    // knows who is here.
     if (window.location.pathname === SIGN_IN_PATH) {
       const { onboarded } = (await response.json()) as { onboarded: boolean }
       const next = safeNext(new URLSearchParams(window.location.search).get("next"))
@@ -173,7 +159,6 @@ export function DynamicSdk({ publish }: { publish: Publish }) {
         appName: "Sandworm Stocks",
         appLogoUrl: "/logo.svg",
         walletConnectors: [EthereumWalletConnectors],
-        // A wallet on another network is asked to switch to one of ours when it signs in
         networkValidationMode: "always",
         overrides: { evmNetworks: onlyAppNetworks },
         events: { onAuthSuccess: startSession, onLogout: endSession },

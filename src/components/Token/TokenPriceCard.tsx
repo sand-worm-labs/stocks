@@ -5,8 +5,6 @@ import type { BaseToken } from "@/lib/markets/tokens"
 
 import { TokenCharts } from "./TokenCharts"
 
-// The token's own chart, and TradingView's chart of the share where there is one, or the token's week where there isn't
-// `chartSymbol` is the share's ticker with its exchange, so the chart finds the right company
 export function TokenPriceCard({ token, chartSymbol }: { token: BaseToken; chartSymbol?: string }) {
   const { address, symbol, series, change7d } = token
   const ticker = shareTicker(token)

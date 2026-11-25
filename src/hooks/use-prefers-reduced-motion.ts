@@ -1,8 +1,7 @@
 "use client"
 
 import { useSyncExternalStore } from "react"
-
-const QUERY = "(prefers-reduced-motion: reduce)"
+import { QUERY } from "@/constants/hooks/use-prefers-reduced-motion"
 
 const subscribe = (notify: () => void) => {
   const media = window.matchMedia(QUERY)

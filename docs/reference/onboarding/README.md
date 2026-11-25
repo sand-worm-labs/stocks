@@ -58,14 +58,14 @@ app. Four steps, a progress bar of four segments, a way to skip at the bottom, a
 
 ## How we adapt it
 
-| Glider | Sandworm Stocks |
-|---|---|
-| What do you want to invest in? (assets) | The themes we can research and buy as tokens: categories from the market, plus "Not sure yet" |
-| Choose a username | What should we call you? (a name, used in greetings and by the agent) |
-| (not in Glider) | Can you trade tokenized stocks? Where you live, a wallet, USDC. Moved here from before the first portfolio, so it is asked once, after sign-up |
-| A place to start (copy a strategy) | Starting briefs for the themes picked: the return of its backtest, the stocks in it, the rules it comes with. Choosing one opens the brief already written |
-| Explore more | The stock picker |
-| Welcome to Glider | Welcome to Sandworm Stocks: say what you want, rules it can't break, trade on Base once you approve |
+| Glider                                  | Sandworm Stocks                                                                                                                                            |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What do you want to invest in? (assets) | The themes we can research and buy as tokens: categories from the market, plus "Not sure yet"                                                              |
+| Choose a username                       | What should we call you? (a name, used in greetings and by the agent)                                                                                      |
+| (not in Glider)                         | Can you trade tokenized stocks? Where you live, a wallet, USDC. Moved here from before the first portfolio, so it is asked once, after sign-up             |
+| A place to start (copy a strategy)      | Starting briefs for the themes picked: the return of its backtest, the stocks in it, the rules it comes with. Choosing one opens the brief already written |
+| Explore more                            | The stock picker                                                                                                                                           |
+| Welcome to Glider                       | Welcome to Sandworm Stocks: say what you want, rules it can't break, trade on Base once you approve                                                        |
 
 The skip at the bottom does not skip the checks that make buying possible; it only skips choosing. They are asked again at the
 buy step if missing.

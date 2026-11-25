@@ -6,14 +6,12 @@ import { buttonVariants } from "@/components/Button/Button"
 import { cn } from "@/lib/utils"
 
 type PaginationProps = {
-  // From 0
   page: number
   pageSize: number
   total: number
   onPage: (page: number) => void
 }
 
-// The pages to show a button for: the first and last, and a few round the one you are on, with a gap marked between
 function pagesToShow(page: number, count: number): (number | "gap")[] {
   const wanted = new Set([0, count - 1, page - 1, page, page + 1])
   const sorted = [...wanted].filter((n) => n >= 0 && n < count).sort((a, b) => a - b)
@@ -21,7 +19,6 @@ function pagesToShow(page: number, count: number): (number | "gap")[] {
   return sorted.flatMap((n, i) => (i > 0 && n - (sorted[i - 1] ?? 0) > 1 ? ["gap" as const, n] : [n]))
 }
 
-// Previous and next, the page you are on, and where that is in the list: for a list that is too long for one page
 export function Pagination({ page, pageSize, total, onPage }: PaginationProps) {
   const count = Math.ceil(total / pageSize)
   if (count <= 1) return null

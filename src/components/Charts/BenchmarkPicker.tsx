@@ -8,10 +8,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SearchField } from "@/components/ui/search-field"
 import { TONE_TEXT_CLASSNAME } from "@/constants/tone"
 import type { BenchmarkLine } from "@/lib/benchmarks/compare"
-import { BENCHMARK_GROUPS } from "@/lib/benchmarks/types"
 import { formatPercent } from "@/lib/format"
 import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
+import { BENCHMARK_GROUPS } from "@/types/benchmarks"
 
 type PickedFund = { id: string; color: string }
 
@@ -25,8 +25,6 @@ type BenchmarkPickerProps = {
 const matches = ({ id, name, fund, group }: BenchmarkLine, query: string) =>
   `${id} ${name} ${fund} ${group}`.toLowerCase().includes(query.trim().toLowerCase())
 
-// A list of index funds and ETFs to compare the portfolio with, by group and searchable, each with how it did. Picking
-// one adds it to the chart; at the most, picking another takes the oldest off.
 export function BenchmarkPicker({ lines, picked, max, onToggle }: BenchmarkPickerProps) {
   const [query, setQuery] = useState("")
   const found = lines.filter((line) => matches(line, query))
@@ -37,12 +35,7 @@ export function BenchmarkPicker({ lines, picked, max, onToggle }: BenchmarkPicke
         <PiPlus aria-hidden="true" size={12} />
         Compare
       </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        // The button slides as chips come and go: follow it on every frame, so the box moves with it and never jumps
-        updatePositionStrategy="always"
-        className="w-[min(380px,calc(100vw-2rem))] p-0"
-      >
+      <PopoverContent align="start" updatePositionStrategy="always" className="w-[min(380px,calc(100vw-2rem))] p-0">
         <div className="p-3 pb-2">
           <SearchField
             value={query}

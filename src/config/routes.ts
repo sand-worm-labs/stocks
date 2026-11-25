@@ -2,7 +2,6 @@ type RouteDefinition = {
   path: string
   label: string
   isBuilt: boolean
-  // A fixed page under a slug: /strategies/<id>/<suffix>
   suffix?: string
 }
 

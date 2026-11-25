@@ -10,21 +10,19 @@ import { StepProgress } from "@/components/Flow/StepProgress"
 import { ResearchSection } from "@/components/Report/sections/ResearchSection"
 import { Card } from "@/components/ui/card"
 import { RESEARCH_STEPS } from "@/constants/flow"
+import { MOCK_DONE_STEPS } from "@/constants/research"
 import { getResearchScript } from "@/lib/agent/source"
 import { getPortfolio } from "@/lib/portfolios/source"
 import { getReport } from "@/lib/report/source"
 
 export const metadata: Metadata = { title: "Research" }
 
-// How far along the mock research is
-const DONE_STEPS = 2
-
 export default async function ResearchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const [portfolio, report] = await Promise.all([getPortfolio(id), getReport(1, id)])
   if (!portfolio) notFound()
 
-  const script = await getResearchScript(portfolio, DONE_STEPS)
+  const script = await getResearchScript(portfolio, MOCK_DONE_STEPS)
 
   return (
     <div className="flex flex-col gap-4">
@@ -35,15 +33,15 @@ export default async function ResearchPage({ params }: { params: Promise<{ id: s
       >
         <Card data-tour="research-progress" className="flex flex-col gap-3 p-4 md:p-6">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="font-medium">{RESEARCH_STEPS[DONE_STEPS - 1]}…</span>
+            <span className="font-medium">{RESEARCH_STEPS[MOCK_DONE_STEPS - 1]}…</span>
             <span className="text-ink-400 text-sm">
-              {DONE_STEPS} of {RESEARCH_STEPS.length}
+              {MOCK_DONE_STEPS} of {RESEARCH_STEPS.length}
             </span>
           </div>
           <div className="bg-inputBg h-2 overflow-hidden rounded-full dark:bg-white/10">
             <div
               className="bg-primary h-full rounded-full"
-              style={{ width: `${(DONE_STEPS / RESEARCH_STEPS.length) * 100}%` }}
+              style={{ width: `${(MOCK_DONE_STEPS / RESEARCH_STEPS.length) * 100}%` }}
             />
           </div>
         </Card>

@@ -3,27 +3,16 @@
 import { useEffect, useRef, useState } from "react"
 import { PiCaretDownFill, PiCaretUpFill } from "react-icons/pi"
 
+import { DURATION_MS, LIT_MS, MIN_MOVE, STARTS_AT } from "@/constants/components/home/count-up"
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion"
 import { formatAmount } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
-const DURATION_MS = 700
-// The first time it shows, it starts this close to where it ends, so the page doesn't show a wrong number before the right one
-const STARTS_AT = 0.96
-// How long the digits stay lit after a move
-const LIT_MS = 1100
-// A move smaller than this is not a move
-const MIN_MOVE = 0.005
-
 type CountUpProps = {
   value: number
-  // Whether to show which way it last went
   trend?: boolean
 }
 
-// An amount written like money: the whole part large and the cents small and quiet. It eases to its new value whenever
-// that changes, lights green or red for a moment as it does, and keeps an arrow for the way it last went. It writes the
-// number itself, since a function can't be handed from a server component to this one.
 export function CountUp({ value, trend = true }: CountUpProps) {
   const reduced = usePrefersReducedMotion()
   const [shown, setShown] = useState(value)
@@ -32,7 +21,6 @@ export function CountUp({ value, trend = true }: CountUpProps) {
   const from = useRef(value * STARTS_AT)
   const previous = useRef(value)
 
-  // Which way it went, and a flash of colour for it
   useEffect(() => {
     const change = value - previous.current
     previous.current = value
@@ -45,10 +33,7 @@ export function CountUp({ value, trend = true }: CountUpProps) {
   }, [value])
 
   useEffect(() => {
-    if (reduced) {
-      from.current = value
-      return setShown(value)
-    }
+    if (reduced) return
 
     const start = performance.now()
     const origin = from.current
@@ -63,7 +48,7 @@ export function CountUp({ value, trend = true }: CountUpProps) {
     return () => cancelAnimationFrame(frame)
   }, [value, reduced])
 
-  const written = formatAmount(shown)
+  const written = formatAmount(reduced ? value : shown)
   const sign = /^[+−-]/.test(written) ? written.slice(0, 1) : ""
   const digits = sign ? written.slice(1) : written
   const point = digits.lastIndexOf(".")

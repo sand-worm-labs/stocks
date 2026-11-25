@@ -2,14 +2,13 @@ import { describe, expect, it } from "vitest"
 
 import { getPortfolio } from "@/lib/portfolios/source"
 
+import type { History, Strategy } from "@/types/strategy"
 import { backtest } from "./backtest"
 import { evaluate, symbolsOf } from "./evaluate"
 import { parseStrategy } from "./schema"
 import { getStrategy } from "./source"
-import type { History, Strategy } from "./types"
 
 const hold: Strategy = { name: "Hold", schedule: "daily", root: { type: "asset", symbol: "AAA" } }
-// Flat at 100, then a drop to 70, then back up to 100
 const fall = [...Array(5).fill(100), 90, 80, 70, 80, 90, 100, 100, 100]
 
 describe("exits in a backtest", () => {
@@ -19,7 +18,6 @@ describe("exits in a backtest", () => {
     const stopped = backtest(hold, history, { feeRate: 0, stopLoss: 0.25, cooldown: 3 })
     const plain = backtest(hold, history, { feeRate: 0 })
     expect(stopped.exits).toBe(1)
-    // Sold at 70 and held cash, so the climb back to 100 was missed for the cooldown
     expect(stopped.values.at(-1)).toBeLessThan(plain.values.at(-1) ?? 0)
     expect(plain.exits).toBe(0)
   })
@@ -44,7 +42,6 @@ describe("a stop on the whole portfolio", () => {
 
   it("sells everything once the portfolio is far enough below its high, and sits in cash for the pause", () => {
     const stopped = backtest(hold, slide, { feeRate: 0, portfolioStop: 0.2, pause: 4 })
-    // Stopped at 80 (20% down); the value is then flat while it waits, so the rest of the slide is not suffered
     expect(stopped.exits).toBeGreaterThanOrEqual(1)
     expect(stopped.values[5]).toBeCloseTo(stopped.values[7] ?? 0)
     expect(stopped.values.at(-1)).toBeGreaterThan(backtest(hold, slide, { feeRate: 0 }).values.at(-1) ?? 0)

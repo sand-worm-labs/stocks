@@ -1,34 +1,25 @@
-import type { Comparison, Condition, Indicator, Node, Strategy } from "./types"
-
-// A strategy said in plain words, for someone who has never read one: what it does, line by line, and what each technical term
-// it uses means. This is a way of reading the strategy and nothing is kept from it.
+import type { Comparison, Condition, Indicator, Node, Strategy } from "@/types/strategy"
 
 export type Step = {
-  // How far in it is: what is inside an if or a split is further in
   depth: number
-  // A condition after "if", the "then" or "otherwise" that follows it, a way of splitting the money, or something to do
   kind: "if" | "then" | "else" | "split" | "keep" | "do"
   text: string
-  // The block this line came from, for the icon it wears. An if has its own word instead.
   block?: "asset" | "cash" | "filter" | "group" | "rebalance"
-  // The share of a split that this line gets, when the shares were set
   share?: string
 }
 
-export type Explained = { intro: string; steps: Step[] }
+type Explained = { intro: string; steps: Step[] }
 
-// How often a rebalance looks, said in a sentence
 const EACH = { daily: "every day", weekly: "every week", monthly: "every month" } as const
 
-export const EVERY = { daily: "Every day", weekly: "Every week", monthly: "Every month" } as const
+const EVERY = { daily: "Every day", weekly: "Every week", monthly: "Every month" } as const
 
 // Figures read as percentages: what is a fraction of a price rather than a price, or a score
 export const FRACTIONS = new Set<Indicator["kind"]>(["return", "sma-return", "drawdown", "volatility"])
 
 const trimmed = (value: number) => String(Number(value.toFixed(1)))
 
-// An indicator as a phrase that goes after a stock's name
-export function plainIndicator(indicator: Indicator): string {
+function plainIndicator(indicator: Indicator): string {
   switch (indicator.kind) {
     case "price":
       return "price"
@@ -74,8 +65,7 @@ export function plainCondition(condition: Condition): string {
   return plainComparison(condition)
 }
 
-// What a term means, in a sentence
-export function meaningOf(indicator: Indicator): string {
+function meaningOf(indicator: Indicator): string {
   const days = "days" in indicator ? indicator.days : 0
   switch (indicator.kind) {
     case "price":
@@ -211,7 +201,6 @@ const indicatorsOf = (node: Node): Indicator[] => {
   }
 }
 
-// The terms a strategy uses, each once, with what it means. A plain price needs no explaining unless it is all there is.
 export function termsOf(strategy: Strategy): { term: string; meaning: string }[] {
   const seen = new Map<string, { term: string; meaning: string }>()
   for (const indicator of indicatorsOf(strategy.root)) {

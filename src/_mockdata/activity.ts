@@ -1,4 +1,4 @@
-import type { Activity, TradeReceipt } from "@/lib/activity/types"
+import type { Activity, TradeReceipt } from "@/types/activity"
 
 const PORTFOLIO = "robotics-20"
 

@@ -9,7 +9,6 @@ type PageHeaderProps = {
   titleClassName?: string
   description?: ReactNode
   actions?: ReactNode
-  // The designed icon shown before the title
   icon?: FancyIconName
 }
 

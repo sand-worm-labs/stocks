@@ -1,5 +1,5 @@
+import type { Node, Strategy } from "@/types/strategy"
 import type { FlowEdge, FlowNode } from "./graph"
-import type { Node, Strategy } from "../types"
 
 export type FromGraph = { ok: true; strategy: Strategy } | { ok: false; error: string }
 

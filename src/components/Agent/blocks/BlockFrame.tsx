@@ -2,7 +2,6 @@ import type { ReactNode } from "react"
 
 type BlockFrameProps = { title: ReactNode; aside?: string; children: ReactNode }
 
-// A box the agent puts a fact or a list in: a grey bar with what it is, then the rows
 export function BlockFrame({ title, aside, children }: BlockFrameProps) {
   return (
     <div

@@ -1,6 +1,6 @@
 import { settingsMockData } from "@/_mockdata/settings"
 
-import type { Settings } from "./types"
+import type { Settings } from "@/types/settings"
 
 export async function getSettings(): Promise<Settings> {
   return settingsMockData

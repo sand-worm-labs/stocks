@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-
-const RESET_AFTER_MS = 2000
+import { RESET_AFTER_MS } from "@/constants/hooks/use-copy-to-clipboard"
 
 export function useCopyToClipboard() {
   const [copied, setCopied] = useState(false)

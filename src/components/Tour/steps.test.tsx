@@ -15,7 +15,6 @@ const walk = (dir: string): string[] =>
     const path = join(dir, name)
     return statSync(path).isDirectory() ? walk(path) : [path]
   })
-// Everything that can carry a tour name, not counting the tour's own files or tests
 const source = walk(SRC)
   .filter((file) => /\.(tsx|ts)$/.test(file) && !/\.test\.|\/Tour\//.test(file))
   .map((file) => readFileSync(file, "utf8"))

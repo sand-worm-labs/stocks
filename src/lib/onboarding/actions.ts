@@ -15,7 +15,6 @@ import { getStarter } from "./source"
 const A_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 const OPTIONS = { path: "/", sameSite: "lax", maxAge: A_YEAR_IN_SECONDS } as const
 
-// What has been answered so far is kept as it is answered, so a reload picks up where it was left
 export async function saveOnboarding(answers: { name?: string; interests?: string[] }) {
   const jar = await cookies()
   if (answers.interests) jar.set(ONBOARDING_COOKIES.interests, cleanInterests(answers.interests).join(","), OPTIONS)
@@ -25,8 +24,6 @@ export async function saveOnboarding(answers: { name?: string; interests?: strin
   }
 }
 
-// The end of the stepper, by finishing or by skipping it. It shows once, and the welcome window is next on the first page.
-// Having chosen a starting brief, or to look around the stocks, goes there; otherwise to the home screen.
 export async function finishOnboarding(to?: { starter?: string; stocks?: boolean }) {
   const jar = await cookies()
   const marker = onboardedMarker(await getSignedInUserId())
@@ -46,9 +43,6 @@ export async function dismissWelcome() {
   revalidatePath("/", "layout")
 }
 
-// For working on the first run, which shows once: forget this browser has been through it, so the stepper, the welcome window and the
-// tour come again as they do for a new account. Only the browser's answers go; the account and its strategies are not touched.
-// Never in production: it refuses there however it was reached, so it can't be used by mistake on a real account.
 export async function resetOnboarding() {
   if (process.env.NODE_ENV === "production") throw new Error("The first run can only be reset while developing")
 

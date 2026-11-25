@@ -3,6 +3,7 @@
 import { PiArrowDownRight, PiArrowUpRight } from "react-icons/pi"
 import { Money } from "@/components/Money/Money"
 
+import { SHOWN } from "@/constants/components/markets/trade-tape"
 import { useFlip } from "@/hooks/use-flip"
 import { useSecondsSince } from "@/hooks/use-seconds-since"
 
@@ -11,8 +12,6 @@ import { cn } from "@/lib/utils"
 
 import { useLiveMarketContext } from "./LiveMarket"
 import { TokenAvatar } from "./TokenAvatar"
-
-const SHOWN = 8
 
 function Ago({ at }: { at: number }) {
   const seconds = useSecondsSince(at)
@@ -23,7 +22,6 @@ function Ago({ at }: { at: number }) {
   )
 }
 
-// The swaps as they land on Base, newest first
 export function TradeTape({ tokens }: { tokens: Pick<BaseToken, "address" | "symbol" | "image">[] }) {
   const { trades, swapCount, isConnected } = useLiveMarketContext()
   const list = useFlip<HTMLUListElement>(trades)

@@ -2,8 +2,6 @@ import { Card } from "@/components/ui/card"
 
 import { Skeleton, SkeletonText } from "./Skeleton"
 
-// For a page that has no placeholder of its own: a title, a row of figures and a large card, in the colour and corners
-// of the real ones. A page that is looked at often has its own, shaped like it.
 export function PageSkeleton({ figures = 3 }: { figures?: number }) {
   return (
     <div className="flex flex-col gap-6">

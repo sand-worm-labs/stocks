@@ -8,7 +8,6 @@ import { briefFromPicks } from "@/lib/brief/fromPicks"
 import { underlyingTicker } from "@/lib/markets/stock"
 import { cn } from "@/lib/utils"
 
-// Starts a strategy built around one stock, from its page
 export function StartResearchButton({ symbol, className }: { symbol: string; className?: string }) {
   const { start, busy } = useStartStrategy()
 

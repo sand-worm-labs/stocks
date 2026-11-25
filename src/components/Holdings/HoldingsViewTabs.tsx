@@ -1,14 +1,8 @@
 import { AppLink } from "@/components/AppLink/AppLink"
+import { VIEWS } from "@/constants/components/holdings/holdings-view-tabs"
 import { cn } from "@/lib/utils"
+import type { HoldingsView } from "@/types/ui"
 
-type HoldingsView = "models" | "stocks"
-
-const VIEWS: { id: HoldingsView; label: string }[] = [
-  { id: "models", label: "By strategy" },
-  { id: "stocks", label: "All stocks" },
-]
-
-// The two ways to read the same holdings: under the model that holds each, or each stock once
 export function HoldingsViewTabs({ view, query }: { view: HoldingsView; query: string }) {
   return (
     <nav

@@ -1,9 +1,8 @@
 import { DEFAULT_SLIPPAGE, NETWORK_FEE, SWAP_FEE_RATE } from "@/constants/trade"
 
+import type { Portfolio } from "@/types/portfolios"
 import { portfolioValue } from "./portfolio"
-import type { Portfolio } from "./types"
 
-// What selling a share of some holdings would do: what comes back, and what the portfolio looks like afterwards
 export function quoteSale(portfolio: Portfolio, symbols: string[], fraction: number) {
   const selected = portfolio.holdings.filter(({ symbol }) => symbols.includes(symbol))
   if (!selected.length) return undefined

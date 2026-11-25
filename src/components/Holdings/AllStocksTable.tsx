@@ -10,7 +10,6 @@ import { changeTone } from "@/lib/tone"
 import { cn } from "@/lib/utils"
 import { listItemHoverClassName } from "@/styles/interactive"
 
-// Every stock held, once, with the models it is in shown as their colours
 export function AllStocksTable({ stocks }: { stocks: StockRow[] }) {
   if (!stocks.length) return <p className="text-ink-400 py-8 text-center">No stock you hold matches.</p>
 

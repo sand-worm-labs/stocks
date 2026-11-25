@@ -21,7 +21,6 @@ function Highlight({
 }: {
   title: string
   icon: IconType
-  // The tile the icon sits in: a soft fill, a border and the icon in the same colour
   tint: string
   tokens: BaseToken[]
   stat: (token: BaseToken) => React.ReactNode

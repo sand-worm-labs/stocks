@@ -19,6 +19,7 @@ export const heldSymbols = (portfolios: Portfolio[]) =>
 export function statusText(portfolio: Portfolio) {
   const { status } = portfolio
   if (status === "live") return "Live"
+  if (status === "closed") return "Closed"
   return status === "draft" && portfolio.stage ? DRAFT_STAGE[portfolio.stage].label : PORTFOLIO_PENDING_TEXT[status]
 }
 

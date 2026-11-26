@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Put, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
@@ -15,7 +15,7 @@ import { signReportShare } from '@/features/auth/core/token';
 import { rulesSchema } from '@/features/strategies/rules/spec';
 import { rulesView } from '@/features/strategies/rules/rules-view';
 import { BRIEF_MAX_LENGTH, StrategyError } from '@/features/strategies/lifecycle/strategy-lifecycle';
-import { brief, isInResearch, listed, report } from '@/features/strategies/lifecycle/strategy-view';
+import { brief, isInResearch, listed, report, trashed } from '@/features/strategies/lifecycle/strategy-view';
 import { changeFunds, fundsSchema, sellSchema, sellStocks } from '@/features/strategies/trading/money';
 import { startTrading, Trade, tradeSchema } from '@/features/strategies/trading/start';
 
@@ -24,6 +24,7 @@ import { StrategyEngine } from './strategy-engine.service';
 const createSchema = z.object({ brief: z.string().min(1).max(BRIEF_MAX_LENGTH) });
 const renameSchema = z.object({ name: z.string().min(1).max(200) });
 const editSchema = z.object({ rules: rulesSchema });
+const purgeSchema = z.object({ confirmName: z.string().min(1).max(200) });
 // `result` is checked in full by the strategy steps, which say what is wrong with it; here it is only required to be there
 const handBackSchema = z.object({ result: z.unknown() });
 
@@ -44,6 +45,13 @@ export class StrategiesController {
   async list(@Asking() { ownerId }: Caller) {
     const records = await this.engine.steps.list(ownerId);
     return records.map(listed);
+  }
+
+  // What this person has deleted, which is kept for 30 days and can be put back
+  @Get('trash')
+  async trash(@Asking() { ownerId }: Caller) {
+    const records = await this.engine.steps.listRemoved(ownerId);
+    return records.map(trashed);
   }
 
   @Post()
@@ -78,6 +86,36 @@ export class StrategiesController {
   async rename(@Asking() { ownerId }: Caller, @Param('id') id: string, @Body(new ZodPipe(renameSchema)) body: z.infer<typeof renameSchema>) {
     const { name } = await this.engine.steps.rename(ownerId, id, body.name);
     return { name };
+  }
+
+  // Ends a trading strategy: everything is sold at today's prices and the cash is taken out. Only then can it be deleted.
+  @Post(':id/close')
+  @HttpCode(200)
+  async close(@Asking() { ownerId }: Caller, @Param('id') id: string) {
+    const { record, takenOut } = await this.engine.steps.close(ownerId, id);
+    return { status: record.status, closedAt: record.closedAt, takenOut };
+  }
+
+  // Puts a strategy in the trash. One that is still trading is refused: it holds money, so it is closed first.
+  @Delete(':id')
+  async remove(@Asking() { ownerId }: Caller, @Param('id') id: string) {
+    const { deletedAt } = await this.engine.steps.remove(ownerId, id);
+    return { deletedAt };
+  }
+
+  @Post(':id/restore')
+  @HttpCode(200)
+  async restore(@Asking() { ownerId }: Caller, @Param('id') id: string) {
+    await this.engine.steps.restore(ownerId, id);
+    return { ok: true };
+  }
+
+  // Deletes what is in the trash for good, with its chat, activity and ledger. It needs the strategy's name, so it can't be done by a slip.
+  @Post(':id/purge')
+  @HttpCode(200)
+  async purge(@Asking() { ownerId }: Caller, @Param('id') id: string, @Body(new ZodPipe(purgeSchema)) body: z.infer<typeof purgeSchema>) {
+    await this.engine.steps.purge(ownerId, id, body.confirmName);
+    return { ok: true };
   }
 
   @Get(':id/activity')

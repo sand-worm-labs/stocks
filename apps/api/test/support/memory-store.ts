@@ -9,7 +9,19 @@ export class MemoryStore implements StrategyStore {
   constructor(_path?: string) {}
 
   async list(ownerId: string) {
-    return [...this.records.values()].filter((record) => record.ownerId === ownerId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    return [...this.records.values()].filter((record) => record.ownerId === ownerId && !record.deletedAt).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  }
+
+  async listRemoved(ownerId: string) {
+    return [...this.records.values()].filter((record) => record.ownerId === ownerId && record.deletedAt).sort((a, b) => (b.deletedAt ?? "").localeCompare(a.deletedAt ?? ""))
+  }
+
+  async removedBefore(cutoff: Date) {
+    return [...this.records.values()].filter((record) => record.deletedAt && Date.parse(record.deletedAt) < cutoff.getTime()).map(({ id, ownerId }) => ({ id, ownerId }))
+  }
+
+  async purge(id: string) {
+    this.records.delete(id)
   }
 
   async get(id: string) {

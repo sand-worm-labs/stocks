@@ -1,5 +1,8 @@
 import { z } from "zod"
 
+// The parts of the report, as the app names them (apps/api/src/features/research/report-outline.ts); a test fails when they differ
+export const SECTION_IDS = ["answer", "numbers", "growth", "checks", "drawdown", "risk", "buyable", "stocks", "sources"] as const
+
 // What an agent hands back as research. This is a copy of the app's own schema (apps/api/src/features/research/research-result.ts), so the agent is told
 // what shape to build. The app checks the result in full when it arrives, so a difference here can't let a bad one in; a test (see
 // research-result.test.ts) fails when the two stop matching, so the agent is never told the wrong shape.
@@ -39,6 +42,8 @@ export const researchResultSchema = z.object({
   sources: z.array(z.object({ name: text(40), title: text(120), url: z.string().url().max(500).optional(), note: text(80).optional() })).max(8).default([]),
   notes: z.array(text(300)).max(8).default([]),
   notebook: z.object({ title: text(100), url: z.string().url().max(500) }),
+  // The block of that notebook each part of the report is built from, by the part's id: what a link from that part of the report opens
+  blocks: z.record(z.enum(SECTION_IDS), z.string().min(1).max(100)).optional(),
   dataNote: text(200).optional(),
   isExample: z.boolean().default(false),
 })

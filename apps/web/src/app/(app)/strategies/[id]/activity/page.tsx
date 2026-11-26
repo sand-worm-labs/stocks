@@ -22,7 +22,8 @@ export default async function PortfolioActivityPage({ params, searchParams }: Po
   const [{ id }, query] = await Promise.all([params, searchParams])
   const portfolio = await getPortfolio(id)
   if (!portfolio) notFound()
-  if (portfolio.status !== "live") redirect(routeHref("portfolio", undefined, id) ?? "/strategies")
+  // A closed strategy keeps its activity: what it did, and how it ended
+  if (portfolio.status !== "live" && portfolio.status !== "closed") redirect(routeHref("portfolio", undefined, id) ?? "/strategies")
 
   const filter = parseActivityFilter(query.filter)
   const [session, activity] = await Promise.all([getSession(), getActivity(id)])

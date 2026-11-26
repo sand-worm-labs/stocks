@@ -19,6 +19,7 @@ import { SourceLogo } from "@/components/SourceLink/SourceLogo"
 import { StockAvatar } from "@/components/StockAvatar/StockAvatar"
 import { Card } from "@/components/ui/card"
 import { InfoTip } from "@/components/ui/info-tip"
+import { blockLink, type SectionId, sectionNumber } from "@/lib/research/outline"
 import type { ResearchResult } from "@/lib/research/result"
 import { cn } from "@/lib/utils"
 
@@ -41,19 +42,21 @@ const TONE_ICON: Record<Tone, { icon: Icon; color: string }> = {
 
 const dollars = (amount: number) => (amount >= 1_000_000 ? `$${(amount / 1_000_000).toFixed(1)}M` : `$${Math.round(amount / 1000)}K`)
 
-function Heading({ icon: Icon, title, tip, link }: { icon: Icon; title: string; tip?: string; link?: string }) {
+// A part of the report is headed with its number, which is its number in the notebook too, and links to its own block there
+function Heading({ icon: Icon, title, tip, link, section }: { icon: Icon; title: string; tip?: string; link?: string; section?: SectionId }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <h2 className="flex items-center gap-2.5 text-base font-medium tracking-tight">
         <span aria-hidden="true" className="bg-inputBg text-ink-200 flex size-8 flex-none items-center justify-center rounded-lg">
           <Icon size={18} aria-hidden />
         </span>
+        {section && <span aria-hidden="true" className="text-ink-300 text-sm font-normal tabular-nums">{sectionNumber(section)}</span>}
         {title}
         {tip && <InfoTip label={title}>{tip}</InfoTip>}
       </h2>
       {link && (
         <a href={link} target="_blank" rel="noopener noreferrer" className="text-ink-400 hover:text-ink-100 text-xs whitespace-nowrap transition-colors">
-          View source ↗
+          Open in notebook ↗
         </a>
       )}
     </div>
@@ -64,10 +67,10 @@ function Section({ children }: { children: ReactNode }) {
   return <Card raised className="flex flex-col gap-4 p-5 md:p-6">{children}</Card>
 }
 
-function ChartSection({ icon, chart, link, tip, area }: { icon: Icon; chart: Chart; link?: string; tip: string; area?: boolean }) {
+function ChartSection({ icon, chart, link, tip, area, section }: { icon: Icon; chart: Chart; link?: string; tip: string; area?: boolean; section: SectionId }) {
   return (
     <Section>
-      <Heading icon={icon} title={chart.title} tip={tip} link={link} />
+      <Heading icon={icon} title={chart.title} tip={tip} link={link} section={section} />
       <Lines title={chart.title} format={chart.format} series={chart.series} mark={chart.mark} area={area} />
     </Section>
   )
@@ -88,7 +91,9 @@ function CheckItem({ tone, text }: { tone: Tone; text: string }) {
 // What research found, laid out for someone deciding whether to buy: the answer, the four numbers that matter most to them, a calculator to
 // try their own money, then the risks and what it would take to buy. The full work is in the one notebook on Sandworm, which each section links to.
 export function ResearchResultView({ result, amount }: { result: ResearchResult; amount: number }) {
-  const { headline, summary, verdict, metrics, charts, checks, holdings, tradability, selection, sources, notebook, dataNote, isExample } = result
+  const { headline, summary, verdict, metrics, charts, checks, holdings, tradability, selection, sources, notebook, blocks, dataNote, isExample } = result
+  // Where in the notebook each part of the report is worked out
+  const openPart = (id: SectionId) => blockLink(notebook.url, blocks?.[id])
   const growth = charts.find(({ kind }) => kind === "growth")
   const drop = charts.find(({ kind }) => kind === "drop")
   const [strategy, bench] = growth?.series ?? []
@@ -106,6 +111,9 @@ export function ResearchResultView({ result, amount }: { result: ResearchResult;
           </p>
         )}
         <p className="text-ink-200 max-w-2xl text-base leading-7">{summary}</p>
+        <a href={openPart("answer")} target="_blank" rel="noopener noreferrer" className="text-ink-400 hover:text-ink-100 w-fit text-xs transition-colors print:hidden">
+          See how it was worked out ↗
+        </a>
         {isExample && (
           <p role="note" className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-[13px] leading-5 text-amber-900">
             <strong className="font-medium">Test data.</strong> These numbers are made up to try the connection. They say nothing about this strategy.
@@ -143,7 +151,7 @@ export function ResearchResultView({ result, amount }: { result: ResearchResult;
 
       {checks.length > 0 && (
         <Section>
-          <Heading icon={PiClipboardText} title="What the numbers say" tip="Each line is worked out from the notebook's numbers and from what you asked for. Amber and red lines are the ones to read twice." />
+          <Heading icon={PiClipboardText} title="What the numbers say" tip="Each line is worked out from the notebook's numbers and from what you asked for. Amber and red lines are the ones to read twice." link={openPart("checks")} section="checks" />
           <ul className="flex flex-col gap-3">
             {checks.slice(0, SHOWN_CHECKS).map(({ tone, text }) => (
               <CheckItem key={text} tone={tone} text={text} />
@@ -173,7 +181,8 @@ export function ResearchResultView({ result, amount }: { result: ResearchResult;
         <ChartSection
           icon={PiChartLineUp}
           chart={growth}
-          link={notebook.url}
+          section="growth"
+          link={openPart("growth")}
           tip="What 1 USDC put in on the first day would have grown to, next to the same money in the S&P 500. The further apart the lines, the bigger the difference."
         />
       )}
@@ -182,7 +191,8 @@ export function ResearchResultView({ result, amount }: { result: ResearchResult;
           icon={PiTrendDown}
           area
           chart={drop}
-          link={notebook.url}
+          section="drawdown"
+          link={openPart("drawdown")}
           tip="How far below its highest point the value was on each day. Deep dips are the times it would have felt worst. The dotted line is the loss you said you'd panic at."
         />
       )}
@@ -193,7 +203,8 @@ export function ResearchResultView({ result, amount }: { result: ResearchResult;
             icon={PiShieldWarning}
             title="Where the risk sits"
             tip="Money is how much you put in each stock. Share of the risk is how much of the ups and downs each one causes. A stock with more risk than money is the one moving your result."
-            link={notebook.url}
+            link={openPart("risk")}
+            section="risk"
           />
           <ShareBars holdings={holdings} />
         </Section>
@@ -201,7 +212,7 @@ export function ResearchResultView({ result, amount }: { result: ResearchResult;
 
       {tradability && (
         <Section>
-          <Heading icon={PiShoppingCartSimple} title="Can it be bought" tip="A pool is where a token trades. A bigger pool means your order barely moves the price; a small one means you could pay noticeably more." />
+          <Heading icon={PiShoppingCartSimple} title="Can it be bought" tip="A pool is where a token trades. A bigger pool means your order barely moves the price; a small one means you could pay noticeably more." link={openPart("buyable")} section="buyable" />
           <p className="text-ink-200 text-[15px] leading-6">{tradability.text}</p>
           <ReportTable>
             <thead>
@@ -231,7 +242,7 @@ export function ResearchResultView({ result, amount }: { result: ResearchResult;
 
       {selection.length > 0 && (
         <Section>
-          <Heading icon={PiListChecks} title="Why these stocks" tip="Each was picked to match what you asked for. The test shows how each behaved on its own, which is evidence about the past, not a reason to expect more of the same." link={notebook.url} />
+          <Heading icon={PiListChecks} title="Why these stocks" tip="Each was picked to match what you asked for. The test shows how each behaved on its own, which is evidence about the past, not a reason to expect more of the same." link={openPart("stocks")} section="stocks" />
           <ReportTable>
             <thead>
               <ReportTableRow>
@@ -260,7 +271,7 @@ export function ResearchResultView({ result, amount }: { result: ResearchResult;
       )}
 
       <Section>
-        <Heading icon={PiBooks} title="Sources" tip="Where each fact in this report came from. The Sandworm notebook holds every calculation, so any number here can be opened and re-run." />
+        <Heading icon={PiBooks} title="Sources" tip="Where each fact in this report came from. The Sandworm notebook holds every calculation, so any number here can be opened and re-run." link={openPart("sources")} section="sources" />
         <ReportTable>
           <thead>
             <ReportTableRow>

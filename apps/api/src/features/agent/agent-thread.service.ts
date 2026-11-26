@@ -170,6 +170,10 @@ export class AgentThread {
       const { cash } = await changeFunds(steps, ownerId, strategyId, { direction: 'remove', amount: step.amount });
       return reply(say(`Took out ${usdc(step.amount)}. ${usdc(cash)} is left in cash.`), offer('How is it doing?'));
     }
+    if (step.kind === 'close') {
+      const { takenOut } = await steps.close(ownerId, strategyId);
+      return reply(say(`Closed. Everything was sold and ${usdc(takenOut)} was taken out. It is kept to read, and can be deleted whenever you like.`), offer('How did it do?'));
+    }
     const { cash, received } = await sellStocks(steps, ownerId, strategyId, { symbols: step.symbols, share: step.share });
     return reply(say(`Sold. You received ${usdc(received)} after fees, and ${usdc(cash)} is now in cash.`), offer('How is it doing?', 'What do I hold?'));
   }
@@ -177,7 +181,7 @@ export class AgentThread {
   // What happened to the strategy, put into the conversation once each, at the time it happened. Only a strategy that is trading has a story
   // beyond what its own pages say.
   private async noteMilestones(record: StrategyRecord) {
-    if (record.status !== 'live') return;
+    if (record.status !== 'live' && record.status !== 'closed') return;
     const rows = milestonesOf(record).map(({ key, from, blocks, at }) => ({
       strategyId: record.id,
       ownerId: record.ownerId,

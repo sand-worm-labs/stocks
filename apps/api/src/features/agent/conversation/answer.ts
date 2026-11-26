@@ -1,9 +1,9 @@
 import type { Reply } from '@/features/agent/types/agent-message.types';
 import type { Context } from './context';
 import type { Intent } from './understand';
-import { cashReply, helpReply, holdingsReply, researchReply, rulesReply, standingReply } from './read-answers';
+import { cashReply, closedReply, helpReply, holdingsReply, researchReply, rulesReply, standingReply } from './read-answers';
 import { link, links, note, offer, reply, say } from './replies';
-import { addFundsReply, lockedReply, moreOfReply, sellReply, takeOutCashReply } from './step-proposals';
+import { addFundsReply, closeReply, lockedReply, moreOfReply, sellReply, takeOutCashReply } from './step-proposals';
 
 const WALLET_TRADES = "This strategy trades from your wallet, and trades from it aren't available here yet.";
 
@@ -25,6 +25,17 @@ function notTradingReply({ record }: Context): Reply {
 }
 
 const isTrading = ({ record }: Context) => record.status === 'live';
+
+// Deleting is done from the strategy's own page, where the person can see what goes with it. A strategy that holds money is closed first.
+function deleteReply({ record }: Context): Reply {
+  if (record.status === 'live') {
+    return reply(
+      say("It is still trading, so it can't be deleted: it holds money. Close it first, which sells everything and takes the cash out. Then it can go to the trash."),
+      offer('Close the strategy'),
+    );
+  }
+  return reply(say("You can delete it from the Manage menu at the top of this page. It goes to the trash, with its chat, and stays there for 30 days in case you want it back."));
+}
 const tradesFromWallet = ({ record }: Context) => record.funding?.mode !== 'paper';
 
 /// What the agent says to one thing the person asked, from the strategy as it stands. What can be said at any stage is said; a step that moves
@@ -39,11 +50,17 @@ export function answer(intent: Intent, context: Context): Reply {
       return lockedReply(context, 'rules');
     case 'change-stocks':
       return lockedReply(context, 'stocks');
+    case 'delete':
+      return deleteReply(context);
     case 'help':
     case 'unknown':
       return helpReply({ isTrading: isTrading(context) });
   }
 
+  if (context.record.status === 'closed') {
+    const isMoney = ['add-funds', 'take-out-cash', 'sell', 'more-of', 'close'].includes(intent.kind);
+    return isMoney ? reply(say("This strategy is closed, so there is nothing left to move. It holds nothing.")) : closedReply(context);
+  }
   if (!isTrading(context)) return notTradingReply(context);
 
   switch (intent.kind) {
@@ -66,5 +83,7 @@ export function answer(intent: Intent, context: Context): Reply {
       return sellReply(context, intent);
     case 'more-of':
       return moreOfReply(context, intent);
+    case 'close':
+      return closeReply(context);
   }
 }

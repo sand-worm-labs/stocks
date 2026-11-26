@@ -19,4 +19,7 @@ export class Strategy {
   startedAt: Date | null;
   @Column('timestamptz', { name: 'closed_at', nullable: true })
   closedAt: Date | null;
+  // When it was put in the trash, or nothing when it isn't there
+  @Column('timestamptz', { name: 'deleted_at', nullable: true })
+  deletedAt: Date | null;
 }

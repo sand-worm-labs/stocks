@@ -164,6 +164,58 @@ const url = process.env.TEST_DATABASE_URL;
     });
   });
 
+  describe('the trash', () => {
+    const gone = (id: string, at: string) => record(id, ME, { deletedAt: at });
+
+    it('keeps when a strategy was closed and when it was deleted, and gives them back', async () => {
+      await strategies.save(live('a', { status: 'closed', closedAt: '2026-11-25T09:00:00.000Z', deletedAt: '2026-11-26T09:00:00.000Z' }));
+      const kept = await strategies.get('a');
+      expect(kept).toMatchObject({ status: 'closed', closedAt: '2026-11-25T09:00:00.000Z', deletedAt: '2026-11-26T09:00:00.000Z' });
+    });
+
+    it('keeps what is deleted out of the list, and lists it as removed, the latest first', async () => {
+      await strategies.save(record('kept'));
+      await strategies.save(gone('old', '2026-11-01T00:00:00.000Z'));
+      await strategies.save(gone('new', '2026-11-20T00:00:00.000Z'));
+      await strategies.save({ ...record('theirs', THEM), deletedAt: '2026-11-21T00:00:00.000Z' });
+
+      expect((await strategies.list(ME)).map(({ id }) => id)).toEqual(['kept']);
+      expect((await strategies.listRemoved(ME)).map(({ id }) => id)).toEqual(['new', 'old']);
+    });
+
+    it('puts a strategy back when its deletion is taken away', async () => {
+      await strategies.save(gone('a', '2026-11-20T00:00:00.000Z'));
+      const deleted = (await strategies.get('a'))!;
+      await strategies.save({ ...deleted, deletedAt: undefined });
+      expect((await strategies.list(ME)).map(({ id }) => id)).toEqual(['a']);
+    });
+
+    it('says what has been in the trash since before a day', async () => {
+      await strategies.save(gone('old', '2026-10-01T00:00:00.000Z'));
+      await strategies.save(gone('recent', '2026-11-25T00:00:00.000Z'));
+      await strategies.save(record('kept'));
+      expect(await strategies.removedBefore(new Date('2026-11-01T00:00:00.000Z'))).toEqual([{ id: 'old', ownerId: ME }]);
+    });
+
+    it('deletes for good: the strategy, its ledger, its research, its chat and its activity all go', async () => {
+      await strategies.save(live('a', { deletedAt: '2026-11-20T00:00:00.000Z' }));
+      await dataSource.query(`insert into agent_messages (strategy_id, owner_id, author, blocks) values ('a', $1, 'user', '[]')`, [ME]);
+      const count = (table: string) => dataSource.query(`select count(*)::int as n from ${table} where strategy_id = 'a'`).then(([row]: { n: number }[]) => row!.n);
+      expect(await count('activity')).toBeGreaterThan(0);
+
+      await strategies.purge('a');
+      expect(await strategies.get('a')).toBeUndefined();
+      for (const table of ['activity', 'ledger', 'research_runs', 'strategy_versions', 'agent_messages']) expect(await count(table)).toBe(0);
+    });
+
+    it("leaves other strategies alone when one is deleted for good", async () => {
+      await strategies.save(record('a'));
+      await strategies.save(record('b'));
+      await strategies.purge('a');
+      expect((await strategies.list(ME)).map(({ id }) => id)).toEqual(['b']);
+    });
+  });
+
   describe('research that is going on', () => {
     const researching = (id: string, research: NonNullable<StrategyRecord['research']>) =>
       record(id, ME, { status: 'draft', stage: 'researching', holdings: [], funding: undefined, research, events: [{ kind: 'created', at: '2026-11-24T10:00:00.000Z' }, { kind: 'researching', at: '2026-11-24T10:01:00.000Z' }], startedAt: undefined });

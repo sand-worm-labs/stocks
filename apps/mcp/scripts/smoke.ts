@@ -106,7 +106,13 @@ if (stage === "researching" && isWaiting) {
     notebook: { title: "Smoke test notebook", url: "https://app.sandwormlab.xyz/notebooks/smoke-test" },
     isExample: true,
   }
-  await works("hand back research", "submit_research", { strategyId: id, result })
+  // A second notebook is refused: a strategy is researched in one
+  const twoNotebooks = { ...result, steps: [{ label: "Backtest", url: result.notebook.url }, { label: "Risk", url: "https://app.sandwormlab.xyz/notebooks/another" }] }
+  await refuses("research in two notebooks", "submit_research", { strategyId: id, result: twoNotebooks })
+  const outline = brief.json?.report?.outline as { id: string; title: string }[] | undefined
+  say(outline?.length === 9 ? "✓" : "✗", `the report's parts the notebook follows: ${outline?.map(({ title }) => title).join(" | ") ?? "(none told)"}`)
+  if (outline?.length !== 9) failures++
+  await works("hand back research, with a block for each part", "submit_research", { strategyId: id, result: { ...result, blocks: Object.fromEntries((outline ?? []).map(({ id: part }, i) => [part, `block-${i + 1}`])) } })
   await refuses("hand it back twice", "submit_research", { strategyId: id, result })
   stage = (await call("check_research", { strategyId: id })).json?.stage
 } else if (stage === "researching") {

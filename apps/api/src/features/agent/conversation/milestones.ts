@@ -6,7 +6,7 @@ import { link, links, note, say } from './replies';
 
 // What happened to a strategy that the conversation should say, in the words the agent would have used when it happened. Each is kept once,
 // under its name, with the time it happened at, so the conversation reads in order from the idea on, wherever it was first opened.
-export type Milestone = { key: 'idea' | 'research' | 'live'; from: 'user' | 'agent'; blocks: AgentBlock[]; at: Date };
+export type Milestone = { key: 'idea' | 'research' | 'live' | 'closed'; from: 'user' | 'agent'; blocks: AgentBlock[]; at: Date };
 
 const eventAt = (record: StrategyRecord, kind: StrategyRecord['events'][number]['kind']) => {
   const found = record.events.find((event) => event.kind === kind);
@@ -31,7 +31,11 @@ export function milestonesOf(record: StrategyRecord): Milestone[] {
     milestones.push({ key: 'research', from: 'agent', blocks, at });
   }
 
-  if (record.status === 'live') milestones.push({ key: 'live', from: 'agent', blocks: [say(startedText(record))], at: started });
+  const hasTraded = record.status === 'live' || record.status === 'closed';
+  if (hasTraded) milestones.push({ key: 'live', from: 'agent', blocks: [say(startedText(record))], at: started });
+  if (record.status === 'closed' && record.closedAt) {
+    milestones.push({ key: 'closed', from: 'agent', blocks: [say(`Closed on ${day.format(new Date(record.closedAt))}: everything was sold and the cash taken out. It is kept to read, and can be deleted whenever you like.`)], at: new Date(record.closedAt) });
+  }
   return milestones;
 }
 

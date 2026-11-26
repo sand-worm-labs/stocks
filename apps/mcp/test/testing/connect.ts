@@ -11,6 +11,7 @@ export const fakeApi = (): { [K in keyof Api]: ReturnType<typeof vi.fn> } => ({
   post: vi.fn().mockResolvedValue({ ok: true }),
   patch: vi.fn().mockResolvedValue({ ok: true }),
   put: vi.fn().mockResolvedValue({ ok: true }),
+  delete: vi.fn().mockResolvedValue({ ok: true }),
 })
 
 // An agent connected to the server, as it would be, over a pipe in memory

@@ -7,6 +7,7 @@ export const ACTIVITY_OF_EVENT = {
   researching: 'researching',
   ready: 'ready',
   live: 'started',
+  closed: 'closed',
 } as const;
 export const EVENT_OF_ACTIVITY = Object.fromEntries(
   Object.entries(ACTIVITY_OF_EVENT).map(([event, kind]) => [kind, event]),
@@ -39,6 +40,10 @@ const WORDS: Record<
   live: ({ name }) => ({
     title: 'Strategy started',
     detail: `${name} is trading.`,
+  }),
+  closed: ({ name }) => ({
+    title: 'Strategy closed',
+    detail: `${name} was closed: everything was sold and the cash taken out.`,
   }),
 };
 

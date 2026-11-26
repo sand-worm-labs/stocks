@@ -6,7 +6,7 @@ import type { StrategyRecord } from "@/features/strategies/types/strategy-record
 // What happened to a strategy's money, from its ledger: money put in, stocks bought and sold, cash taken out. Each trade carries its receipt.
 // The first deposit, and what it bought, are how the strategy started, and are shown as that.
 function moneyActivity(record: StrategyRecord): Activity[] {
-  if (record.status !== "live") return []
+  if (record.status !== "live" && record.status !== "closed") return []
   const base = { portfolioId: record.id }
 
   return ledgerOf(record).flatMap((line, i): Activity[] => {
@@ -75,6 +75,8 @@ function eventActivity({ id, name, brief, events }: Pick<StrategyRecord, "id" | 
         }
       case "live":
         return { ...base, id: key, kind: "started", at, title: "Strategy started", detail: `${name} is trading.` }
+      case "closed":
+        return { ...base, id: key, kind: "closed", at, title: "Strategy closed", detail: `${name} was closed: everything was sold and the cash taken out.` }
     }
   })
 }

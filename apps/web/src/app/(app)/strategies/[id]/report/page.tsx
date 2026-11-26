@@ -55,7 +55,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   )
 
   // Once it is trading, the report is one of the strategy's own pages, in the same frame as the others
-  if (document && own?.status === "live")
+  if (document && (own?.status === "live" || own?.status === "closed"))
     return (
       <PortfolioShell portfolio={portfolio} current="report">
         {document}
@@ -68,13 +68,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       <FlowLayout
         steps={<StepProgress current="report" portfolioId={portfolio.id} />}
         aside={<AgentWorkspace script={script} strategyId={portfolio.own ? portfolio.id : undefined} />}
-        agent={portfolio.status === "live" ? "on-demand" : "open"}
+        agent={portfolio.status === "live" || portfolio.status === "closed" ? "on-demand" : "open"}
       >
         <ReportActionBar plan={report.plan} verdict={result?.verdict ? verdictOf(result.verdict) : report.verdict}>
           <AppLink route="adapt" slug={portfolio.id} className={buttonVariants({ intent: "outline", size: "compact" })}>
             Refine
           </AppLink>
-          {portfolio.status !== "live" && (
+          {portfolio.status !== "live" && portfolio.status !== "closed" && (
             <ReviewAndBuy
               orders={orders}
               report={report}

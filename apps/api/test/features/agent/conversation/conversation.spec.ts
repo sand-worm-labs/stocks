@@ -218,6 +218,54 @@ describe('a strategy that trades from a wallet', () => {
   });
 });
 
+describe('closing and deleting', () => {
+  const closed = async () => {
+    const record = await live();
+    return service.close('u1', record.id);
+  };
+
+  it('proposes closing as one step to confirm: everything sold at today\'s prices and the cash taken out', async () => {
+    const record = await live();
+    const { proposal, blocks } = ask(record, 'close it');
+    expect(proposal).toMatchObject({ title: 'Close strategy', step: { kind: 'close' } });
+    expect(proposal?.rows.map(({ label }) => label)).toEqual(expect.arrayContaining(['Fees', 'You take out']));
+    expect(textOf(blocks)).toMatch(/Nothing moves until you confirm/);
+    expect((await service.owned('u1', record.id)).status).toBe('live');
+  });
+
+  it('understands the ways of saying it, without taking a sale for a close', async () => {
+    const record = await live();
+    for (const message of ['stop trading', 'wind it down', 'close this strategy']) expect(ask(record, message).proposal?.step).toEqual({ kind: 'close' });
+    expect(ask(record, 'sell everything').proposal?.step).toMatchObject({ kind: 'sell' });
+  });
+
+  it("says a strategy that is trading must be closed before it is deleted, and where a closed one is deleted", async () => {
+    const record = await live();
+    const trading = ask(record, 'delete this strategy');
+    expect(trading.proposal).toBeUndefined();
+    expect(textOf(trading.blocks)).toMatch(/Close it first/);
+
+    const done = await service.close('u1', record.id);
+    expect(textOf(ask(done.record, 'delete it').blocks)).toMatch(/Manage menu.*30 days/);
+  });
+
+  it('says what a closed strategy came to, and moves no money for it', async () => {
+    const { record } = await closed();
+    expect(textOf(ask(record, 'how is it doing?').blocks)).toMatch(/was closed.*You put in .* and took out .* USDC.*It holds nothing now/);
+    for (const message of ['add 100 USDC', 'sell everything', 'close it']) {
+      const result = ask(record, message);
+      expect(result.proposal).toBeUndefined();
+      expect(textOf(result.blocks)).toMatch(/is closed/);
+    }
+  });
+
+  it('tells the closing into the story, once the strategy is closed', async () => {
+    const { record } = await closed();
+    expect(milestonesOf(record).map(({ key }) => key)).toEqual(['idea', 'live', 'closed']);
+    expect(suggestionsOf(record)).toEqual(['How did it do?', 'What are my rules?']);
+  });
+});
+
 describe('an idea that names what is not on Base', () => {
   const OIL = 'Grow 1,000 USDC in oil stocks (Exxon, Chevron, Shell and similar). Max 20% in one stock. Ask before buying.';
 

@@ -12,6 +12,7 @@ export function toPortfolio(record: StrategyRecord): Portfolio {
     name: record.name,
     brief: record.brief,
     status: record.status,
+    closedAt: record.closedAt,
     stage: record.status === "draft" ? record.stage : undefined,
     createdAt: record.createdAt,
     holdings: record.holdings,

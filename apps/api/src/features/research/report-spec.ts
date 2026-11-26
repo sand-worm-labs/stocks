@@ -1,4 +1,5 @@
 import type { RuleSpec } from "@/features/strategies/rules/spec"
+import { REPORT_SECTIONS, sectionTitle } from "./report-outline"
 
 // What a person cares about, read from how they put it. It decides which four numbers lead their report, so a person who said they'd panic
 // at a loss sees the worst fall first, and one who wants to beat the market sees how far ahead it is.
@@ -55,6 +56,9 @@ const READS: Record<Priority, string> = {
   spread: "whether the money was spread out",
 }
 
+// The parts of the report as an agent is told them, numbered as the report numbers them
+const outline = () => REPORT_SECTIONS.map(({ id, reads }) => `- ${sectionTitle(id)} (id: ${id}): ${reads}`).join("\n")
+
 // The instructions a researcher is given with the person's own words, so the report comes back in the shape the app shows. They are
 // written for an agent (Sandworm's, or one driving it) and are what makes its notebooks print what the report needs. The researcher does
 // the sums; it doesn't decide what the report says.
@@ -63,8 +67,10 @@ export function reportInstructions(priorities: Priority[], kpis: KpiId[]) {
   return [
     "Report structure. Test the plan on real daily prices against the S&P 500 (SPY), after trading costs and with the rules' stop.",
     `The person cares about: ${cares}. Lead with these four numbers: ${kpis.join(", ")}.`,
-    "Do all of it in one notebook for this strategy, with its summary in the first cell. Then two parts: Backtest (growth, return, Sharpe, beta, a bad/typical/good year) and Risk (worst fall, worst month, share of the risk by stock, each stock on its own).",
-    "Have the notebook print lines of `STOCKS_RESULT {json}` for what it found, each under 3,000 characters. Print numbers, not sentences.",
+    "One notebook for this strategy, and only one: if it already has a notebook, add to it, never make a second. The notebook is the report with its working shown, so lay it out as the report is.",
+    `Start with a cell titled "Start here": the person's idea, their rules, what is tested and what couldn't be (see \`coverage\`). Then the parts below, in this order. Each part is a markdown cell whose title is exactly the one given and whose text says what it shows, followed by the cells for it. Say in words, in a printed line, what each cell found.\n${outline()}`,
+    "Have the notebook print lines of `STOCKS_RESULT {json}` for what it found, each under 3,000 characters, next to the words a person reads. The report is made from those lines.",
+    "When you submit the research, pass `blocks`: for each part, the id of its heading cell, so the report can link to it. Leave a part out if you don't have its block id.",
     "Say plainly when a stock has no price history. Never promise a return; give what history shows and how wide the spread was.",
   ].join("\n")
 }

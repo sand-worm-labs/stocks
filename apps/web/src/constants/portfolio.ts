@@ -1,5 +1,5 @@
 import type { IconType } from "react-icons"
-import { PiChartLineUp, PiHourglass, PiProhibit } from "react-icons/pi"
+import { PiChartLineUp, PiHourglass, PiLockSimple, PiProhibit } from "react-icons/pi"
 
 import type { RouteId } from "@/config/routes"
 
@@ -15,6 +15,8 @@ type StatusDefinition = {
 export const PORTFOLIO_STATUS = {
   live: { label: "Live", tone: "positive", icon: PiChartLineUp, route: "portfolio" },
   draft: { label: "Draft", tone: "warning", icon: PiHourglass, route: "rules" },
+  // Was trading and has been closed: everything sold and the cash taken out. It is kept to read.
+  closed: { label: "Closed", tone: "neutral", icon: PiLockSimple, route: "portfolio" },
   unbuildable: {
     label: "Can't be built",
     tone: "negative",

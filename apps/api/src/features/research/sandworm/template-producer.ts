@@ -7,7 +7,9 @@ import type { Stock } from "@/features/market/types/market.types"
 import type { StrategyRecord } from "@/features/strategies/types/strategy-record"
 
 import { createSandwormClient, type RunCell, type SandwormClient, SandwormError } from "@/infrastructure/sandworm/sandworm.client"
-import { type NotebookPlan, researchNotebook, RESULT_MARKER } from "./notebooks"
+import { type NotebookContext, type NotebookPlan, researchNotebook, RESULT_MARKER } from "./notebooks"
+import type { SectionId } from "@/features/research/report-outline"
+import { describeRule } from "@/features/strategies/rules/spec"
 import { type Backtest, type Risk, type Series, SLIPPAGE, toResult } from "./report"
 
 const DEFAULT_PAUSE_DAYS = 63
@@ -83,6 +85,15 @@ function progressOf(done: number, urls: Record<string, string> = {}): AgentStep[
   }))
 }
 
+// The block that heads each part of the report, from where its cell was in the plan and the ids Sandworm gave the cells, in that order
+function blocksOf(sections: NotebookPlan["sections"], added: { id: string }[]) {
+  const entries = Object.entries(sections).flatMap(([section, position]) => {
+    const id = added[position ?? -1]?.id
+    return id ? [[section, id] as const] : []
+  })
+  return Object.fromEntries(entries) as Partial<Record<SectionId, string>>
+}
+
 // What this producer asks of Sandworm: it makes a notebook, fills it and runs it itself
 export type TemplateClient = Pick<SandwormClient, "workspaceId" | "createNotebook" | "addCells" | "run">
 
@@ -92,13 +103,13 @@ type Options = {
   getPrices?: typeof getDailyPrices
   // The stocks on offer, which says which aren't listed yet and how deep each pool is
   market?: () => Promise<Stock[]>
-  plan?: (inputs: Parameters<typeof researchNotebook>[0]) => NotebookPlan
+  plan?: (inputs: Parameters<typeof researchNotebook>[0], context: NotebookContext) => NotebookPlan
 }
 
 type Found = Pick<Awaited<ReturnType<typeof inputsFor>>, "inputs" | "panic" | "maxShare" | "asOf" | "skipped" | "stocks">
 
 // What the notebook printed, written up as the result. Whoever made the notebook, a person's template or Sandworm's agent, it is read the same.
-export function resultOf(lines: Printed[], record: StrategyRecord, found: Found, notebook: { title: string; url: string }) {
+export function resultOf(lines: Printed[], record: StrategyRecord, found: Found, notebook: { title: string; url: string }, blocks?: Partial<Record<SectionId, string>>) {
   const backtest = lines.find(({ kind }) => kind === "backtest") as Backtest | undefined
   const risk = lines.find(({ kind }) => kind === "risk") as Risk | undefined
   const growth = lines.find(({ kind }) => kind === "growth") as Series | undefined
@@ -106,7 +117,7 @@ export function resultOf(lines: Printed[], record: StrategyRecord, found: Found,
   if (!backtest || !risk || !growth || !drawdown) throw new SandwormError("The notebook didn't print its results")
 
   const { inputs, panic, maxShare, asOf, skipped, stocks } = found
-  return toResult(
+  const result = toResult(
     { backtest, risk, growth, drawdown },
     {
       notebook,
@@ -120,6 +131,19 @@ export function resultOf(lines: Printed[], record: StrategyRecord, found: Found,
       prices: `Daily closes from Yahoo Finance, to ${asOf}; the S&P 500 is SPY.`,
     }
   )
+  // Which block of the notebook each part of the report is built from, so a part of the report can link to its own block
+  return blocks && Object.keys(blocks).length ? { ...result, blocks } : result
+}
+
+// What the notebook says about the strategy besides its prices: the person's words and rules, and what the design left out or assumed
+function contextOf(record: StrategyRecord, { maxShare, stocks }: Found): NotebookContext {
+  return {
+    idea: record.brief,
+    rules: record.rules.map(describeRule),
+    notes: record.assumption ? [record.assumption] : [],
+    maxShare,
+    stocks: stocks.map(({ symbol, name, liquidity, impact }) => ({ symbol, name, liquidity, impact })),
+  }
 }
 
 // Does the research on Sandworm, as the person: real prices for the stocks, a backtest notebook and a risk notebook built and run in their
@@ -143,12 +167,13 @@ export function createSandwormProducer({
       const sandworm = client(sandwormToken)
       const workspaceId = await sandworm.workspaceId()
 
-      const { title, cells } = plan(inputs)
+      const { title, cells, sections } = plan(inputs, contextOf(record, { inputs, panic, maxShare, asOf, skipped, stocks }))
       const { id, url } = await sandworm.createNotebook(workspaceId, title)
       // Both parts are linked from their steps as soon as the notebook exists, while it is still being filled and run
       const urls = { [STEPS[2]]: url, [STEPS[3]]: url }
       await progress(progressOf(2, urls))
       const added = await sandworm.addCells(workspaceId, id, cells)
+      const blocks = blocksOf(sections, added)
       const runnable = added.filter(({ kind }) => kind === "python").map(({ id: cellId }) => cellId)
       const ran = await sandworm.run(workspaceId, id, runnable)
       const failed = ran.find(({ state }) => state === "error")
@@ -156,7 +181,7 @@ export function createSandwormProducer({
       const lines = printed(ran)
       await progress(progressOf(STEPS.length - 1, urls))
 
-      return resultOf(lines, record, { inputs, panic, maxShare, asOf, skipped, stocks }, { title, url })
+      return resultOf(lines, record, { inputs, panic, maxShare, asOf, skipped, stocks }, { title, url }, blocks)
     },
   }
 }

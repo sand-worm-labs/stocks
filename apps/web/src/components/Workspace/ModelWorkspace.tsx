@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { buttonVariants } from "@/components/Button/Button"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { StepProgress } from "@/components/Flow/StepProgress"
+import { StrategyManage } from "@/components/Strategy/StrategyManage"
 import { Badge } from "@/components/ui/badge"
 
 import { STATUS, STEP } from "@/constants/components/workspace/model-workspace"
@@ -143,6 +144,7 @@ export function ModelWorkspace({
               <p className="text-ink-400 text-sm">&ldquo;{brief}&rdquo;</p>
             </div>
 
+            {real && phase !== "researching" && <StrategyManage id={id} name={name} status="draft" />}
             {phase === "rules" && (
               <button
                 type="button"

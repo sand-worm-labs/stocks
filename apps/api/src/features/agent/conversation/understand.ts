@@ -14,6 +14,8 @@ export type Intent =
   // `isEverything` is "sell half of everything": no stock is named, but it is every one of them that is meant
   | { kind: 'sell'; symbols: string[]; named?: string; share?: number; isEverything: boolean }
   | { kind: 'more-of'; symbol?: string; named?: string; target?: number }
+  | { kind: 'close' }
+  | { kind: 'delete' }
   | { kind: 'change-rules' }
   | { kind: 'change-stocks' }
   | { kind: 'help' }
@@ -22,6 +24,8 @@ export type Intent =
 type Known = Pick<Stock, 'symbol' | 'name'>;
 
 const WORDS = {
+  close: /\b(close (it|this|the strategy)|stop trading|shut (it )?down|wind (it )?down|end (it|the strategy|trading))\b/,
+  deleteIt: /\b(delete|trash|get rid of|remove (it|this|the strategy))\b/,
   sell: /\b(sell|exit|liquidate|dump|cash out|close out)\b/,
   everything: /\b(everything|all of it|every stock|all (of )?(my|the) (stocks|holdings|positions))\b/,
   takeOut: /\b(withdraw|take (it |some |money )?(out|off)|remove)\b/,
@@ -100,6 +104,8 @@ export function understand(message: string, { held, listed }: { held: Known[]; l
   const anyNamed = stocksNamed(text, [...held, ...listed]);
   const outsider = anyNamed.find(({ stock }) => !heldNamed.includes(stock.symbol));
 
+  if (WORDS.close.test(text)) return { kind: 'close' };
+  if (WORDS.deleteIt.test(text)) return { kind: 'delete' };
   if (WORDS.changeStocks.test(text)) return { kind: 'change-stocks' };
   if (WORDS.changeRules.test(text) && !anyNamed.length) return { kind: 'change-rules' };
 

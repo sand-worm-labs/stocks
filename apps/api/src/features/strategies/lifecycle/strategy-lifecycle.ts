@@ -42,6 +42,9 @@ const MOST_ATTEMPTS = 3
 // A run that Sandworm does from here that has gone this long with no result is not coming: it is stopped, so the person can try again
 // instead of watching a card that never changes
 export const RESEARCH_DEADLINE_MS = 30 * 60 * 1000
+
+// How long a deleted strategy stays in the trash, where it can be put back, before it is deleted for good
+export const TRASH_DAYS = 30
 export const INTERRUPTED = "The research was interrupted when the server restarted. Try again."
 const TOO_LONG = "The research is taking much longer than it should. Try again."
 
@@ -129,7 +132,15 @@ export function createStrategyService({
   // A strategy that isn't theirs is not found, the same as one that doesn't exist
   async function owned(ownerId: string, id: string) {
     const record = await store.get(id)
-    if (!record || record.ownerId !== ownerId) throw new StrategyError("That strategy wasn't found", 404)
+    // What is in the trash is not a strategy any step can work on: it is put back first
+    if (!record || record.ownerId !== ownerId || record.deletedAt) throw new StrategyError("That strategy wasn't found", 404)
+    return record
+  }
+
+  // A strategy of theirs that is in the trash, for the steps that are about the trash
+  async function removed(ownerId: string, id: string) {
+    const record = await store.get(id)
+    if (!record || record.ownerId !== ownerId || !record.deletedAt) throw new StrategyError("That isn't in the trash", 404)
     return record
   }
 
@@ -181,6 +192,10 @@ export function createStrategyService({
     const parsed = researchResultSchema.safeParse(result)
     if (!parsed.success) throw new StrategyError("The research result is missing something or has something wrong in it", 422)
     if (!isSandwormLink(parsed.data.notebook.url)) throw new StrategyError("The notebook link has to lead to Sandworm", 422)
+    // A strategy is researched in one notebook: a step that points at another is a second notebook, which makes the report hard to follow
+    const { notebook, steps } = parsed.data
+    if (steps.some(({ url }) => url && url !== notebook.url))
+      throw new StrategyError("A strategy is researched in one notebook. Every step has to link to the same notebook as `notebook`, so put it all in that one", 422)
 
     // Progress is being written as the run goes, so a read can be out of date by the time this saves; it is read again and saved again
     return afresh(async () => {
@@ -194,6 +209,7 @@ export function createStrategyService({
   // which come later, so nothing is recorded for it here.
   async function paperStrategy(ownerId: string, id: string) {
     const record = await owned(ownerId, id)
+    if (record.status === "closed") throw new StrategyError("This strategy is closed", 409)
     if (record.status !== "live") throw new StrategyError("It isn't trading yet", 409)
     if (record.funding?.mode !== "paper")
       throw new StrategyError("This strategy trades from your wallet, and trades from it aren't available yet", 409)
@@ -265,6 +281,64 @@ export function createStrategyService({
       const chosen = symbols?.length ? symbols : held
       const { saved, lines } = await moveMoney(record, (priceOf) => saleLines(record, chosen, share, priceOf, now().toISOString()))
       return { record: saved, lines }
+    },
+
+    // Ends a trading strategy: everything it holds is sold at today's prices and the cash is taken out, so nothing is left in it. It is kept, to
+    // read, as a closed strategy; only a strategy with nothing in it can be deleted.
+    async close(ownerId: string, id: string) {
+      const record = await paperStrategy(ownerId, id)
+      const quotes = await prices()
+      const paid = new Map(record.holdings.map(({ symbol, entryPrice }) => [symbol, entryPrice]))
+      const priceOf = (symbol: string) => quotes[symbol] ?? paid.get(symbol)
+      try {
+        const at = now().toISOString()
+        const { holdings } = positionsOf(ledgerOf(record))
+        const sales = holdings.length ? saleLines(record, holdings.map(({ symbol }) => symbol), 1, priceOf, at) : []
+        const { cash } = positionsOf(ledgerOf(withLines(record, sales)))
+        const takeOut = cash > 0 ? [withdrawLine(withLines(record, sales), cash, at)] : []
+        const lines = [...sales, ...takeOut]
+        const saved = await save({ ...withLines(record, lines), status: "closed", closedAt: at, events: happened(record, "closed") })
+        return { record: saved, lines, takenOut: cash }
+      } catch (error) {
+        if (error instanceof LedgerError) throw new StrategyError(error.message, 400)
+        throw error
+      }
+    },
+
+    // Puts a strategy in the trash, where it is kept for TRASH_DAYS and can be put back. One that is still trading holds money, so it is closed
+    // first: nothing with money in it is ever deleted.
+    async remove(ownerId: string, id: string) {
+      const record = await owned(ownerId, id)
+      if (record.status === "live") {
+        const { holdings, cash } = positionsOf(ledgerOf(record))
+        const stocks = `${holdings.length} stock${holdings.length === 1 ? "" : "s"}`
+        throw new StrategyError(`It is still trading: it holds ${stocks} and ${cash.toFixed(2)} USDC in cash. Close it first, which sells everything and takes the cash out`, 409)
+      }
+      return save({ ...record, deletedAt: now().toISOString() })
+    },
+
+    async restore(ownerId: string, id: string) {
+      const record = await removed(ownerId, id)
+      return save({ ...record, deletedAt: undefined })
+    },
+
+    async listRemoved(ownerId: string) {
+      return store.listRemoved(ownerId)
+    },
+
+    // Deletes what is in the trash for good, with its chat, activity and ledger. The person has to give its name, so it can't be done by a slip.
+    async purge(ownerId: string, id: string, confirmName: string) {
+      const record = await removed(ownerId, id)
+      if (confirmName.trim() !== record.name) throw new StrategyError("Type the strategy's name to delete it for good", 400)
+      await store.purge(id)
+    },
+
+    // What has been in the trash longer than TRASH_DAYS is deleted for good. Says how many.
+    async purgeExpired() {
+      const cutoff = new Date(now().getTime() - TRASH_DAYS * 24 * 60 * 60 * 1000)
+      const expired = await store.removedBefore(cutoff)
+      for (const { id } of expired) await store.purge(id)
+      return expired.length
     },
 
     async create(ownerId: string, brief: string) {

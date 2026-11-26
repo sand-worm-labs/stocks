@@ -38,6 +38,19 @@ export function standingReply({ record, stocks, rules }: Context): Reply {
   return reply(say(text), holdingsBlock(standing), ...warnings);
 }
 
+// What a closed strategy came to: what was put in and what was taken out, fees counted
+export function closedReply({ record }: Context): Reply {
+  const lines = record.ledger ?? [];
+  const putIn = lines.filter(({ kind }) => kind === 'deposit').reduce((sum, { usdc: amount }) => sum + amount, 0);
+  const takenOut = lines.filter(({ kind }) => kind === 'withdraw').reduce((sum, { usdc: amount }) => sum - amount, 0);
+  const when = record.closedAt ? ` on ${new Date(record.closedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}` : '';
+  const result = putIn > 0 ? `, ${movement(takenOut / putIn - 1)} on what was put in` : '';
+  return reply(
+    say(`${record.name} was closed${when}. You put in ${usdc(putIn)} and took out ${usdc(takenOut)}${result}, fees counted. It holds nothing now.`),
+    links(link('Open the results', 'report', record.id), link('Activity', 'activity', record.id)),
+  );
+}
+
 export function holdingsReply({ record, stocks }: Context, symbols: string[]): Reply {
   const standing = standingOf(record, stocks);
   const named = standing.positions.filter(({ symbol }) => symbols.includes(symbol));

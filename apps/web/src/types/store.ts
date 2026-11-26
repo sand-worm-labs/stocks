@@ -58,6 +58,7 @@ export type StrategyRecord = {
   name: string
   brief: string
   status: PortfolioStatus
+  closedAt?: string
   stage: DraftStage
   rules: RuleSpec[]
   strategy: Strategy

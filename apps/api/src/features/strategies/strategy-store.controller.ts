@@ -20,7 +20,8 @@ export class StrategyStoreController {
   @Get(':id')
   async get(@Param('id') id: string) {
     const record = await this.strategies.get(id);
-    if (!record) throw new NotFoundException('That strategy was not found');
+    // What is in the trash is gone as far as the web app's pages go, including a link someone was given to its report
+    if (!record || record.deletedAt) throw new NotFoundException('That strategy was not found');
     return record;
   }
 

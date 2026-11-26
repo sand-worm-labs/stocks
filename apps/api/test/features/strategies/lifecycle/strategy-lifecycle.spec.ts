@@ -10,7 +10,7 @@ import { StoreConflict } from "@/features/strategies/lifecycle/store-conflict"
 import { MemoryStore as FileStore } from "../../../support/memory-store"
 
 import { toPortfolio } from "@/features/strategies/lifecycle/to-portfolio"
-import { createStrategyService, fill, INTERRUPTED, RESEARCH_DEADLINE_MS, RESEARCH_MS, StrategyConflict, StrategyError, type StrategyService } from "@/features/strategies/lifecycle/strategy-lifecycle"
+import { createStrategyService, fill, INTERRUPTED, RESEARCH_DEADLINE_MS, RESEARCH_MS, TRASH_DAYS, StrategyConflict, StrategyError, type StrategyService } from "@/features/strategies/lifecycle/strategy-lifecycle"
 import type { AgentStep } from "@/features/research/types/agent-step.types"
 import type { StrategyRecord, StrategyStore } from "@/features/strategies/types/strategy-record"
 
@@ -258,6 +258,27 @@ describe("research that is waited on", () => {
       random: () => `w${++counter}`,
     })
 
+  it("keeps a research in one notebook: a step that links to another notebook is refused, and the blocks of the parts are kept", async () => {
+    const agent = waiting()
+    const draft = await agent.create("u1", BRIEF)
+    await agent.confirmRules("u1", draft.id, { submittedByAgent: true })
+    const other = "https://app.sandwormlab.xyz/workspace/w/documents/other/notebook/edit"
+
+    const two = { ...result, steps: [{ label: "Backtest", url: result.notebook.url }, { label: "Risk", url: other }] }
+    await expect(agent.completeResearch("u1", draft.id, two)).rejects.toThrow(/researched in one notebook/)
+
+    const one = { ...result, steps: [{ label: "Backtest", url: result.notebook.url }], blocks: { answer: "blk-1", risk: "blk-6" } }
+    const done = await agent.completeResearch("u1", draft.id, one)
+    expect(done.research?.result?.blocks).toEqual({ answer: "blk-1", risk: "blk-6" })
+  })
+
+  it("refuses a block for a part the report doesn't have", async () => {
+    const agent = waiting()
+    const draft = await agent.create("u1", BRIEF)
+    await agent.confirmRules("u1", draft.id, { submittedByAgent: true })
+    await expect(agent.completeResearch("u1", draft.id, { ...result, blocks: { nonsense: "b" } })).rejects.toThrow(/missing something or has something wrong/)
+  })
+
   it("is not ended by the clock, only by its result", async () => {
     const agent = waiting()
     const draft = await agent.create("u1", BRIEF)
@@ -432,6 +453,169 @@ describe("research that never comes back", () => {
   })
 })
 
+describe("closing, deleting and renaming a strategy", () => {
+  const prices = async () => ({ NVDAc: 100, TSLAc: 200, AMZNc: 50, GOOGLc: 150, AAPLc: 120, MSFTc: 300 })
+  const make = () =>
+    createStrategyService({ store, pipeline: createLocalPipeline(reportMockData[1]), prices, market: async () => market, now: () => clock, random: () => `x${++counter}` })
+
+  const trading = async () => {
+    const steps = make()
+    const draft = await steps.create("u1", BRIEF)
+    await steps.confirmRules("u1", draft.id)
+    await steps.finishResearch("u1", draft.id)
+    await steps.goLive("u1", draft.id, 400, { mode: "paper" })
+    return { steps, id: draft.id }
+  }
+  const draft = async () => {
+    const steps = make()
+    return { steps, id: (await steps.create("u1", BRIEF)).id }
+  }
+
+  describe("closing", () => {
+    it("sells everything at today's prices and takes the cash out, so nothing is left in it", async () => {
+      const { steps, id } = await trading()
+      later(60_000)
+      const { record, lines, takenOut } = await steps.close("u1", id)
+
+      expect(lines.filter(({ kind }) => kind === "sell").length).toBeGreaterThan(0)
+      expect(lines.at(-1)).toMatchObject({ kind: "withdraw" })
+      expect(takenOut).toBeGreaterThan(0)
+      expect(record).toMatchObject({ status: "closed", holdings: [], cash: 0, closedAt: clock.toISOString() })
+      expect(record.events.at(-1)).toMatchObject({ kind: "closed" })
+      // What it did is kept: the ledger only ever grows
+      expect(record.ledger!.length).toBeGreaterThan(lines.length)
+    })
+
+    it("is done once: a closed strategy takes no more money and can't be closed again", async () => {
+      const { steps, id } = await trading()
+      await steps.close("u1", id)
+
+      await expect(steps.close("u1", id)).rejects.toThrow(/is closed/)
+      await expect(steps.addFunds("u1", id, 50)).rejects.toThrow(/is closed/)
+      await expect(steps.sell("u1", id, { share: 1 })).rejects.toThrow(/is closed/)
+    })
+
+    it("is only for a strategy that is trading", async () => {
+      const { steps, id } = await draft()
+      await expect(steps.close("u1", id)).rejects.toThrow(/isn't trading yet/)
+    })
+
+    it("is the owner's alone", async () => {
+      const { steps, id } = await trading()
+      await expect(steps.close("u2", id)).rejects.toThrow(/wasn't found/)
+    })
+  })
+
+  describe("deleting", () => {
+    it("puts a strategy with no money in the trash, out of the list but kept", async () => {
+      const { steps, id } = await draft()
+      later(1000)
+      const removed = await steps.remove("u1", id)
+
+      expect(removed.deletedAt).toBe(clock.toISOString())
+      expect((await steps.list("u1")).map(({ id: each }) => each)).not.toContain(id)
+      expect((await steps.listRemoved("u1")).map(({ id: each }) => each)).toEqual([id])
+    })
+
+    it("refuses a strategy that is trading, and says what it holds and what to do", async () => {
+      const { steps, id } = await trading()
+      await expect(steps.remove("u1", id)).rejects.toThrow(/still trading: it holds \d+ stocks? and [\d.]+ USDC in cash\. Close it first/)
+    })
+
+    it("lets a closed strategy go to the trash, and keeps its record of what it did", async () => {
+      const { steps, id } = await trading()
+      await steps.close("u1", id)
+      await steps.remove("u1", id)
+      const [kept] = await steps.listRemoved("u1")
+      expect(kept).toMatchObject({ id, status: "closed" })
+      expect(kept!.ledger!.length).toBeGreaterThan(3)
+    })
+
+    it("is not a strategy any step can work on while it is in the trash", async () => {
+      const { steps, id } = await draft()
+      await steps.remove("u1", id)
+      await expect(steps.owned("u1", id)).rejects.toThrow(/wasn't found/)
+      await expect(steps.rename("u1", id, "New name")).rejects.toThrow(/wasn't found/)
+      await expect(steps.confirmRules("u1", id)).rejects.toThrow(/wasn't found/)
+    })
+
+    it("can be put back, exactly as it was", async () => {
+      const { steps, id } = await draft()
+      const before = await steps.owned("u1", id)
+      await steps.remove("u1", id)
+      const back = await steps.restore("u1", id)
+
+      expect(back.deletedAt).toBeUndefined()
+      expect(back).toMatchObject({ name: before.name, brief: before.brief, rules: before.rules })
+      expect((await steps.list("u1")).map(({ id: each }) => each)).toContain(id)
+    })
+
+    it("only puts back what is in the trash, and only for its owner", async () => {
+      const { steps, id } = await draft()
+      await expect(steps.restore("u1", id)).rejects.toThrow(/isn't in the trash/)
+      await steps.remove("u1", id)
+      await expect(steps.restore("u2", id)).rejects.toThrow(/isn't in the trash/)
+    })
+  })
+
+  describe("deleting for good", () => {
+    it("removes it, with its record, when the person gives its name", async () => {
+      const { steps, id } = await draft()
+      const { name } = await steps.owned("u1", id)
+      await steps.remove("u1", id)
+
+      await steps.purge("u1", id, `  ${name} `)
+      expect(await store.get(id)).toBeUndefined()
+      expect(await steps.listRemoved("u1")).toEqual([])
+    })
+
+    it("needs the right name, so it can't be done by a slip", async () => {
+      const { steps, id } = await draft()
+      await steps.remove("u1", id)
+      await expect(steps.purge("u1", id, "wrong")).rejects.toThrow(/Type the strategy's name/)
+      expect(await store.get(id)).toBeDefined()
+    })
+
+    it("is only for what is already in the trash", async () => {
+      const { steps, id } = await draft()
+      const { name } = await steps.owned("u1", id)
+      await expect(steps.purge("u1", id, name)).rejects.toThrow(/isn't in the trash/)
+    })
+
+    it("happens by itself once a strategy has been in the trash for a month, and never sooner", async () => {
+      const { steps, id } = await draft()
+      await steps.remove("u1", id)
+      const other = await draft()
+      await other.steps.remove("u1", other.id)
+
+      later((TRASH_DAYS - 1) * 24 * 3600 * 1000)
+      expect(await steps.purgeExpired()).toBe(0)
+      later(2 * 24 * 3600 * 1000)
+      expect(await steps.purgeExpired()).toBe(2)
+      expect(await store.get(id)).toBeUndefined()
+    })
+  })
+
+  describe("renaming", () => {
+    it("is allowed at every stage: a draft, a trading strategy and a closed one", async () => {
+      const first = await draft()
+      expect((await first.steps.rename("u1", first.id, "  My   draft ")).name).toBe("My draft")
+
+      const { steps, id } = await trading()
+      expect((await steps.rename("u1", id, "Big tech, steady")).name).toBe("Big tech, steady")
+      await steps.close("u1", id)
+      expect((await steps.rename("u1", id, "Big tech, closed")).name).toBe("Big tech, closed")
+    })
+
+    it("changes only the name: the id, the rules and the money stay as they were", async () => {
+      const { steps, id } = await trading()
+      const before = await steps.owned("u1", id)
+      const after = await steps.rename("u1", id, "Another name")
+      expect(after).toMatchObject({ id, rules: before.rules, holdings: before.holdings, cash: before.cash })
+    })
+  })
+})
+
 describe("moving a live strategy's money", () => {
   const prices = async () => ({ NVDAc: 100, TSLAc: 200, AMZNc: 50, GOOGLc: 150, AAPLc: 120, MSFTc: 300 })
   const trading = async () => {
@@ -505,6 +689,9 @@ function withRivals(inner: StrategyStore, rivals: () => number) {
   const racing: StrategyStore = {
     list: (ownerId) => inner.list(ownerId),
     get: (id) => inner.get(id),
+    listRemoved: (ownerId) => inner.listRemoved(ownerId),
+    removedBefore: (cutoff) => inner.removedBefore(cutoff),
+    purge: (id) => inner.purge(id),
     async save(record: StrategyRecord) {
       saves.count += 1
       if (rivalsLeft > 0 && record.id) {
@@ -625,6 +812,9 @@ describe("a strategy that changes while a step is being made", () => {
     const watching: StrategyStore = {
       list: (ownerId) => store.list(ownerId),
       get: (storeId) => store.get(storeId),
+      listRemoved: (ownerId) => store.listRemoved(ownerId),
+      removedBefore: (cutoff) => store.removedBefore(cutoff),
+      purge: (storeId) => store.purge(storeId),
       async save(record) {
         if (record.stage === "ready") keptAfterBehind = (await store.get(id))?.research?.progress
         return store.save(record)

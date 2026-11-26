@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { DataSource, EntityManager, In } from 'typeorm';
+import { DataSource, EntityManager, In, IsNull, LessThan, Not } from 'typeorm';
 
 import { Profile } from '@/features/accounts/entities/profile.entity';
 import { Activity } from '@/features/activity/entities/activity.entity';
@@ -29,12 +29,37 @@ function group<T>(items: T[], key: (item: T) => string) {
 export class StrategiesService {
   constructor(private readonly dataSource: DataSource) {}
 
+  /// What this person has, newest first. What is in the trash is not here: it is `listRemoved`.
   async list(ownerId: string) {
     const rows = await this.dataSource.manager.find(Strategy, {
-      where: { ownerId },
+      where: { ownerId, deletedAt: IsNull() },
       order: { createdAt: 'DESC' },
     });
     return this.assemble(rows);
+  }
+
+  /// What this person has put in the trash, the most recently deleted first
+  async listRemoved(ownerId: string) {
+    const rows = await this.dataSource.manager.find(Strategy, {
+      where: { ownerId, deletedAt: Not(IsNull()) },
+      order: { deletedAt: 'DESC' },
+    });
+    return this.assemble(rows);
+  }
+
+  /// The ids of what has been in the trash since before `cutoff`
+  async removedBefore(cutoff: Date): Promise<{ id: string; ownerId: string }[]> {
+    const rows = await this.dataSource.manager.find(Strategy, { where: { deletedAt: LessThan(cutoff) }, select: { id: true, ownerId: true } });
+    return rows.map(({ id, ownerId }) => ({ id, ownerId }));
+  }
+
+  /// Deletes a strategy for good, with everything that belongs to it: its versions, research, ledger, approval and chat go with it, and so
+  /// does its activity, which would otherwise be left in the person's list with nothing to open.
+  async purge(id: string) {
+    await this.dataSource.transaction(async (tx) => {
+      await tx.delete(Activity, { strategyId: id });
+      await tx.delete(Strategy, { id });
+    });
   }
 
   async get(id: string) {
@@ -163,6 +188,8 @@ export class StrategiesService {
         createdAt: iso(row.createdAt),
         updatedAt: iso(row.updatedAt),
         startedAt: row.startedAt ? iso(row.startedAt) : undefined,
+        closedAt: row.closedAt ? iso(row.closedAt) : undefined,
+        deletedAt: row.deletedAt ? iso(row.deletedAt) : undefined,
       } as StrategyRecord;
     });
   }
@@ -193,6 +220,8 @@ async function saveStrategy(tx: EntityManager, record: StrategyRecord, revision:
       createdAt: new Date(record.createdAt),
       updatedAt: new Date(record.updatedAt),
       startedAt: record.startedAt ? new Date(record.startedAt) : null,
+      closedAt: record.closedAt ? new Date(record.closedAt) : null,
+      deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
     },
     ['id'],
   );
@@ -245,7 +274,9 @@ async function saveResearch(tx: EntityManager, record: StrategyRecord) {
 // The first time a strategy is live, its starting cash and stocks are written to the ledger. After that the ledger only grows: lines the
 // record has past those already kept are added, and none already kept is ever changed.
 async function openLedger(tx: EntityManager, record: StrategyRecord) {
-  if (record.status !== 'live' || !record.funding) return;
+  // A closed strategy has still done what it did: the sales that closed it are part of its ledger too
+  const hasTraded = record.status === 'live' || record.status === 'closed';
+  if (!hasTraded || !record.funding) return;
 
   const kept = await tx.countBy(LedgerEntry, { strategyId: record.id });
   if (kept === 0) {

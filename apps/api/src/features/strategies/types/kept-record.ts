@@ -10,7 +10,7 @@ export type Holding = {
   value: number;
 };
 
-export type EventKind = 'created' | 'researching' | 'ready' | 'live';
+export type EventKind = 'created' | 'researching' | 'ready' | 'live' | 'closed';
 
 export type StrategyRecord = {
   id: string;
@@ -57,4 +57,6 @@ export type StrategyRecord = {
   createdAt: string;
   updatedAt: string;
   startedAt?: string;
+  closedAt?: string;
+  deletedAt?: string;
 };

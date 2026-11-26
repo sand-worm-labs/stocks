@@ -13,6 +13,7 @@ export type Api = {
   post(path: string, body?: unknown): Promise<unknown>
   patch(path: string, body: unknown): Promise<unknown>
   put(path: string, body: unknown): Promise<unknown>
+  delete(path: string): Promise<unknown>
 }
 
 // The Sandworm Stocks app, called as the agent's person. The agent's own token goes on to the app untouched: the app decides who it is for
@@ -40,5 +41,6 @@ export function createApi(baseUrl: string, token: string, fetchImpl: typeof fetc
     post: (path, body) => call("POST", path, body ?? {}),
     patch: (path, body) => call("PATCH", path, body),
     put: (path, body) => call("PUT", path, body),
+    delete: (path) => call("DELETE", path),
   }
 }

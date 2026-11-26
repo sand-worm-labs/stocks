@@ -4,6 +4,7 @@ export type ActivityKind =
   | "researching"
   | "ready"
   | "started"
+  | "closed"
   | "checked"
   | "locked"
   | "report"

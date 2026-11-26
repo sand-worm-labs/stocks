@@ -9,6 +9,8 @@ export type Portfolio = {
   name: string
   brief: string
   status: PortfolioStatus
+  // When it was closed, for a strategy that was
+  closedAt?: string
   stage?: DraftStage
   createdAt: string
   holdings: Holding[]

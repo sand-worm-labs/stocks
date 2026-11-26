@@ -8,16 +8,17 @@ import { PortfolioHeroLive } from "@/components/PortfolioDetail/PortfolioHeroLiv
 import { PortfolioShell } from "@/components/PortfolioDetail/PortfolioShell"
 import { RecentActivity } from "@/components/PortfolioDetail/RecentActivity"
 import { ValueCard } from "@/components/PortfolioDetail/ValueCard"
+import { ClosedNotice } from "@/components/Strategy/ClosedNotice"
 import { DraftWorkspace } from "@/components/Workspace/DraftWorkspace"
 import { getActivity } from "@/lib/activity/source"
 import { getCantMeetScript } from "@/lib/agent/source"
 import { getBenchmarks } from "@/lib/benchmarks/source"
+import { stocksNamedIn } from "@/lib/markets/categories"
 import { getCategories, getMarketSummary, getStocks } from "@/lib/markets/source"
 import { getHeldAddresses } from "@/lib/portfolios/addresses"
 import { getChartData } from "@/lib/portfolios/chart"
 import { getPortfolio } from "@/lib/portfolios/source"
 import { maxWeightOf } from "@/lib/rules/readings"
-import { stocksNamedIn } from "@/lib/markets/categories"
 import { getRules } from "@/lib/rules/source"
 import { getSession } from "@/lib/session/source"
 import { getStrategy } from "@/lib/strategy/source"
@@ -48,6 +49,16 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         summary={summary}
         script={script}
       />
+    )
+  }
+
+  if (portfolio.status === "closed") {
+    const [session, activity] = await Promise.all([getSession(), getActivity(id)])
+    return (
+      <PortfolioShell portfolio={portfolio} current="overview">
+        <ClosedNotice id={id} closedAt={portfolio.closedAt} />
+        <RecentActivity portfolioId={id} activity={activity} now={session.now} />
+      </PortfolioShell>
     )
   }
 

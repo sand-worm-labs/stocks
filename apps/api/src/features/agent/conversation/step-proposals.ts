@@ -110,6 +110,27 @@ export function sellReply(context: Context, { symbols, named, share, isEverythin
   }
 }
 
+// Closing: everything sold at today's prices and the cash taken out, all in one step the person confirms
+export function closeReply(context: Context): Reply {
+  const { record, stocks, now } = context;
+  const { positions, cash } = standingOf(record, stocks);
+  try {
+    const lines = positions.length ? saleLines(record, positions.map(({ symbol }) => symbol), 1, pricer(context), now.toISOString()) : [];
+    const rows: Fact[] = lines.map(({ symbol, usdc: received }) => ({
+      label: positions.find((position) => position.symbol === symbol)?.name ?? symbol ?? '',
+      term: `sell all of ${symbol}`,
+      value: usdc(received),
+    }));
+    const fees = lines.reduce((sum, { fee = 0 }) => sum + fee, 0);
+    const takenOut = cash + lines.reduce((sum, { usdc: received }) => sum + received, 0);
+    rows.push({ label: 'Fees', value: usdc(fees) }, { label: 'You take out', value: usdc(takenOut) });
+    return propose('This sells everything at today\'s prices and takes the cash out. The strategy is then closed: it is kept to read, and can be deleted.', 'Close strategy', rows, { kind: 'close' });
+  } catch (error) {
+    if (error instanceof LedgerError) return reply(note("Can't close it", error.message, 'warning'));
+    throw error;
+  }
+}
+
 function ruleCapping({ rules }: Context) {
   return rules.rules.find(({ setting }) => setting?.type === 'max-weight');
 }

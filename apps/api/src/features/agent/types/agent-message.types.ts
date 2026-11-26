@@ -24,7 +24,9 @@ export type AgentBlock =
 export type ProposedStep =
   | { kind: 'add-funds'; amount: number }
   | { kind: 'take-out-cash'; amount: number }
-  | { kind: 'sell'; symbols?: string[]; share: number };
+  | { kind: 'sell'; symbols?: string[]; share: number }
+  // Ends the strategy: everything sold and the cash taken out
+  | { kind: 'close' };
 
 // A step proposed in a message, and what became of it. It is carried out once, and only after the person confirms.
 export type Proposal = { step: ProposedStep; title: string; rows: Fact[]; confirmLabel: string; status: ProposalStatus };

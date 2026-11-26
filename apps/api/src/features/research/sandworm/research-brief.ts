@@ -46,7 +46,7 @@ export function briefMarkdown(record: StrategyRecord, inputs: ResearchInputs) {
 
 // The first message of the chat, which has to be short. It points at the brief and says what to leave alone.
 export const askForResearch = (name: string) =>
-  `Do the research for "${name}" in this notebook. Read the Brief cell first. Then write a short summary in the first cell, build the backtest and the risk check below it as python cells that read DATA from the Prices and plan cell, run them, and make them print the lines the Brief asks for. Leave the Brief and the Prices and plan cells as they are.`
+  `Do the research for "${name}" in this notebook, and only in this one. Read the Brief cell first. Lay the notebook out as the Brief says: a "Start here" cell, then the numbered parts, each with a heading cell titled exactly as given, in that order. Build their python cells so they read DATA from the Prices and plan cell, run them, and make them print what the Brief asks for. Leave the Brief and the Prices and plan cells as they are.`
 
 export const askToFix = (problems: string[]) =>
   `The notebook isn't done: ${problems.join("; ")}. Fix the cells, run them again, and print those lines exactly as the Brief describes.`

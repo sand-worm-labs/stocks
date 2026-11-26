@@ -19,7 +19,7 @@ const url = process.env.TEST_DATABASE_URL;
   let mine: string;
   let theirs: string;
 
-  const call = (method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'OPTIONS', path: string, options: { body?: object | string; session?: string; headers?: Record<string, string> } = {}) =>
+  const call = (method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS', path: string, options: { body?: object | string; session?: string; headers?: Record<string, string> } = {}) =>
     app.inject({
       method,
       url: path,
@@ -111,7 +111,12 @@ const url = process.env.TEST_DATABASE_URL;
       const listed = await call('GET', '/strategies', { session: mine });
       expect(listed.json()).toEqual(expect.arrayContaining([expect.objectContaining({ id, stage: 'rules' })]));
       expect((await call('GET', `/strategies/${id}/rules`, { session: mine })).statusCode).toBe(200);
-      expect((await call('GET', `/strategies/${id}/brief`, { session: mine })).json()).toHaveProperty('report.kpis');
+      const brief = (await call('GET', `/strategies/${id}/brief`, { session: mine })).json();
+      expect(brief).toHaveProperty('report.kpis');
+      // The parts of the report, which the one notebook is laid out as: an agent is told them, numbered
+      expect(brief.report.outline.map((part: { title: string }) => part.title)).toEqual(expect.arrayContaining(['1 · The answer', '3 · Growth of 1 USDC', '9 · Sources and method']));
+      expect(brief.report.outline).toHaveLength(9);
+      expect(brief.report.instructions).toMatch(/One notebook for this strategy, and only one/);
 
       const renamed = await call('PATCH', `/strategies/${id}`, { session: mine, body: { name: 'Robots' } });
       expect(renamed.json()).toEqual({ name: 'Robots' });
@@ -194,6 +199,102 @@ const url = process.env.TEST_DATABASE_URL;
       const id = await create();
       const response = await call('POST', `/strategies/${id}/share`, { session: mine });
       expect(response.statusCode).toBe(409);
+    });
+  });
+
+  describe('managing a strategy: renaming, closing, the trash, and deleting for good', () => {
+    const trading = async () => {
+      const id = await create();
+      await call('POST', `/strategies/${id}/confirm`, { session: mine });
+      await call('POST', `/strategies/${id}/ready`, { session: mine });
+      await call('POST', `/strategies/${id}/trade`, { session: mine, body: { mode: 'paper', amount: 200 } });
+      return id;
+    };
+    const nameOf = async (id: string) => (await call('GET', `/strategies/${id}`, { session: mine })).json<{ name: string }>().name;
+    const ids = async (path: string) => (await call('GET', path, { session: mine })).json<{ id: string }[]>().map(({ id }) => id);
+
+    it('renames a strategy at any stage, even when it is trading', async () => {
+      const id = await trading();
+      expect((await call('PATCH', `/strategies/${id}`, { session: mine, body: { name: 'Steady big tech' } })).json()).toEqual({ name: 'Steady big tech' });
+      expect(await nameOf(id)).toBe('Steady big tech');
+      expect((await call('PATCH', `/strategies/${id}`, { session: mine, body: { name: '   ' } })).statusCode).toBe(400);
+    });
+
+    it('refuses to delete a strategy that holds money, and says to close it first', async () => {
+      const id = await trading();
+      const refused = await call('DELETE', `/strategies/${id}`, { session: mine });
+      expect(refused.statusCode).toBe(409);
+      expect(refused.json().error).toMatch(/still trading: it holds \d+ stocks? and .* USDC in cash\. Close it first/);
+      expect(await ids('/strategies')).toContain(id);
+    });
+
+    it('closes a trading strategy, selling everything and taking the cash out, and keeps it to read', async () => {
+      const id = await trading();
+      const closed = await call('POST', `/strategies/${id}/close`, { session: mine });
+      expect(closed.statusCode).toBe(200);
+      expect(closed.json()).toMatchObject({ status: 'closed', takenOut: expect.any(Number) });
+      expect(closed.json().takenOut).toBeGreaterThan(0);
+
+      const report = (await call('GET', `/strategies/${id}`, { session: mine })).json();
+      expect(report).toMatchObject({ status: 'closed', holdings: [], cash: 0 });
+      expect(ids('/strategies')).resolves.toContain(id);
+      expect((await call('GET', `/strategies/${id}/activity`, { session: mine })).json<{ kind: string }[]>().map(({ kind }) => kind)).toContain('closed');
+
+      // Nothing more can be put into or taken out of it
+      expect((await call('POST', `/strategies/${id}/funds`, { session: mine, body: { direction: 'add', amount: 10 } })).statusCode).toBe(409);
+      expect((await call('POST', `/strategies/${id}/close`, { session: mine })).statusCode).toBe(409);
+    });
+
+    it('puts a deleted strategy in the trash, with its chat, and puts it back as it was', async () => {
+      const id = await trading();
+      await call('POST', `/strategies/${id}/close`, { session: mine });
+      await call('POST', `/strategies/${id}/agent/messages`, { session: mine, body: { text: 'How did it do?' } });
+
+      const removed = await call('DELETE', `/strategies/${id}`, { session: mine });
+      expect(removed.statusCode).toBe(200);
+      expect(await ids('/strategies')).not.toContain(id);
+      const trash = (await call('GET', '/strategies/trash', { session: mine })).json<{ id: string; purgesAt: string }[]>();
+      expect(trash.map(({ id: each }) => each)).toContain(id);
+      expect(Date.parse(trash.find(({ id: each }) => each === id)!.purgesAt)).toBeGreaterThan(Date.now() + 29 * 24 * 3600 * 1000);
+
+      // While it is there nothing works on it, and the web app's server can't read it (so a shared link to its report stops working)
+      expect((await call('GET', `/strategies/${id}`, { session: mine })).statusCode).toBe(404);
+      expect((await call('GET', `/strategies/${id}/agent`, { session: mine })).statusCode).toBe(404);
+      expect((await call('GET', `/internal/strategies/${id}`, { headers: { authorization: 'Bearer service-key' } })).statusCode).toBe(404);
+
+      expect((await call('POST', `/strategies/${id}/restore`, { session: mine })).statusCode).toBe(200);
+      expect(await ids('/strategies')).toContain(id);
+      const thread = (await call('GET', `/strategies/${id}/agent`, { session: mine })).json<{ messages: unknown[] }>();
+      expect(thread.messages.length).toBeGreaterThan(3);
+    });
+
+    it("keeps one person's trash from another's", async () => {
+      const id = await create();
+      await call('DELETE', `/strategies/${id}`, { session: mine });
+      expect((await call('GET', '/strategies/trash', { session: theirs })).json()).toEqual([]);
+      expect((await call('POST', `/strategies/${id}/restore`, { session: theirs })).statusCode).toBe(404);
+      expect((await call('DELETE', `/strategies/${id}`, { session: theirs })).statusCode).toBe(404);
+    });
+
+    it('deletes for good only from the trash, only with the right name, and takes everything that belongs to it', async () => {
+      const id = await create();
+      const name = await nameOf(id);
+
+      // Not in the trash yet
+      expect((await call('POST', `/strategies/${id}/purge`, { session: mine, body: { confirmName: name } })).statusCode).toBe(404);
+      await call('DELETE', `/strategies/${id}`, { session: mine });
+
+      const wrong = await call('POST', `/strategies/${id}/purge`, { session: mine, body: { confirmName: 'not it' } });
+      expect(wrong.statusCode).toBe(400);
+      expect(wrong.json().error).toMatch(/Type the strategy's name/);
+      expect((await call('POST', `/strategies/${id}/purge`, { session: theirs, body: { confirmName: name } })).statusCode).toBe(404);
+
+      expect((await call('POST', `/strategies/${id}/purge`, { session: mine, body: { confirmName: name } })).statusCode).toBe(200);
+      expect((await call('GET', '/strategies/trash', { session: mine })).json<{ id: string }[]>().map(({ id: each }) => each)).not.toContain(id);
+      expect((await call('POST', `/strategies/${id}/restore`, { session: mine })).statusCode).toBe(404);
+      // Its activity went with it: nothing is left in the person's list to open
+      const activity = (await call('GET', '/activity', { session: mine })).json<{ portfolioId?: string }[]>();
+      expect(activity.some(({ portfolioId }) => portfolioId === id)).toBe(false);
     });
   });
 

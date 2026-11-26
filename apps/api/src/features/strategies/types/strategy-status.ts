@@ -1,6 +1,7 @@
 // What a strategy's status and stage can be, with the words the API uses in what it answers. The icons for them are the web app's, since they are only
 // for display.
-export type PortfolioStatus = "live" | "draft" | "unbuildable"
+// A strategy that was trading and has been closed: everything sold and the cash taken out. It is kept to read, and can be deleted.
+export type PortfolioStatus = "live" | "draft" | "unbuildable" | "closed"
 
 export const DRAFT_STAGE = {
   rules: { label: "Rules to confirm", detail: "Read the rules, then confirm them" },

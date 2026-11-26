@@ -3,7 +3,9 @@ import type { ReactNode } from "react"
 import { AgentWorkspace } from "@/components/Agent/AgentWorkspace"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { PortfolioBreadcrumb } from "@/components/Flow/PortfolioBreadcrumb"
+import { StrategyManage } from "@/components/Strategy/StrategyManage"
 import { getLiveScript } from "@/lib/agent/source"
+import { portfolioValue } from "@/lib/portfolios/portfolio"
 import { maxWeightOf } from "@/lib/rules/readings"
 import { getRules } from "@/lib/rules/source"
 import { getSession } from "@/lib/session/source"
@@ -37,8 +39,22 @@ export async function PortfolioShell({
           chain={chain}
           actions={
             <>
-              <AddFundsDialog portfolios={[portfolio]} cap={maxWeightOf(rules) ?? 1} />
-              <SellDialog portfolio={portfolio} pickable mode={mode} />
+              {portfolio.status === "live" && (
+                <>
+                  <AddFundsDialog portfolios={[portfolio]} cap={maxWeightOf(rules) ?? 1} />
+                  <SellDialog portfolio={portfolio} pickable mode={mode} />
+                </>
+              )}
+              {portfolio.own && (
+                <StrategyManage
+                  id={portfolio.id}
+                  name={portfolio.name}
+                  status={portfolio.status}
+                  stocks={portfolio.holdings.length}
+                  value={(portfolioValue(portfolio) ?? 0) - portfolio.cash}
+                  cash={portfolio.cash}
+                />
+              )}
             </>
           }
         />

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, OnApplicationBootstrap, UnprocessableEntityException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, OnApplicationBootstrap, OnApplicationShutdown, UnprocessableEntityException } from '@nestjs/common';
 
 import { reportMockData } from '@/_mockdata/reports';
 import { StocksService } from '@/features/market/stocks.service';
@@ -31,6 +31,12 @@ function storeOver(strategies: StrategiesService): StrategyStore {
       const kept = await strategies.get(id);
       return kept && read(kept);
     },
+    async listRemoved(ownerId) {
+      const kept = await strategies.listRemoved(ownerId);
+      return kept.map(read);
+    },
+    removedBefore: (cutoff) => strategies.removedBefore(cutoff),
+    purge: (id) => strategies.purge(id),
     async save(record) {
       try {
         return await strategies.save(record as unknown as KeptRecord);
@@ -57,10 +63,11 @@ function pricesFrom(yahoo: YahooService): GetDailyPrices {
 
 // The steps a strategy goes through, joined to the database, the market and whoever does the research
 @Injectable()
-export class StrategyEngine implements OnApplicationBootstrap {
+export class StrategyEngine implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly logger = new Logger(StrategyEngine.name);
   readonly store: StrategyStore;
   readonly steps: StrategyService;
+  private trashTimer?: NodeJS.Timeout;
 
   constructor(
     private readonly strategies: StrategiesService,
@@ -80,7 +87,15 @@ export class StrategyEngine implements OnApplicationBootstrap {
 
   /// Research that Sandworm does from here runs inside this process, so the ones still marked as going when it starts were stopped by the last
   /// restart. They are said to have been interrupted, which gives the person a way to try again, instead of a card that never changes.
+  onApplicationShutdown() {
+    if (this.trashTimer) clearInterval(this.trashTimer);
+  }
+
   async onApplicationBootstrap() {
+    await this.emptyTrash();
+    // A server that stays up for days still empties it
+    this.trashTimer = setInterval(() => void this.emptyTrash(), 6 * 60 * 60 * 1000);
+    this.trashTimer.unref();
     const left = await this.strategies.sandwormRunsInProgress().catch((error: unknown) => {
       this.logger.error(error);
       return [];
@@ -89,6 +104,16 @@ export class StrategyEngine implements OnApplicationBootstrap {
       await this.steps.interruptRun(ownerId, id).catch((error: unknown) => this.logger.error(error));
     }
     if (left.length) this.logger.warn(`${left.length} research run(s) were interrupted by the restart`);
+  }
+
+  /// Deletes for good what has been in the trash for a month
+  private async emptyTrash() {
+    try {
+      const count = await this.steps.purgeExpired();
+      if (count) this.logger.log(`${count} strategies were deleted for good after a month in the trash`);
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 
   /// Starts a waiting run's work and returns at once: it takes minutes, and what goes wrong is kept on the run for the person to see

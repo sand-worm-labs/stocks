@@ -4,6 +4,7 @@ import { researchResultSchema } from "@/features/research/research-result"
 
 import { createSandwormClient, SandwormError } from "@/infrastructure/sandworm/sandworm.client"
 import { researchNotebook, RESULT_MARKER } from "@/features/research/sandworm/notebooks"
+import { REPORT_SECTIONS, sectionTitle } from "@/features/research/report-outline"
 import { createSandwormProducer, inputsFor, limitsOf, type TemplateClient } from "@/features/research/sandworm/template-producer"
 import type { StrategyRecord } from "@/features/strategies/types/strategy-record"
 
@@ -42,9 +43,13 @@ theme = types.ModuleType("sandworm_theme"); theme.chart = lambda *a, **k: None
 sys.modules.update({"plotly": plotly, "plotly.graph_objects": go, "sandworm_theme": theme})
 `
 
-function runPython(plan: ReturnType<typeof researchNotebook>) {
+function printedBy(plan: ReturnType<typeof researchNotebook>) {
   const code = [STUBS, ...plan.cells.filter(({ type }) => type === "python").map(({ content }) => content)].join("\n")
   return execFileSync("python3", ["-I", "-c", code], { encoding: "utf8" })
+}
+
+function runPython(plan: ReturnType<typeof researchNotebook>) {
+  return printedBy(plan)
     .split("\n")
     .filter((line) => line.startsWith(RESULT_MARKER))
     .map((line) => JSON.parse(line.slice(RESULT_MARKER.length)) as Record<string, unknown> & { kind: string })
@@ -113,7 +118,7 @@ describeWithPython("the notebooks' own test, run in python", () => {
   it("prints a backtest and a risk result that add up", async () => {
     const { inputs } = await inputsFor(record, getPrices)
     // One notebook, run from top to bottom in one go as Sandworm runs it: the backtest and its chart, then the risk and its chart
-    const [backtest, growth, risk, drawdown] = runPython(researchNotebook(inputs))
+    const [backtest, growth, drawdown, risk] = runPython(researchNotebook(inputs))
 
     expect(backtest).toMatchObject({ kind: "backtest", stops: 0 })
     // Both stocks rise faster than the benchmark here, so the strategy beats it, and it never falls far from a peak
@@ -133,11 +138,41 @@ describeWithPython("the notebooks' own test, run in python", () => {
     expect(shares.reduce((sum, share) => sum + share, 0)).toBeCloseTo(1, 1)
   })
 
+  it("reads as the report does: one notebook with its parts numbered and named as the report's are, each with its numbers printed in words", async () => {
+    const { inputs } = await inputsFor(record, getPrices)
+    const plan = researchNotebook(inputs, { idea: "Grow 500 USDC in two stocks", rules: ["Max 50% in any one stock"], notes: ["Nothing on Base matches oil."], maxShare: 0.5, stocks: [{ symbol: "NVDAc", liquidity: 900000, impact: 0.002 }] })
+
+    // The first cell says what the notebook is, what was asked and what is in it
+    const start = plan.cells[0]!
+    expect(start).toMatchObject({ type: "markdown", title: "Start here" })
+    expect(start.content).toContain("Grow 500 USDC in two stocks")
+    expect(start.content).toContain("Max 50% in any one stock")
+    expect(start.content).toContain("Nothing on Base matches oil.")
+    for (const { id } of REPORT_SECTIONS) expect(start.content).toContain(sectionTitle(id))
+
+    // Each part has a heading cell with its number and name, in the report's order, and the plan says where each starts
+    const headings = plan.cells.filter(({ type, title }) => type === "markdown" && /^\d · /.test(title))
+    expect(headings.map(({ title }) => title)).toEqual(REPORT_SECTIONS.map(({ id }) => sectionTitle(id)))
+    for (const { id } of REPORT_SECTIONS) expect(plan.cells[plan.sections[id]!]?.title).toBe(sectionTitle(id))
+
+    // The working is written once: the test's own code isn't repeated in each part
+    expect(plan.cells.filter(({ content }) => content.includes("def simulate")).length).toBe(1)
+
+    // What it prints is for a person to read, beside the lines Stocks reads
+    const text = printedBy(plan)
+    expect(text).toMatch(/Over \d+(\.\d+)? years it grew/)
+    expect(text).toMatch(/Return a year\s+[+-]\d/)
+    expect(text).toMatch(/Your cap is 50% in one stock/)
+    expect(text).toMatch(/The worst month was/)
+    expect(text).toMatch(/NVDAc\s+900,000/)
+    expect(text).toMatch(/Its own return a year/)
+  })
+
   it("sells everything when the portfolio stop is hit, and waits before buying again", async () => {
     const { inputs } = await inputsFor(record, getPrices)
     // Prices that halve on day 100 and then stay flat
     const crash = Object.fromEntries(Object.entries(inputs.closes).map(([ticker, series]) => [ticker, series.map((price, i) => (i >= 100 && ticker !== "SPY" ? price / 2 : price))]))
-    const [, , risk] = runPython(researchNotebook({ ...inputs, closes: crash }))
+    const [, , , risk] = runPython(researchNotebook({ ...inputs, closes: crash }))
     expect(risk).toMatchObject({ kind: "risk", stops: 1 })
   })
 })
@@ -178,6 +213,9 @@ describe("the Sandworm producer", () => {
 
     expect(researchResultSchema.safeParse(result).success).toBe(true)
     expect(ran).toEqual(["n1"])
+    // Each part of the report names the block of the one notebook it is built from, in the report's own order
+    expect(Object.keys(result.blocks ?? {})).toEqual(REPORT_SECTIONS.map(({ id }) => id))
+    expect(result.blocks?.answer).toMatch(/^c1-\d+$/)
     expect(result.isExample).toBe(false)
     expect(result.notebook.title).toContain("Research")
     // Both parts of the one notebook are linked from their steps

@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { SECTION_IDS } from "./outline"
+
 // What research hands back, whoever did it (Sandworm's agent, an agent driving Sandworm from outside, or the stand-in). It is small on
 // purpose: a verdict, a few numbers, a couple of charts and the one notebook where the work can be opened. The full analysis lives in that
 // notebook: a strategy is researched in one.
@@ -58,6 +60,8 @@ export const researchResultSchema = z.object({
   notes: z.array(text(300)).max(8).default([]),
   // The one notebook all the research is in, with its summary at the top
   notebook: notebookLinkSchema,
+  // The block of that notebook each part of the report is built from, by the part's id: what a link from that part of the report opens
+  blocks: z.record(z.enum(SECTION_IDS), z.string().min(1).max(100)).optional(),
   // Where the numbers came from, and as of when
   dataNote: text(200).optional(),
   // True when the numbers are made up for a test, so the page can say so

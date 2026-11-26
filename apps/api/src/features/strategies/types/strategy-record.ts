@@ -20,7 +20,7 @@ export type Funding = {
 
 type Approval = { message: string; signature: string; balance: number; expiresAt: string }
 
-export type StrategyEvent = { kind: "created" | "researching" | "ready" | "live"; at: string }
+export type StrategyEvent = { kind: "created" | "researching" | "ready" | "live" | "closed"; at: string }
 
 // The research on a strategy, which runs for a while on the agent's side. A "timed" run is the stand-in's: it is done when `readyAt` comes. A
 // "waiting" run is a real one (Sandworm's, or an agent driving it): it is done when it reports its `result`, or fails with an `error`.
@@ -75,11 +75,21 @@ export type StrategyRecord = {
   createdAt: string
   updatedAt: string
   startedAt?: string
+  // When it was closed, and when it was put in the trash: each missing until it happens
+  closedAt?: string
+  deletedAt?: string
 }
 
 export interface StrategyStore {
+  // What the person has, not counting what is in the trash
   list(ownerId: string): Promise<StrategyRecord[]>
+  // One strategy by its id, in the trash or not: a step decides what it is allowed to do with one that has been deleted
   get(id: string): Promise<StrategyRecord | undefined>
+  listRemoved(ownerId: string): Promise<StrategyRecord[]>
+  // The strategies that have been in the trash since before `cutoff`
+  removedBefore(cutoff: Date): Promise<{ id: string; ownerId: string }[]>
+  // Deletes one for good, with everything that belongs to it
+  purge(id: string): Promise<void>
   // Keeps the record and says which revision it now is. Refused (a StoreConflict) when the strategy has been saved since the revision the record
   // carries, so a save made from an old read can't undo what came after it.
   save(record: StrategyRecord): Promise<number>

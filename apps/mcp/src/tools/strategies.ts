@@ -20,7 +20,7 @@ const ruleSetting = z.object({
 // What a person does with their strategies in the app, from making one to getting its research back and sharing the report. Each tool is one
 // of the app's own API calls (the same ones its pages make), so what is allowed and what is refused is the same in both.
 export function addStrategyTools(server: McpServer, api: Api) {
-  addTool(server, "list_strategies", "Every strategy this person has made, newest first, with where each one is: its status and stage.", {}, () =>
+  addTool(server, "list_strategies", "Every strategy this person has made, newest first, with where each one is: its status (draft, live, closed) and stage. What they have deleted is not here: see list_trash.", {}, () =>
     api.get("/strategies")
   )
 
@@ -68,7 +68,7 @@ export function addStrategyTools(server: McpServer, api: Api) {
     (input) => api.get(`/strategies/${path(input.strategyId)}`)
   )
 
-  addTool(server, "rename_strategy", "Give a strategy a new name.", { strategyId, name: z.string().min(1).max(200) }, ({ strategyId: id, name }) =>
+  addTool(server, "rename_strategy", "Give a strategy a new name. Allowed at any stage, even while it is trading; it changes only the name.", { strategyId, name: z.string().min(1).max(200) }, ({ strategyId: id, name }) =>
     api.patch(`/strategies/${path(id)}`, { name })
   )
 
@@ -109,7 +109,8 @@ export function addStrategyTools(server: McpServer, api: Api) {
     "submit_research",
     [
       "Hand back the research for a strategy that is waiting for it. Only works once per strategy, and only while it is waiting.",
-      "Build the work as one Sandworm notebook for this strategy first (the Sandworm tools: create_notebook, add_cell, run_notebook), with its summary in the first cell and then its parts, such as performance, risk and holdings. Then pass what it shows here.",
+      "Build the work as ONE Sandworm notebook for this strategy first (the Sandworm tools: create_notebook, add_cell, run_notebook), laid out as get_strategy's `report.outline` says: a 'Start here' cell, then each numbered part with a heading cell titled exactly as given. Never make a second notebook; add to the first. Then pass what it shows here.",
+      "Pass `blocks` too: the id of each part's heading cell, by the part's id (answer, numbers, growth, checks, drawdown, risk, buyable, stocks, sources), so each part of the report links to its own place in the notebook. Every step's url must be the notebook's own.",
       "Keep it small: a one-line headline, a short summary, up to 8 metrics, a couple of charts and up to 8 notes. The full analysis stays in the notebook, and it must be linked with its Sandworm url.",
       "Set isExample to true when the numbers are made up or from dummy data, so the person is told.",
       "The headline and summary must only claim what was tested: if the strategy's `coverage.couldntMatch` is not empty, say in the summary that those weren't tested because they aren't on Base yet.",
@@ -124,6 +125,40 @@ export function addStrategyTools(server: McpServer, api: Api) {
     "A link anyone can open to read a strategy's report, without signing in. Only for a strategy that has a report.",
     { strategyId },
     (input) => api.post(`/strategies/${path(input.strategyId)}/share`)
+  )
+
+  addTool(
+    server,
+    "close_strategy",
+    "End a strategy that is trading: everything it holds is sold at today's prices and the cash is taken out, so nothing is left in it. It is then closed: kept to read, and it can be deleted. Do this before delete_strategy for one that holds money. Ask the person first: it sells everything.",
+    { strategyId },
+    (input) => api.post(`/strategies/${path(input.strategyId)}/close`)
+  )
+
+  addTool(
+    server,
+    "delete_strategy",
+    "Put a strategy in the trash, with its chat. It is kept for 30 days and can be put back with restore_strategy. A strategy that is still trading is refused: close_strategy first. The Sandworm notebook it was researched in stays in the person's Sandworm workspace.",
+    { strategyId },
+    (input) => api.delete(`/strategies/${path(input.strategyId)}`)
+  )
+
+  addTool(
+    server,
+    "restore_strategy",
+    "Put a strategy back from the trash, exactly as it was.",
+    { strategyId },
+    (input) => api.post(`/strategies/${path(input.strategyId)}/restore`)
+  )
+
+  addTool(server, "list_trash", "The strategies this person has deleted, with the day each will be deleted for good.", {}, () => api.get("/strategies/trash"))
+
+  addTool(
+    server,
+    "purge_strategy",
+    "Delete a strategy that is in the trash FOR GOOD, with its chat, activity and ledger. It can't be undone. Only do it when the person has asked for exactly this; `confirmName` has to be the strategy's exact name.",
+    { strategyId, confirmName: z.string().min(1).max(200) },
+    ({ strategyId: id, confirmName }) => api.post(`/strategies/${path(id)}/purge`, { confirmName })
   )
 
   addTool(

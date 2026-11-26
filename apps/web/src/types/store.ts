@@ -28,6 +28,8 @@ export type ResearchRun = {
   startedAt: string
   readyAt?: string
   mode?: "timed" | "waiting"
+  // Who does a waiting run: Sandworm's own agent (`sandworm`), or an agent from outside that hands the result back (`agent`)
+  runner?: "sandworm" | "agent"
   result?: ResearchResult
   error?: string
   // Where a waiting run has got to, step by step, each with its notebook once there is one

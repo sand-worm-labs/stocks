@@ -13,11 +13,13 @@ import { Badge } from "@/components/ui/badge"
 import { STATUS, STEP } from "@/constants/components/workspace/model-workspace"
 import { RESEARCH_EVENT } from "@/constants/research"
 import { TONE_DOT_CLASSNAME } from "@/constants/tone"
+import { useIdeaCoverage } from "@/hooks/use-idea-coverage"
 import { confirmRules, errorMessage, finishResearch } from "@/lib/strategies/client"
 import { cn } from "@/lib/utils"
 
 import type { AgentStep } from "@/types/agent"
 import type { WorkspacePhase } from "@/types/ui"
+import { CoverageNotice, CoverageStrip } from "./CoverageNotice"
 import { DraftFlowProvider } from "./DraftFlow"
 import { EditableName } from "./EditableName"
 import { LeaveNotice } from "./LeaveNotice"
@@ -26,7 +28,7 @@ import { ResearchWaiting } from "./ResearchWaiting"
 
 type ModelWorkspaceProps = {
   id: string
-  research?: { startedAt: string; readyAt?: string; mode?: "timed" | "waiting"; error?: string; progress?: AgentStep[] }
+  research?: { startedAt: string; readyAt?: string; mode?: "timed" | "waiting"; runner?: "sandworm" | "agent"; error?: string; progress?: AgentStep[] }
   real: boolean
   stage?: WorkspacePhase
   agents: Record<WorkspacePhase, ReactNode>
@@ -56,6 +58,7 @@ export function ModelWorkspace({
   buy,
 }: ModelWorkspaceProps) {
   const router = useRouter()
+  const coverage = useIdeaCoverage(id, real)
   const [phase, setPhase] = useState<WorkspacePhase>(stage ?? "rules")
   const [confirming, setConfirming] = useState(false)
   const [skipping, setSkipping] = useState(false)
@@ -151,7 +154,7 @@ export function ModelWorkspace({
                 )}
               >
                 {confirming && <PiCircleNotch aria-hidden="true" className="animate-spin" />}
-                Confirm rules
+                {coverage?.basis === "fallback" ? "Confirm with these stocks" : "Confirm rules"}
               </button>
             )}
             {phase === "researching" && (
@@ -166,6 +169,8 @@ export function ModelWorkspace({
             )}
             {phase === "ready" && buy}
           </header>
+
+          {phase === "rules" && <CoverageNotice coverage={coverage} brief={brief} />}
 
           <section aria-label="Rules" className="flex flex-col gap-3">
             <div className="flex items-baseline justify-between gap-3">
@@ -185,8 +190,16 @@ export function ModelWorkspace({
 
           {phase !== "rules" && (
             <div ref={research} className="animate-fade-up flex scroll-mt-[calc(var(--shell-top)+1rem)] flex-col gap-4">
+              <CoverageStrip coverage={coverage} />
               {real && run?.mode === "waiting" ? (
-                <ResearchWaiting id={id} running={phase === "researching"} failure={run.error} progress={run.progress} onDone={finish} />
+                <ResearchWaiting
+                  id={id}
+                  running={phase === "researching"}
+                  runner={run.runner}
+                  failure={run.error}
+                  progress={run.progress}
+                  onDone={finish}
+                />
               ) : (
                 <ResearchProgress
                   running={phase === "researching"}
@@ -211,6 +224,7 @@ export function ModelWorkspace({
                 </div>
                 <div className="flex flex-none gap-2">{buy}</div>
               </div>
+              <CoverageStrip coverage={coverage} />
               {report}
             </div>
           )}

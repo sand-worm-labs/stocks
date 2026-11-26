@@ -10,6 +10,7 @@ import { standingOf } from '@/features/agent/conversation/strategy-facts';
 import { suggestionsOf } from '@/features/agent/conversation/suggestions';
 import { understand } from '@/features/agent/conversation/understand';
 import type { AgentBlock } from '@/features/agent/types/agent-message.types';
+import { coverageOf } from '@/features/strategies/brief/idea-coverage';
 import { createLocalPipeline } from '@/features/strategies/design/local-pipeline';
 import { createStrategyService, type StrategyService } from '@/features/strategies/lifecycle/strategy-lifecycle';
 import { rulesView } from '@/features/strategies/rules/rules-view';
@@ -41,7 +42,7 @@ async function live(mode: 'paper' | 'live' = 'paper') {
   return service.goLive('u1', ready.id, 400, { mode });
 }
 
-const contextOf = (record: StrategyRecord): Context => ({ record, stocks, rules: rulesView(record, stocks), now: new Date('2026-11-26T12:00:00Z') });
+const contextOf = (record: StrategyRecord): Context => ({ record, stocks, rules: rulesView(record, stocks), coverage: coverageOf(record, market), now: new Date('2026-11-26T12:00:00Z') });
 
 function ask(record: StrategyRecord, message: string) {
   const held = standingOf(record, stocks).positions;
@@ -214,6 +215,30 @@ describe('a strategy that trades from a wallet', () => {
     const result = ask(record, 'Add 100 USDC');
     expect(result.proposal).toBeUndefined();
     expect(blockOf(result.blocks, 'note')?.text).toMatch(/trades from your wallet/);
+  });
+});
+
+describe('an idea that names what is not on Base', () => {
+  const OIL = 'Grow 1,000 USDC in oil stocks (Exxon, Chevron, Shell and similar). Max 20% in one stock. Ask before buying.';
+
+  it('is said when the rules are asked about, with what is tested instead', async () => {
+    const record = await service.create('u1', OIL);
+    const rules = ask(record, 'What are my rules?').blocks;
+    const heads = blockOf(rules, 'note');
+    expect(heads).toMatchObject({ label: expect.stringMatching(/^Nothing on Base matches oil/), tone: 'warning' });
+    expect(heads?.text).toMatch(/most liquid stocks instead/);
+  });
+
+  it('is said again, as not tested, once the rules are locked', async () => {
+    const created = await service.create('u1', OIL);
+    const record = await service.confirmRules('u1', created.id);
+    expect(blockOf(ask(record, 'What are my rules?').blocks, 'note')?.text).toMatch(/so it was not tested\. It tested/);
+  });
+
+  it('is written into the strategy itself, so no page has to say it for it', async () => {
+    const record = await service.create('u1', OIL);
+    expect(record.assumption).toMatch(/Nothing on Base matches oil/);
+    expect(record.summary.find(({ label }) => label === 'Include')?.value).toMatch(/^The most liquid stocks \(nothing on Base for oil/);
   });
 });
 

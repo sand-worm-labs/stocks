@@ -13,8 +13,8 @@ import { getStarter } from "@/lib/onboarding/source"
 
 export const metadata: Metadata = { title: "Idea" }
 
-export default async function BriefPage({ searchParams }: { searchParams: Promise<{ starter?: string }> }) {
-  const [{ starter }, draft, stocks, summary] = await Promise.all([
+export default async function BriefPage({ searchParams }: { searchParams: Promise<{ starter?: string; idea?: string }> }) {
+  const [{ starter, idea }, draft, stocks, summary] = await Promise.all([
     searchParams,
     getBriefDraft(),
     getStocks(),
@@ -29,7 +29,7 @@ export default async function BriefPage({ searchParams }: { searchParams: Promis
           What should this strategy do?
         </h1>
         <BriefTabs current="brief" />
-        <BriefWorkspace key={chosen?.id} initialText={chosen?.brief ?? draft.text} examples={draft.examples} />
+        <BriefWorkspace key={idea ?? chosen?.id} initialText={idea?.slice(0, 2000) ?? chosen?.brief ?? draft.text} examples={draft.examples} />
         <StockShortcuts stocks={stocks.filter(isBuyable).sort(byLiquidity).slice(0, 6)} total={summary.buyable} />
       </FlowLayout>
     </div>

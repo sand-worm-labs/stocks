@@ -9,6 +9,7 @@ import { ZodPipe } from '@/core/pipes/zod.pipe';
 import { SandwormSession } from '@/features/auth/sandworm/sandworm-session.service';
 import { StocksService } from '@/features/market/stocks.service';
 import { activityOf } from '@/features/activity/strategy-activity';
+import { coverageOf } from '@/features/strategies/brief/idea-coverage';
 import { appOrigin } from '@/features/auth/core/request';
 import { signReportShare } from '@/features/auth/core/token';
 import { rulesSchema } from '@/features/strategies/rules/spec';
@@ -47,8 +48,10 @@ export class StrategiesController {
 
   @Post()
   async create(@Asking() { ownerId }: Caller, @Body(new ZodPipe(createSchema)) body: z.infer<typeof createSchema>) {
-    const { id } = await this.engine.steps.create(ownerId, body.brief);
-    return { id };
+    const record = await this.engine.steps.create(ownerId, body.brief);
+    // What the idea turned into, so an agent can tell the person at once if what they asked for isn't on Base
+    const market = await this.stocks.market();
+    return { id: record.id, name: record.name, coverage: coverageOf(record, market) };
   }
 
   @Get('research')
@@ -62,7 +65,8 @@ export class StrategiesController {
   @Get('waiting')
   async waiting(@Asking() { ownerId }: Caller) {
     const records = await this.engine.steps.waitingForResearch(ownerId);
-    return records.map(brief);
+    const market = await this.stocks.market();
+    return records.map((record) => ({ ...brief(record), coverage: coverageOf(record, market) }));
   }
 
   @Get(':id')
@@ -85,15 +89,18 @@ export class StrategiesController {
   // What was asked for and the rules it was turned into, with how the report should come out: what research is built to
   @Get(':id/brief')
   async brief(@Asking() { ownerId }: Caller, @Param('id') id: string) {
-    return brief(await this.engine.steps.owned(ownerId, id));
+    const record = await this.engine.steps.owned(ownerId, id);
+    const market = await this.stocks.market();
+    return { ...brief(record), coverage: coverageOf(record, market) };
   }
 
   @Get(':id/rules')
   async rules(@Asking() { ownerId }: Caller, @Param('id') id: string) {
     const record = await this.engine.steps.owned(ownerId, id);
+    const market = await this.stocks.market();
     // Only a trading strategy has anything to be measured against today's prices
-    const stocks = record.status === 'live' ? await this.stocks.source.getStocks() : [];
-    return rulesView(record, stocks);
+    const stocks = record.status === 'live' ? market.stocks : [];
+    return { ...rulesView(record, stocks), coverage: coverageOf(record, market) };
   }
 
   // Replaces the rules of a strategy that is still being looked over. Once they are confirmed they can't be changed.
@@ -120,7 +127,7 @@ export class StrategiesController {
   @HttpCode(200)
   async ready(@Asking() { ownerId }: Caller, @Param('id') id: string) {
     const { stage, research } = await this.engine.steps.finishResearch(ownerId, id);
-    return { stage, error: research?.error, progress: research?.progress };
+    return { stage, runner: research?.runner, error: research?.error, progress: research?.progress };
   }
 
   // The research for a strategy that is waiting for it, handed back by whoever did it. Once per strategy, and only while it is waiting.

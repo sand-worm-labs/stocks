@@ -15,7 +15,7 @@ type Sources = { market: () => Promise<Stock[]>; getPrices: GetDailyPrices }
 //   "standin"   the stand-in: a timed run with a template report, for working on the app with nothing connected. The default without Sandworm.
 export function getProducer({ market, getPrices }: Sources): Producer | undefined {
   const { researchProducer, sandworm } = settings()
-  if (researchProducer === "agent") return {}
+  if (researchProducer === "agent") return { runner: "agent" }
 
   const baseUrl = sandworm.apiUrl
   if (researchProducer === "standin" || !baseUrl) return undefined

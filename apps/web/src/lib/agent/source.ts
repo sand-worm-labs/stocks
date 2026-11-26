@@ -39,7 +39,7 @@ export async function getRulesScript(
           { type: "text", text: intro },
           { type: "facts", title: "Strategy", rows: strategy },
           { type: "rules", title: "Your rules", note: "Locks on confirm", rules },
-          { type: "note", label: "I assumed", text: assumption },
+          { type: "note", label: "Assumptions", text: assumption },
           {
             type: "actions",
             actions: [

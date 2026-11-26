@@ -139,6 +139,21 @@ const url = process.env.TEST_DATABASE_URL;
       expect((await call('GET', '/activity', { session: mine })).statusCode).toBe(200);
     });
 
+    it('says at once, to a person or an agent, when what the idea names is not on Base', async () => {
+      const oil = 'Grow 1,000 USDC in oil stocks (Exxon, Chevron, Shell and similar). Ask before buying.';
+      const made = await call('POST', '/strategies', { session: mine, body: { brief: oil } });
+      const { id, coverage } = made.json<{ id: string; coverage: { basis: string; couldntMatch: string[]; tests: unknown[]; headline: string } }>();
+      expect(coverage).toMatchObject({ basis: 'fallback', couldntMatch: expect.arrayContaining(['oil', 'Exxon']) });
+      expect(coverage.headline).toMatch(/^Nothing on Base matches/);
+      expect(coverage.tests.length).toBeGreaterThan(0);
+
+      // The same words wherever the strategy is read, so a page and an agent can't tell the person different things
+      expect((await call('GET', `/strategies/${id}/rules`, { session: mine })).json().coverage).toEqual(coverage);
+      expect((await call('GET', `/strategies/${id}/brief`, { session: mine })).json().coverage).toEqual(coverage);
+      const idea = await call('POST', '/strategies', { session: mine, body: { brief: IDEA } });
+      expect(idea.json().coverage.basis).toBe('named');
+    });
+
     it('is handed back by an agent that did the research', async () => {
       stubEnv('RESEARCH_PRODUCER', 'standin');
       const id = await create();
@@ -156,6 +171,17 @@ const url = process.env.TEST_DATABASE_URL;
       const response = await call('GET', `/strategies/${id}`, { session: theirs });
       expect(response.statusCode).toBe(404);
       expect(response.json()).toEqual({ error: "That strategy wasn't found" });
+    });
+
+    it('takes a button with nothing to send even when the client says its body is JSON (what a browser sends)', async () => {
+      const id = await create();
+      const json = { 'content-type': 'application/json' };
+      const confirmed = await call('POST', `/strategies/${id}/confirm`, { session: mine, headers: json });
+      expect(confirmed.statusCode).toBe(200);
+      expect((await call('POST', `/strategies/${id}/ready`, { session: mine, headers: json })).statusCode).toBe(200);
+      // A body that says it is JSON and isn't is still refused, in words
+      const broken = await call('POST', '/strategies', { session: mine, headers: json, body: '{not json' });
+      expect(broken.statusCode).toBe(400);
     });
 
     it('says what is wrong with a request', async () => {

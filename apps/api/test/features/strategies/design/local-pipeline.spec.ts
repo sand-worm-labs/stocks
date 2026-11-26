@@ -46,6 +46,13 @@ describe("designing from an idea", () => {
     expect(design.strategy.root.type).toBe("rebalance")
   })
 
+  it("doesn't name a strategy with a word that leads nowhere, and says what of the idea it couldn't find", async () => {
+    const design = await pipeline.design("Grow 1,000 USDC in stuff related to oil, ask before buying", market)
+    expect(design.name).toBe("Grow 1,000 USDC")
+    expect(design.assumption).toMatch(/Nothing on Base matches oil\.$/)
+    expect(design.summary.find(({ label }) => label === "Include")?.value).toMatch(/nothing on Base for oil/)
+  })
+
   it("says what it assumed when the idea doesn't", async () => {
     const design = await pipeline.design("Put some money into Tesla", market)
     expect(design.budget).toBe(500)

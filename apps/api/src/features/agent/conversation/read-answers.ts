@@ -55,7 +55,16 @@ export function cashReply({ record, stocks }: Context): Reply {
   return reply(say('There is no cash: all of it is invested.'), offer('Add 100 USDC'));
 }
 
-export function rulesReply({ record, rules }: Context): Reply {
+// What the idea named that can't be bought, said wherever the rules or the research are talked about, so it is never found out from the results
+function coverageNotes({ coverage }: Context, { isConfirmed }: { isConfirmed: boolean }) {
+  if (!coverage.headline) return [];
+  const isMissing = coverage.couldntMatch.length > 0;
+  const text = isConfirmed && isMissing ? `${coverage.headline}, so it was not tested. It tested ${coverage.tests.map(({ symbol }) => symbol).join(', ')}.` : coverage.detail;
+  return [note(coverage.headline, text ?? '', isMissing ? 'warning' : undefined)];
+}
+
+export function rulesReply(context: Context): Reply {
+  const { record, rules } = context;
   const intro = rules.isConfirmed
     ? 'These rules are locked while it trades. This is where each one stands.'
     : "These rules aren't locked yet. You can still change them on the Rules page, then confirm.";
@@ -70,16 +79,18 @@ export function rulesReply({ record, rules }: Context): Reply {
       detail: standing?.reading,
     })),
   };
-  return reply(say(intro), block, ...(rules.isConfirmed ? [] : [links(link('Edit rules', 'rules', record.id))]));
+  const edit = rules.isConfirmed ? [] : [links(link('Edit rules', 'rules', record.id))];
+  return reply(say(intro), ...coverageNotes(context, rules), block, ...edit);
 }
 
-export function researchReply({ record }: Context): Reply {
+export function researchReply(context: Context): Reply {
+  const { record } = context;
   const result = record.research?.result;
   if (!result) return reply(say("There are no research results yet. I'll have them here as soon as the research is done."));
 
   const worries = result.checks.filter(({ tone }) => tone !== 'good').slice(0, 2);
   const notes = worries.map(({ tone, text }) => note('Worth knowing', text, tone === 'bad' ? 'negative' : 'warning'));
-  return reply(say(result.headline), ...notes, links(link('Open the results', 'report', record.id)));
+  return reply(say(result.headline), ...coverageNotes(context, { isConfirmed: true }).slice(0, 1), ...notes, links(link('Open the results', 'report', record.id)));
 }
 
 export function helpReply({ isTrading }: { isTrading: boolean }): Reply {

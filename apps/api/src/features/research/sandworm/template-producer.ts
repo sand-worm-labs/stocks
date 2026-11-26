@@ -133,6 +133,7 @@ export function createSandwormProducer({
   plan = researchNotebook,
 }: Options): Producer {
   return {
+    runner: "sandworm",
     needsSandworm: true,
     async run(record, { sandwormToken, progress = async () => {} }) {
       if (!sandwormToken) throw new SandwormError("Sandworm has signed you out. Sign in again")

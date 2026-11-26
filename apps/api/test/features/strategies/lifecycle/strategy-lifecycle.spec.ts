@@ -10,7 +10,7 @@ import { StoreConflict } from "@/features/strategies/lifecycle/store-conflict"
 import { MemoryStore as FileStore } from "../../../support/memory-store"
 
 import { toPortfolio } from "@/features/strategies/lifecycle/to-portfolio"
-import { createStrategyService, fill, RESEARCH_MS, StrategyConflict, StrategyError, type StrategyService } from "@/features/strategies/lifecycle/strategy-lifecycle"
+import { createStrategyService, fill, INTERRUPTED, RESEARCH_DEADLINE_MS, RESEARCH_MS, StrategyConflict, StrategyError, type StrategyService } from "@/features/strategies/lifecycle/strategy-lifecycle"
 import type { AgentStep } from "@/features/research/types/agent-step.types"
 import type { StrategyRecord, StrategyStore } from "@/features/strategies/types/strategy-record"
 
@@ -365,6 +365,70 @@ describe("research that is waited on", () => {
     await agent.confirmRules("u1", a.id)
     expect((await agent.waitingForResearch("u1")).map(({ id }) => id)).toEqual([a.id])
     expect(await agent.waitingForResearch("u2")).toEqual([])
+  })
+})
+
+describe("research that never comes back", () => {
+  const withRunner = (runner?: "sandworm" | "agent") =>
+    createStrategyService({
+      store,
+      pipeline: createLocalPipeline(reportMockData[1]),
+      producer: { runner },
+      market: async () => market,
+      now: () => clock,
+      random: () => `r${++counter}`,
+    })
+
+  const confirmed = async (runner?: "sandworm" | "agent") => {
+    const steps = withRunner(runner)
+    const draft = await steps.create("u1", BRIEF)
+    await steps.confirmRules("u1", draft.id, { sandwormToken: "t" })
+    return { steps, id: draft.id }
+  }
+
+  it("says who is doing the research, Sandworm unless it is an agent from outside", async () => {
+    const { steps, id } = await confirmed("agent")
+    expect((await steps.owned("u1", id)).research?.runner).toBe("agent")
+
+    const other = await confirmed()
+    expect((await other.steps.owned("u1", other.id)).research?.runner).toBe("sandworm")
+  })
+
+  it("stops a run that Sandworm does once it has gone far too long, so the person can try it again", async () => {
+    const { steps, id } = await confirmed("sandworm")
+
+    later(RESEARCH_DEADLINE_MS - 1000)
+    expect((await steps.finishResearch("u1", id)).research?.error).toBeUndefined()
+
+    later(2000)
+    const stopped = await steps.finishResearch("u1", id)
+    expect(stopped.stage).toBe("researching")
+    expect(stopped.research?.error).toMatch(/taking much longer than it should/)
+
+    const again = await steps.retryResearch("u1", id, { sandwormToken: "t" })
+    expect(again.research).toMatchObject({ mode: "waiting", runner: "sandworm" })
+    expect(again.research?.error).toBeUndefined()
+  })
+
+  it("never stops an agent's run for taking long: an agent can be asked at any time", async () => {
+    const { steps, id } = await confirmed("agent")
+    later(RESEARCH_DEADLINE_MS * 5)
+    expect((await steps.finishResearch("u1", id)).research?.error).toBeUndefined()
+  })
+
+  it("says a run was interrupted when the server that was doing it has restarted, and lets it be tried again", async () => {
+    const { steps, id } = await confirmed("sandworm")
+    const interrupted = await steps.interruptRun("u1", id)
+    expect(interrupted.research?.error).toBe(INTERRUPTED)
+    expect((await steps.retryResearch("u1", id, { sandwormToken: "t" })).research?.error).toBeUndefined()
+  })
+
+  it("leaves alone what a restart did not stop: an agent's run, and a strategy that is not being researched", async () => {
+    const agent = await confirmed("agent")
+    expect((await agent.steps.interruptRun("u1", agent.id)).research?.error).toBeUndefined()
+
+    const done = await ready()
+    expect((await service.interruptRun("u1", done.id)).stage).toBe("ready")
   })
 })
 

@@ -7,7 +7,7 @@ export class ResearchRun {
   @PrimaryGeneratedColumn('uuid') id: string;
   @Column('text', { name: 'strategy_id' }) strategyId: string;
   @Column('integer') version: number;
-  @Column('text') source: 'standin' | 'sandworm';
+  @Column('text') source: 'standin' | 'sandworm' | 'agent';
   @Column('text') status: 'running' | 'ready' | 'failed';
   @Column('timestamptz', { name: 'started_at', default: () => 'now()' })
   startedAt: Date;

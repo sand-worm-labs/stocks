@@ -32,6 +32,11 @@ services:
       STOCKS_API_KEY: local-development-key
       # Where the browser connects for chat, handed out with each chat pass
       REALTIME_WS_URL: ${REALTIME_WS_URL:-ws://localhost:3002}
+      # For trying the MCP server without the AI credit Sandworm's own research needs: `scripts/mcp-test.sh` sets these in the `.env` beside this
+      # file. With RESEARCH_PRODUCER=agent the research waits for an agent (Claude) to do it and hand it back. Left empty, they are not set.
+      RESEARCH_PRODUCER: ${RESEARCH_PRODUCER:-}
+      STOCKS_AGENT_TOKEN: ${STOCKS_AGENT_TOKEN:-}
+      STOCKS_AGENT_OWNER_ID: ${STOCKS_AGENT_OWNER_ID:-}
     depends_on:
       db:
         condition: service_healthy

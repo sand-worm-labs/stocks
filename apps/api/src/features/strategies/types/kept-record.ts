@@ -48,6 +48,7 @@ export type StrategyRecord = {
     startedAt: string;
     readyAt?: string;
     mode?: 'timed' | 'waiting';
+    runner?: 'sandworm' | 'agent';
     result?: Json;
     error?: string;
     progress?: Json;

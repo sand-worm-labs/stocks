@@ -44,6 +44,17 @@ export class StrategiesService {
     return record;
   }
 
+  /// The strategies whose research Sandworm is doing from this server and has not finished or failed. Such a run lives in this process, so
+  /// when the server starts, whatever is listed was left behind by the one before it.
+  async sandwormRunsInProgress(): Promise<{ id: string; ownerId: string }[]> {
+    const rows: { id: string; owner_id: string }[] = await this.dataSource.query(
+      `SELECT s."id", s."owner_id" FROM "research_runs" r
+       JOIN "strategies" s ON s."id" = r."strategy_id" AND s."current_version" = r."version"
+       WHERE r."mode" = 'waiting' AND r."status" = 'running' AND r."source" = 'sandworm' AND r."error" IS NULL AND r."result" IS NULL`,
+    );
+    return rows.map(({ id, owner_id }) => ({ id, ownerId: owner_id }));
+  }
+
   /// Keeps the record, and says which revision it now is. Refused (409) if the strategy has been saved since the revision the record carries,
   /// so a save made from an old read can't undo what came after.
   async save(record: StrategyRecord): Promise<number> {
@@ -140,6 +151,7 @@ export class StrategiesService {
           startedAt: iso(run.startedAt),
           readyAt: run.expectedAt ? iso(run.expectedAt) : undefined,
           mode: run.mode ?? undefined,
+          runner: run.mode === 'waiting' && run.source !== 'standin' ? run.source : undefined,
           result: run.result ?? undefined,
           error: run.error ?? undefined,
           progress: run.progress ?? undefined,
@@ -204,7 +216,7 @@ async function saveResearch(tx: EntityManager, record: StrategyRecord) {
   const isReady = !(record.status === 'draft' && record.stage === 'researching');
   const finished = record.events.find(({ kind }) => kind === 'ready')?.at ?? record.updatedAt;
   const run = {
-    source: record.research?.mode === 'waiting' ? ('sandworm' as const) : ('standin' as const),
+    source: record.research?.mode === 'waiting' ? (record.research.runner ?? 'sandworm') : ('standin' as const),
     mode: record.research?.mode ?? null,
     result: record.research?.result ?? null,
     error: record.research?.error ?? null,

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, UnprocessableEntityException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, OnApplicationBootstrap, UnprocessableEntityException } from '@nestjs/common';
 
 import { reportMockData } from '@/_mockdata/reports';
 import { StocksService } from '@/features/market/stocks.service';
@@ -57,12 +57,16 @@ function pricesFrom(yahoo: YahooService): GetDailyPrices {
 
 // The steps a strategy goes through, joined to the database, the market and whoever does the research
 @Injectable()
-export class StrategyEngine {
+export class StrategyEngine implements OnApplicationBootstrap {
   private readonly logger = new Logger(StrategyEngine.name);
   readonly store: StrategyStore;
   readonly steps: StrategyService;
 
-  constructor(strategies: StrategiesService, stocks: StocksService, yahoo: YahooService) {
+  constructor(
+    private readonly strategies: StrategiesService,
+    stocks: StocksService,
+    yahoo: YahooService,
+  ) {
     this.store = storeOver(strategies);
     this.steps = createStrategyService({
       store: this.store,
@@ -72,6 +76,19 @@ export class StrategyEngine {
       prices: () => stocks.prices(),
       market: () => stocks.market(),
     });
+  }
+
+  /// Research that Sandworm does from here runs inside this process, so the ones still marked as going when it starts were stopped by the last
+  /// restart. They are said to have been interrupted, which gives the person a way to try again, instead of a card that never changes.
+  async onApplicationBootstrap() {
+    const left = await this.strategies.sandwormRunsInProgress().catch((error: unknown) => {
+      this.logger.error(error);
+      return [];
+    });
+    for (const { id, ownerId } of left) {
+      await this.steps.interruptRun(ownerId, id).catch((error: unknown) => this.logger.error(error));
+    }
+    if (left.length) this.logger.warn(`${left.length} research run(s) were interrupted by the restart`);
   }
 
   /// Starts a waiting run's work and returns at once: it takes minutes, and what goes wrong is kept on the run for the person to see

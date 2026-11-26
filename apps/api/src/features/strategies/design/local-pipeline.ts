@@ -1,4 +1,5 @@
 import { analyzeBrief } from "@/features/strategies/brief/analyze"
+import { ideaCoverage } from "@/features/strategies/brief/idea-coverage"
 import { isBuyable } from "@/features/market/stock"
 import type { RuleSpec } from "@/features/strategies/rules/spec"
 import type { Stock } from "@/features/market/types/market.types"
@@ -19,6 +20,8 @@ const norm = (text: string) =>
     .replace(/[^a-z0-9 ]+/g, " ")
     .replace(/\s+/g, " ")
     .trim()
+// A name cut after four words can end on a word that leads nowhere ("Grow 1,000 USDC in")
+const TRAILING_FILLER = /(?:[\s,.;:]+(?:in|on|into|with|to|for|of|at|by|and|or|the|a|an))+[.,;:]*$|[.,;:]+$/i
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
 function named(items: string[], { stocks, categories }: Market) {
@@ -51,7 +54,7 @@ export function shares(count: number, maxShare: number) {
 function nameFor(brief: string, theme: string | undefined, maxShare: number | undefined) {
   const base = theme
     ? sentence(theme)
-    : sentence(brief.trim().split(/\s+/).slice(0, 4).join(" ")).replace(/[.,;:]+$/, "")
+    : sentence(brief.trim().split(/\s+/).slice(0, 4).join(" ")).replace(TRAILING_FILLER, "")
   return `${base}${maxShare ? `, capped at ${Math.round(maxShare * 100)}%` : ""}`.slice(0, 60)
 }
 
@@ -76,6 +79,12 @@ function designStrategy(name: string, symbols: string[]): Strategy {
   }
 }
 
+// What the "Include" line of the summary says: what was asked for, or that nothing was and the most liquid stocks were taken
+function includeText(items: string[], { basis, couldntMatch }: { basis: string; couldntMatch: string[] }) {
+  if (basis === "fallback") return `The most liquid stocks (nothing on Base for ${couldntMatch.join(", ")})`
+  return items.join(", ") || "The most liquid stocks"
+}
+
 const percent = (fraction: number) => `${Math.round(fraction * 100)}%`
 const usdc = (amount: number) => amount.toLocaleString("en-US", { maximumFractionDigits: 0 })
 
@@ -96,11 +105,11 @@ export function createLocalPipeline(template: Report): Pipeline {
         ...(fields.askBeforeBuying ? [{ type: "approval" } as const] : []),
         { type: "portfolio-stop", limit: loss / 100, pause: STOP_PAUSE_DAYS },
       ]
+      const coverage = ideaCoverage({ brief, symbols: picked.map(({ symbol }) => symbol), market, maxShare })
       const assumed = [
         !fields.budget && `a budget of ${usdc(DEFAULT_BUDGET)} USDC`,
         !fields.maxPerStock && `no more than ${percent(DEFAULT_MAX_SHARE)} in one stock`,
         !fields.loss && `a loss limit of −${DEFAULT_LOSS_LIMIT}%`,
-        !picked.length && "the most liquid stocks, as none were named",
       ].filter(Boolean)
 
       return {
@@ -115,12 +124,16 @@ export function createLocalPipeline(template: Report): Pipeline {
           { label: "Goal", value: fields.goal?.value ?? "Growth" },
           { label: "Horizon", value: fields.horizon?.value ?? "3+ years" },
           { label: "Loss you can live with", term: "Max drawdown limit", value: `−${loss}%` },
-          { label: "Include", value: fields.include.items.join(", ") || "The most liquid stocks" },
+          { label: "Include", value: includeText(fields.include.items, coverage) },
           { label: "Benchmark", value: "S&P 500" },
         ],
-        assumption: assumed.length
-          ? `Your idea didn't say, so I assumed ${assumed.join(", ")}.`
-          : "I read everything in your idea as written.",
+        assumption: [
+          assumed.length ? `Your idea didn't say, so I assumed ${assumed.join(", ")}.` : "I read everything in your idea as written.",
+          // Said plainly where the rules are read, so nobody finds out from the results that the stocks they named weren't the ones tested
+          coverage.headline && `${coverage.headline}.`,
+        ]
+          .filter(Boolean)
+          .join(" "),
       } satisfies Design
     },
 

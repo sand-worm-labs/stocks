@@ -36,7 +36,7 @@ export function report({ id, name, brief, status, stage, holdings, cash, funding
     holdings,
     cash,
     funding: funding && { mode: funding.mode, amount: funding.amount, from: funding.from },
-    research: research && { mode: research.mode, error: research.error, progress: research.progress, result: research.result },
+    research: research && { mode: research.mode, runner: research.runner, error: research.error, progress: research.progress, result: research.result },
     events,
   }
 }

@@ -39,6 +39,12 @@ export class StrategyConflict extends StrategyError {
 
 const MOST_ATTEMPTS = 3
 
+// A run that Sandworm does from here that has gone this long with no result is not coming: it is stopped, so the person can try again
+// instead of watching a card that never changes
+export const RESEARCH_DEADLINE_MS = 30 * 60 * 1000
+export const INTERRUPTED = "The research was interrupted when the server restarted. Try again."
+const TOO_LONG = "The research is taking much longer than it should. Try again."
+
 const doneCount = (steps?: AgentStep[]) => steps?.filter(({ state }) => state === "done").length ?? 0
 
 // Does `work` again, from a fresh read, when it was refused because the strategy changed under it. For steps that belong to the system and
@@ -89,6 +95,8 @@ export type ProduceContext = {
 // from here (Sandworm's agent, started after the request is answered); one that can't is waited on, and an agent from outside reports with
 // `completeResearch`. Without a producer the stand-in's timed run is used.
 export type Producer = {
+  // Who does the work, so the person is told the truth about what they are waiting for. Sandworm's agent runs from here, in this process.
+  runner?: "sandworm" | "agent"
   // True when the work is done as the person on Sandworm, so it can't start without their login there
   needsSandworm?: boolean
   run?: (record: StrategyRecord, context: ProduceContext) => Promise<ResearchResult>
@@ -140,6 +148,25 @@ export function createStrategyService({
     ...(record.events ?? []),
     { kind, at: now().toISOString() },
   ]
+
+  // A run that Sandworm does from here, which is still going: it has no result and has not failed
+  const isSandwormRun = (record: StrategyRecord) =>
+    isResearching(record) &&
+    record.research?.mode === "waiting" &&
+    (record.research.runner ?? "sandworm") === "sandworm" &&
+    !record.research.result &&
+    !record.research.error
+
+  const isOverdue = (record: StrategyRecord) =>
+    isSandwormRun(record) && now().getTime() - Date.parse(record.research?.startedAt ?? "") > RESEARCH_DEADLINE_MS
+
+  // Ends a run with what went wrong, from a fresh read, unless it has finished or failed in the meantime
+  const stopRun = (ownerId: string, id: string, error: string) =>
+    afresh(async () => {
+      const fresh = await owned(ownerId, id)
+      if (!isSandwormRun(fresh) || !fresh.research) return fresh
+      return save({ ...fresh, research: { ...fresh.research, error } })
+    })
 
   // Research that has run its time is done: the strategy is ready, and that is noted for its activity and notifications. This is the one
   // place a run ends. The stand-in's ends when its time is up, found out whenever the strategy is next looked at; Sandworm's will end it
@@ -300,7 +327,7 @@ export function createStrategyService({
         report: research.report,
         orders: research.orders,
         research: producer
-          ? { startedAt: startedAt.toISOString(), mode: "waiting" }
+          ? { startedAt: startedAt.toISOString(), mode: "waiting", runner: producer.runner ?? "sandworm" }
           : {
               startedAt: startedAt.toISOString(),
               readyAt: new Date(startedAt.getTime() + RESEARCH_MS).toISOString(),
@@ -314,9 +341,17 @@ export function createStrategyService({
       const record = await owned(ownerId, id)
       if (record.stage === "ready") return record
       if (!isResearching(record) || !record.report) throw new StrategyError("It isn't being researched", 409)
-      // A real run isn't ended by the clock: it ends when its result comes in, so asking early finds it still going
-      if (record.research?.mode === "waiting") return record
+      // A real run isn't ended by the clock: it ends when its result comes in, so asking early finds it still going. Except one that Sandworm
+      // does from here, which has gone so long that it isn't coming.
+      if (record.research?.mode === "waiting") return isOverdue(record) ? stopRun(ownerId, id, TOO_LONG) : record
       return finish(record)
+    },
+
+    // The server that was doing a run is gone (it was restarted), and a run that Sandworm does from here goes with it: said, so the person can
+    // start it again, rather than leaving the strategy "researching" for good. Does nothing for anything else.
+    async interruptRun(ownerId: string, id: string) {
+      const record = await owned(ownerId, id)
+      return isSandwormRun(record) ? stopRun(ownerId, id, INTERRUPTED) : record
     },
 
     // Does a waiting run's work, when its producer can. Run after the request that confirmed the rules has been answered: it takes a while,
@@ -360,7 +395,7 @@ export function createStrategyService({
         throw new StrategyError("Sign out and sign in again to connect your Sandworm account, then try again", 401)
       if (!isResearching(record) || record.research?.mode !== "waiting" || !record.research.error)
         throw new StrategyError("There is no stopped research to try again", 409)
-      return save({ ...record, research: { startedAt: now().toISOString(), mode: "waiting" } })
+      return save({ ...record, research: { startedAt: now().toISOString(), mode: "waiting", runner: record.research.runner } })
     },
 
     // Strategies whose research an agent from outside is being waited on for

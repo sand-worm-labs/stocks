@@ -27,19 +27,23 @@ export function addStrategyTools(server: McpServer, api: Api) {
   addTool(
     server,
     "create_strategy",
-    "Make a strategy from an idea in plain words, such as 'big tech, no more than 25% in one stock'. It comes back with its id; read its rules with get_strategy, then lock them with confirm_rules.",
+    [
+      "Make a strategy from an idea in plain words, such as 'big tech, no more than 25% in one stock'. It comes back with its id and `coverage`: how much of what the idea named can be bought on Base.",
+      "Read `coverage` before anything else. basis 'fallback' means NOTHING the idea named is on Base, so the strategy would test the most liquid stocks instead; 'partly' means some of it isn't. Tell the person what couldn't be matched (`couldntMatch`) and what would be tested (`tests`), and let them choose: go ahead, or make a new strategy with a different idea. Never force the missing names into the rules.",
+      "Then read the rules with get_strategy, and lock them with confirm_rules.",
+    ].join(" "),
     { brief: z.string().min(1).max(2000) },
     (input) => api.post("/strategies", input)
   )
 
-  addTool(server, "get_strategy", "One strategy: the person's idea, the rules it was turned into, the stocks it would hold, and how its report should come out.", { strategyId }, (input) =>
+  addTool(server, "get_strategy", "One strategy: the person's idea, the rules it was turned into, the stocks it would hold, and how its report should come out. `coverage` says how much of what the idea named is on Base, what couldn't be matched, and what is actually tested.", { strategyId }, (input) =>
     api.get(`/strategies/${path(input.strategyId)}/brief`)
   )
 
   addTool(
     server,
     "get_rules",
-    "A strategy's rules as the person sees them: each in plain words with the exact setting behind it, whether they are confirmed yet, and, once it is trading, how close each is to its limit.",
+    "A strategy's rules as the person sees them: each in plain words with the exact setting behind it, whether they are confirmed yet, and, once it is trading, how close each is to its limit. `coverage` says what of the person's idea isn't on Base and what is tested instead.",
     { strategyId },
     (input) => api.get(`/strategies/${path(input.strategyId)}/rules`)
   )
@@ -71,7 +75,7 @@ export function addStrategyTools(server: McpServer, api: Api) {
   addTool(
     server,
     "confirm_rules",
-    "Lock a strategy's rules and start its research. After this the strategy waits for research: do it on Sandworm, then give the result back with submit_research.",
+    "Lock a strategy's rules and start its research. If `coverage.basis` is 'fallback' or 'partly', make sure the person has been told what isn't on Base and has said to go ahead with what is tested. After this the strategy waits for research: do it on Sandworm, then give the result back with submit_research.",
     { strategyId },
     (input) => api.post(`/strategies/${path(input.strategyId)}/confirm`)
   )
@@ -95,7 +99,7 @@ export function addStrategyTools(server: McpServer, api: Api) {
   addTool(
     server,
     "list_research_requests",
-    "Strategies whose rules the person has confirmed and that are waiting for research. Each is something to research on Sandworm: build one notebook there, then call submit_research.",
+    "Strategies whose rules the person has confirmed and that are waiting for research. Each is something to research on Sandworm: build one notebook there, then call submit_research. Each has `coverage`: research the stocks in `tests`, and say plainly in the result that what is in `couldntMatch` was not tested.",
     {},
     () => api.get("/strategies/waiting")
   )
@@ -108,6 +112,7 @@ export function addStrategyTools(server: McpServer, api: Api) {
       "Build the work as one Sandworm notebook for this strategy first (the Sandworm tools: create_notebook, add_cell, run_notebook), with its summary in the first cell and then its parts, such as performance, risk and holdings. Then pass what it shows here.",
       "Keep it small: a one-line headline, a short summary, up to 8 metrics, a couple of charts and up to 8 notes. The full analysis stays in the notebook, and it must be linked with its Sandworm url.",
       "Set isExample to true when the numbers are made up or from dummy data, so the person is told.",
+      "The headline and summary must only claim what was tested: if the strategy's `coverage.couldntMatch` is not empty, say in the summary that those weren't tested because they aren't on Base yet.",
     ].join(" "),
     { strategyId, result: researchResultSchema },
     ({ strategyId: id, result }) => api.post(`/strategies/${path(id)}/research`, { result })

@@ -163,4 +163,30 @@ const url = process.env.TEST_DATABASE_URL;
       expect(await strategies.save(record('a', ME, { revision: 0 }))).toBe(1);
     });
   });
+
+  describe('research that is going on', () => {
+    const researching = (id: string, research: NonNullable<StrategyRecord['research']>) =>
+      record(id, ME, { status: 'draft', stage: 'researching', holdings: [], funding: undefined, research, events: [{ kind: 'created', at: '2026-11-24T10:00:00.000Z' }, { kind: 'researching', at: '2026-11-24T10:01:00.000Z' }], startedAt: undefined });
+    const started = '2026-11-24T10:01:00.000Z';
+
+    it('keeps who is doing a run, and gives it back', async () => {
+      await strategies.save(researching('a', { startedAt: started, mode: 'waiting', runner: 'agent' }));
+      await strategies.save(researching('b', { startedAt: started, mode: 'waiting', runner: 'sandworm' }));
+      await strategies.save(researching('c', { startedAt: started, readyAt: '2026-11-24T10:01:45.000Z', mode: 'timed' }));
+
+      expect((await strategies.get('a'))?.research?.runner).toBe('agent');
+      expect((await strategies.get('b'))?.research?.runner).toBe('sandworm');
+      expect((await strategies.get('c'))?.research?.runner).toBeUndefined();
+    });
+
+    it("lists only the runs that Sandworm is doing from here and that haven't ended: what a restart leaves behind", async () => {
+      await strategies.save(researching('agent', { startedAt: started, mode: 'waiting', runner: 'agent' }));
+      await strategies.save(researching('going', { startedAt: started, mode: 'waiting', runner: 'sandworm' }));
+      await strategies.save(researching('failed', { startedAt: started, mode: 'waiting', runner: 'sandworm', error: 'It stopped' }));
+      await strategies.save(researching('timed', { startedAt: started, readyAt: '2026-11-24T10:01:45.000Z', mode: 'timed' }));
+      await strategies.save(live('done'));
+
+      expect(await strategies.sandwormRunsInProgress()).toEqual([{ id: 'going', ownerId: ME }]);
+    });
+  });
 });

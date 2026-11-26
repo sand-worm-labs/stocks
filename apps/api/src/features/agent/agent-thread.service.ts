@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 
 import { StocksService } from '@/features/market/stocks.service';
-import type { Stock } from '@/features/market/types/market.types';
+import { coverageOf } from '@/features/strategies/brief/idea-coverage';
 import { StrategyEngine } from '@/features/strategies/strategy-engine.service';
 import { StrategyError } from '@/features/strategies/lifecycle/strategy-lifecycle';
 import { rulesView } from '@/features/strategies/rules/rules-view';
@@ -117,8 +117,9 @@ export class AgentThread {
   private async contextOf(ownerId: string, strategyId: string): Promise<Context> {
     const record = await this.strategyOf(ownerId, strategyId);
     // The agent answers without prices when the market is down: what was paid stands in for them
-    const stocks: Stock[] = await this.stocks.source.getStocks().catch(() => []);
-    return { record, stocks, rules: rulesView(record, record.status === 'live' ? stocks : []), now: new Date() };
+    const market = await this.stocks.market().catch(() => ({ stocks: [], categories: [] }));
+    const { stocks } = market;
+    return { record, stocks, rules: rulesView(record, record.status === 'live' ? stocks : []), coverage: coverageOf(record, market), now: new Date() };
   }
 
   private rowOf(ownerId: string, strategyId: string, said: Reply, createdAt: Date) {

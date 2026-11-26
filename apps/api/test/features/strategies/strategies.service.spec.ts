@@ -1,9 +1,10 @@
+import { ConflictException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 import { dataSourceOptions } from '@/infrastructure/database/data-source';
 
 import { StrategiesService } from '@/features/strategies/strategies.service';
-import { StrategyRecord } from '@/features/strategies/strategy-record';
+import { StrategyRecord } from '@/features/strategies/types/kept-record';
 
 const ME = '11111111-1111-4111-8111-111111111111';
 const THEM = '22222222-2222-4222-8222-222222222222';
@@ -66,13 +67,13 @@ const url = process.env.TEST_DATABASE_URL;
   it('keeps what is saved, whole, and gives it back by id', async () => {
     const saved = record('a', ME, { startedAt: '2026-11-24T11:00:00.000Z' });
     await strategies.save(saved);
-    expect(await strategies.get('a')).toEqual({ ...saved, ledger: [] });
+    expect(await strategies.get('a')).toEqual({ ...saved, revision: 1, ledger: [] });
     expect(await strategies.get('missing')).toBeUndefined();
   });
 
   it('replaces a record saved again under its id, and records each event once', async () => {
     await strategies.save(record('a'));
-    await strategies.save(record('a', ME, { name: 'Renamed', stage: 'researching', updatedAt: '2026-11-24T12:00:00.000Z' }));
+    await strategies.save(record('a', ME, { revision: 1, name: 'Renamed', stage: 'researching', updatedAt: '2026-11-24T12:00:00.000Z' }));
     const again = await strategies.get('a');
     expect(again).toMatchObject({ name: 'Renamed', stage: 'researching', updatedAt: '2026-11-24T12:00:00.000Z' });
     expect(again?.events).toHaveLength(1);
@@ -103,11 +104,63 @@ const url = process.env.TEST_DATABASE_URL;
     ];
     await strategies.save({ ...kept, ledger: more });
     // Saving the same thing again adds nothing
-    await strategies.save({ ...kept, ledger: more });
+    await strategies.save({ ...kept, revision: 2, ledger: more });
 
     const after = await strategies.get('a');
     expect(after?.ledger).toHaveLength(4);
     expect(after?.holdings).toMatchObject([{ symbol: 'NVDAc', units: 1 }]);
     expect(after?.cash).toBeCloseTo(219.64, 2);
+  });
+
+  describe('revisions', () => {
+    it('starts a new strategy at revision 1 and says so', async () => {
+      expect(await strategies.save(record('a'))).toBe(1);
+    });
+
+    it('moves the revision on by one with each save, and says what it is now', async () => {
+      await strategies.save(record('a'));
+      expect(await strategies.save(record('a', ME, { revision: 1 }))).toBe(2);
+      expect(await strategies.save(record('a', ME, { revision: 2 }))).toBe(3);
+      expect((await strategies.get('a'))?.revision).toBe(3);
+    });
+
+    it('refuses a save made from a read that is out of date, and keeps what is there', async () => {
+      await strategies.save(record('a'));
+      await strategies.save(record('a', ME, { revision: 1, name: 'First change' }));
+
+      await expect(strategies.save(record('a', ME, { revision: 1, name: 'Stale change' }))).rejects.toBeInstanceOf(ConflictException);
+      expect((await strategies.get('a'))?.name).toBe('First change');
+    });
+
+    it('refuses a save of a strategy that exists from a record that carries no revision', async () => {
+      await strategies.save(record('a'));
+      await expect(strategies.save(record('a'))).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('lets only one of two saves made at the same moment from the same read through', async () => {
+      await strategies.save(record('a'));
+      const results = await Promise.allSettled([
+        strategies.save(record('a', ME, { revision: 1, name: 'One' })),
+        strategies.save(record('a', ME, { revision: 1, name: 'Two' })),
+      ]);
+
+      expect(results.filter(({ status }) => status === 'fulfilled')).toHaveLength(1);
+      expect(results.filter(({ status }) => status === 'rejected')).toHaveLength(1);
+      expect((await strategies.get('a'))?.revision).toBe(2);
+    });
+
+    it('keeps the revisions of different strategies apart', async () => {
+      await strategies.save(record('a'));
+      await strategies.save(record('b'));
+      await strategies.save(record('a', ME, { revision: 1 }));
+      expect((await strategies.get('b'))?.revision).toBe(1);
+    });
+
+    it('treats a strategy kept before revisions existed as revision 0', async () => {
+      await strategies.save(record('a'));
+      await dataSource.query(`update strategies set revision = 0 where id = 'a'`);
+      expect((await strategies.get('a'))?.revision).toBe(0);
+      expect(await strategies.save(record('a', ME, { revision: 0 }))).toBe(1);
+    });
   });
 });

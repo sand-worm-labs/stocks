@@ -8,7 +8,7 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "migration:run": "typeorm migration:run -d dist/database/data-source.js",
     "migration:show": "typeorm migration:show -d dist/database/data-source.js",
     "migration:revert": "typeorm migration:revert -d dist/database/data-source.js"
@@ -28,12 +28,15 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "fastify": "^5.12.8",
+    "jose": "^5.10.0",
     "nestjs-pino": "^4.6.1",
     "pg": "^8.16.3",
     "pino-http": "^11.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "typeorm": "^0.3.31"
+    "typeorm": "^0.3.31",
+    "viem": "^2.58.6",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -52,7 +55,9 @@
   },
   "jest": {
     "rootDir": ".",
-    "roots": ["<rootDir>/test"],
+    "roots": [
+      "<rootDir>/test"
+    ],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.ts$": "ts-jest"
@@ -60,6 +65,7 @@
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     },
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testTimeout": 20000
   }
 }

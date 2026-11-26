@@ -19,9 +19,10 @@ type OnboardingFlowProps = {
   region: string
   chain: string
   starters: Starter[]
+  offeredInterests: { id: string; label: string }[]
 }
 
-export function OnboardingFlow({ initial, region, chain, starters }: OnboardingFlowProps) {
+export function OnboardingFlow({ initial, region, chain, starters, offeredInterests }: OnboardingFlowProps) {
   const [step, setStep] = useState(0)
   const [interests, setInterests] = useState(initial.interests)
   const [name, setName] = useState(initial.name ?? "")
@@ -47,6 +48,7 @@ export function OnboardingFlow({ initial, region, chain, starters }: OnboardingF
             {shown === 0 && (
               <InterestStep
                 name={initial.name}
+                interests={offeredInterests}
                 value={interests}
                 onChange={setInterests}
                 onContinue={() => {

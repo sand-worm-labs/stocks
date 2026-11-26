@@ -1,0 +1,14 @@
+{
+  "name": "sandworm-stocks",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "description": "Runs every server of Sandworm Stocks together. Each app has its own package.json; this one only starts them.",
+  "scripts": {
+    "setup": "git submodule update --init --recursive && pnpm --dir apps/web install && pnpm --dir apps/mcp install",
+    "dev": "docker compose up -d --build --wait && concurrently --names web,mcp,realtime --prefix-colors cyan,magenta,yellow --kill-signal SIGTERM \"pnpm --dir apps/web dev\" \"pnpm --dir apps/mcp dev\" \"pnpm --dir apps/web realtime\"",
+    "stop": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

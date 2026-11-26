@@ -1,0 +1,56 @@
+import type { Tone } from "./tone.types"
+import type { Source } from "@/features/market/types/market.types"
+
+export type Check = { id: string; tone: Tone; text: string; term?: string }
+
+export type Metric = {
+  id: string
+  label: string
+  term: string
+  value: number
+  kind: "percent" | "ratio" | "multiple"
+  benchmark?: number
+  was?: number
+  note?: string
+}
+
+type ResearchEntry = {
+  symbol: string
+  text: string
+  label: "Fact" | "Assumption" | "Opinion"
+  source?: Source
+}
+
+type ReportSource = Source & { note: string }
+
+export type FanPoint = { month: number; low: number; median: number; high: number }
+
+export type Report = {
+  version: 1 | 2
+  // Made by the stand-in for the research agent, which runs no test: the numbers are an example and the report says so
+  preview?: boolean
+  verdict: { label: string; tone: Tone }
+  headline: string
+  plan: string
+  metrics: Metric[]
+  allocation: { symbol: string; weight: number }[]
+  summary: string[]
+  changed?: string
+  comparison?: { label: string; term?: string; before: string; after: string }[]
+  checks: { honesty: Check[]; bias: Check[]; overfit: Check[] }
+  // Month-end value of 100 invested at `start` (YYYY-MM), oldest first, the portfolio against the S&P 500. The last
+  // `holdoutMonths` are the stretch the strategy was never built on.
+  performance: { start: string; holdoutMonths: number; portfolio: number[]; benchmark: number[] }
+  periods: { label: string; term: string; portfolio: number; benchmark: number }[]
+  // `fan` is the range of a year's outcomes month by month: the middle, and the bad and good year at 1 in 20
+  drawdown: { text: string; bad: number; median: number; good: number; note: string; fan: FanPoint[] }
+  tolerance: { panic: number; worst: number; fits: boolean; text: string }
+  concentration: { symbol: string; weight: number; risk: number }[]
+  liquidity: { symbol: string; token: number; share: number }[]
+  venue: { facts: { label: string; value: string }[]; sources: Source[]; asOf: string }
+  research: ResearchEntry[]
+  researchNote: { text: string; sources: Source[]; asOf: string }
+  sources: ReportSource[]
+}
+
+export type Order = { symbol: string; spend: number; receive: number; impact: number }

@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from "node:http"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
 
 import { createServer } from "./server"
-import { createWeb, WebError } from "./web"
+import { createApi, ApiError } from "./api"
 
 const MAX_BODY = 1_000_000
 const SCOPE = "stocks"
@@ -11,8 +11,9 @@ const SCOPE = "stocks"
 export type HttpConfig = {
   // Where this server is reached from outside, with no trailing slash
   publicUrl: string
-  // Where the Sandworm Stocks app is, for this server to call, and where a person's browser reaches it (the app is the sign-in)
-  webUrl: string
+  // Where the Sandworm Stocks API is, for this server to call
+  apiUrl: string
+  // Where a person's browser reaches the web app, which is the sign-in
   webPublicUrl: string
   fetchImpl?: typeof fetch
 }
@@ -51,11 +52,11 @@ async function handleMcp(request: IncomingMessage, response: ServerResponse, con
   const token = request.headers.authorization?.replace(/^Bearer /i, "")
   if (!token) return unauthorized(response, config, "Sign in to Sandworm Stocks")
 
-  const web = createWeb(config.webUrl, token, config.fetchImpl)
+  const api = createApi(config.apiUrl, token, config.fetchImpl)
   try {
-    await web.get("/api/oauth/whoami")
+    await api.get("/oauth/whoami")
   } catch (error) {
-    if (error instanceof WebError && error.status === 401) return unauthorized(response, config, "That sign-in isn't valid any more")
+    if (error instanceof ApiError && error.status === 401) return unauthorized(response, config, "That sign-in isn't valid any more")
     return send(response, 502, { error: "The Sandworm Stocks app could not be reached" })
   }
 
@@ -64,7 +65,7 @@ async function handleMcp(request: IncomingMessage, response: ServerResponse, con
 
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })
   response.on("close", () => void transport.close())
-  await createServer(web).connect(transport)
+  await createServer(api).connect(transport)
   await transport.handleRequest(request, response, body)
 }
 

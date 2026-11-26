@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { NOT_FOR_AGENTS, TOOL_FOR } from "../src/parity"
 import { appCalls } from "./testing/app-calls"
-import { connect, fakeWeb } from "./testing/connect"
+import { connect, fakeApi } from "./testing/connect"
 
 describe("the app's API and the tools", () => {
   const calls = appCalls()
@@ -22,7 +22,7 @@ describe("the app's API and the tools", () => {
   })
 
   it("has every tool the list names", async () => {
-    const client = await connect(fakeWeb())
+    const client = await connect(fakeApi())
     const names = (await client.listTools()).tools.map(({ name }) => name)
     for (const tool of new Set(Object.values(TOOL_FOR))) expect(names).toContain(tool)
   })

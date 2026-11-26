@@ -1,5 +1,5 @@
 import type { IconType } from "react-icons"
-import { PiBuildings, PiCpu, PiHardDrives, PiQuestion, PiRobot, PiRocketLaunch } from "react-icons/pi"
+import { PiBuildings, PiCpu, PiHardDrives, PiQuestion, PiRobot, PiRocketLaunch, PiSquaresFour } from "react-icons/pi"
 
 export const ONBOARDING_COOKIES = {
   done: "sw_onboarded",
@@ -12,14 +12,19 @@ export const ONBOARDING_PATH = "/onboarding"
 
 export const NOT_SURE = "not-sure"
 
-export const INTERESTS: { id: string; label: string; icon: IconType }[] = [
-  { id: "ai", label: "AI and chips", icon: PiCpu },
-  { id: "big-tech", label: "Big tech", icon: PiBuildings },
-  { id: "robotics", label: "Robotics", icon: PiRobot },
-  { id: "space", label: "Space and frontier", icon: PiRocketLaunch },
-  { id: "hardware", label: "Hardware and memory", icon: PiHardDrives },
-  { id: NOT_SURE, label: "Not sure yet", icon: PiQuestion },
-]
+// The interests offered are the categories marked for it in the database. Only how each is drawn is here; one with no icon of its own
+// gets the plain one.
+export const INTEREST_ICONS: Record<string, IconType> = {
+  ai: PiCpu,
+  "big-tech": PiBuildings,
+  robotics: PiRobot,
+  space: PiRocketLaunch,
+  hardware: PiHardDrives,
+}
+
+export const DEFAULT_INTEREST_ICON: IconType = PiSquaresFour
+
+export const NOT_SURE_INTEREST = { id: NOT_SURE, label: "Not sure yet", icon: PiQuestion }
 
 export const STEPS = ["interests", "name", "checks", "start"] as const
 

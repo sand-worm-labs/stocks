@@ -3,11 +3,12 @@ import { ApiTags } from '@nestjs/swagger';
 import { isUUID } from 'class-validator';
 
 import { StrategiesService } from './strategies.service';
-import { StrategyRecord } from './strategy-record';
+import { StrategyRecord } from '@/features/strategies/types/kept-record';
 
-@ApiTags('Strategies')
-@Controller('strategies')
-export class StrategiesController {
+// Records as they are kept, for the web app's server, which reads them to draw its pages (with the service key)
+@ApiTags('Strategy store')
+@Controller('internal/strategies')
+export class StrategyStoreController {
   constructor(private readonly strategies: StrategiesService) {}
 
   @Get()
@@ -28,6 +29,6 @@ export class StrategiesController {
   async save(@Param('id') id: string, @Body() record: StrategyRecord) {
     if (record.id !== id) throw new BadRequestException('The strategy does not match its address');
     if (!isUUID(record.ownerId)) throw new BadRequestException('A strategy belongs to an account, which has a uuid for an id');
-    await this.strategies.save(record);
+    return { revision: await this.strategies.save(record) };
   }
 }

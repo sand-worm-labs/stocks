@@ -1,9 +1,10 @@
-import { categoriesMockData } from "@/_mockdata/categories"
 import { marketSummaryMockData } from "@/_mockdata/markets"
 import { stockDetailMock } from "@/_mockdata/stock-details"
 import { stocksMockData } from "@/_mockdata/stocks"
 
-import type { MarketSummary, Stock, StockCategory } from "@/types/markets"
+import { fromMarket } from "@/lib/api/market"
+import type { Category, MarketSummary, Stock } from "@/types/markets"
+
 import { getQuotes } from "./quote"
 import { isBuyable, underlyingTicker } from "./stock"
 
@@ -34,6 +35,5 @@ export async function getStockDetail(symbol: string) {
   return stock && isBuyable(stock) ? { stock, detail: stockDetailMock(stock) } : undefined
 }
 
-export async function getCategories(): Promise<StockCategory[]> {
-  return categoriesMockData
-}
+// Kept in the database, and read from the API. Without it the pages still draw, with none.
+export const getCategories = () => fromMarket<Category[]>("/market/categories", [])

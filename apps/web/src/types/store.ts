@@ -49,6 +49,8 @@ export type LedgerLine = {
 
 export type StrategyRecord = {
   id: string
+  // How many times it has been saved, set by the store. A strategy that is changed is saved with the revision it was read at.
+  revision?: number
   // Who made it, by the id they signed in with. Everything that reads or changes a strategy checks this first.
   ownerId: string
   name: string
@@ -76,5 +78,7 @@ export type StrategyRecord = {
 export interface StrategyStore {
   list(ownerId: string): Promise<StrategyRecord[]>
   get(id: string): Promise<StrategyRecord | undefined>
-  save(record: StrategyRecord): Promise<void>
+  // Keeps the record and says which revision it now is. Refused (a StoreConflict) when the strategy has been saved since the revision the record
+  // carries, so a save made from an old read can't undo what came after it.
+  save(record: StrategyRecord): Promise<number>
 }

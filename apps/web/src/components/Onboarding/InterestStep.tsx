@@ -1,6 +1,6 @@
 "use client"
 
-import { INTERESTS, NOT_SURE } from "@/constants/onboarding"
+import { DEFAULT_INTEREST_ICON, INTEREST_ICONS, NOT_SURE, NOT_SURE_INTEREST } from "@/constants/onboarding"
 import { cn } from "@/lib/utils"
 
 import { ContinueButton } from "./ContinueButton"
@@ -8,6 +8,7 @@ import { StepHeading } from "./StepHeading"
 
 type InterestStepProps = {
   name?: string
+  interests: { id: string; label: string }[]
   value: string[]
   onChange: (value: string[]) => void
   onContinue: () => void
@@ -15,7 +16,11 @@ type InterestStepProps = {
 
 // What they want to invest in, as many as they like. "Not sure yet" is the way out: it stands alone, and any other choice
 // takes it back.
-export function InterestStep({ name, value, onChange, onContinue }: InterestStepProps) {
+export function InterestStep({ name, interests, value, onChange, onContinue }: InterestStepProps) {
+  const options = [
+    ...interests.map(({ id, label }) => ({ id, label, icon: INTEREST_ICONS[id] ?? DEFAULT_INTEREST_ICON })),
+    NOT_SURE_INTEREST,
+  ]
   const toggle = (id: string) => {
     if (id === NOT_SURE) return onChange(value.includes(NOT_SURE) ? [] : [NOT_SURE])
     const others = value.filter((current) => current !== NOT_SURE)
@@ -30,7 +35,7 @@ export function InterestStep({ name, value, onChange, onContinue }: InterestStep
         support="Pick as many as you like."
       />
       <ul className="flex max-w-3xl flex-wrap justify-center gap-2">
-        {INTERESTS.map(({ id, label, icon: Icon }, i) => {
+        {options.map(({ id, label, icon: Icon }, i) => {
           const selected = value.includes(id)
           return (
             <li key={id} className="animate-fade-up" style={{ "--index": i } as React.CSSProperties}>

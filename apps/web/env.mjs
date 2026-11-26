@@ -5,8 +5,6 @@ export const env = createEnv({
   server: {
     // Signs the sign-in nonce and the session. A random string of 32 characters or more, kept secret.
     AUTH_SECRET: z.string().min(32).optional(),
-    // A CoinGecko "Demo" API key (free). Without one the feed is shared and rate-limited, and can refuse a deployed app.
-    COINGECKO_API_KEY: z.string().optional(),
     // The Stocks API, which keeps everything that is stored (see apps/api), and the key the two share. Without them strategies are kept in a
     // file, which is for trying the app, not for real use.
     STOCKS_API_URL: z.string().url().optional(),
@@ -31,7 +29,6 @@ export const env = createEnv({
   },
   runtimeEnv: {
     ANALYZE: process.env.ANALYZE,
-    COINGECKO_API_KEY: process.env.COINGECKO_API_KEY,
     SANDWORM_API_URL: process.env.SANDWORM_API_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
     STOCKS_API_URL: process.env.STOCKS_API_URL,

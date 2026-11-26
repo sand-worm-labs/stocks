@@ -1,13 +1,13 @@
 import { z } from "zod"
 
-import { BASE_RPC_URL, COINGECKO_URL } from "@/constants/markets"
+import { BASE_RPC_URL } from "@/constants/markets"
+import { fromMarket } from "@/lib/api/market"
 
 export type TokenSupply = { totalSupply: number; decimals: number }
 
 const TOTAL_SUPPLY = "0x18160ddd"
 const DECIMALS = "0x313ce567"
 const SUPPLY_CACHE_MS = 5 * 60 * 1000
-const ETH_CACHE_MS = 60 * 1000
 
 const rpcSchema = z.object({ result: z.string() })
 
@@ -38,22 +38,9 @@ export async function getTokenSupply(address: string): Promise<TokenSupply | und
   }
 }
 
-let ethPrice: { at: number; usd: number } | undefined
-
 export async function getEthPrice(): Promise<number | undefined> {
-  if (ethPrice && Date.now() - ethPrice.at < ETH_CACHE_MS) return ethPrice.usd
-
-  try {
-    const response = await fetch(`${COINGECKO_URL}/simple/price?ids=ethereum&vs_currencies=usd`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(8000),
-    })
-    const usd = z.object({ ethereum: z.object({ usd: z.number() }) }).parse(await response.json()).ethereum.usd
-    ethPrice = { at: Date.now(), usd }
-    return usd
-  } catch {
-    return ethPrice?.usd
-  }
+  const { usd } = await fromMarket<{ usd?: number }>("/market/eth-price", {})
+  return usd
 }
 
 const NAME = "0x06fdde03"

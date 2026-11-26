@@ -1,22 +1,26 @@
 import { readdirSync, readFileSync, statSync } from "node:fs"
-import { join, relative, sep } from "node:path"
+import { join } from "node:path"
 
-const API = join(import.meta.dirname, "../../../web/src/app/api")
-const METHOD = /export\s+(?:async\s+function|const)\s+(GET|POST|PUT|PATCH|DELETE)\b/g
+const FEATURES = join(import.meta.dirname, "../../../api/src/features")
+// A controller people and agents call is one the web app's service key doesn't guard
+const FOR_PEOPLE = /^@(ForPeople|ForTheApp|Public)\(\)/m
+const PREFIX = /@Controller\('([^']*)'\)/
+const ROUTE = /@(Get|Post|Put|Patch|Delete)\((?:'([^']*)')?\)/g
 
-function routeFiles(folder: string): string[] {
+function controllerFiles(folder: string): string[] {
   return readdirSync(folder).flatMap((name) => {
     const full = join(folder, name)
-    if (statSync(full).isDirectory()) return routeFiles(full)
-    return name === "route.ts" ? [full] : []
+    if (statSync(full).isDirectory()) return controllerFiles(full)
+    return name.endsWith(".controller.ts") ? [full] : []
   })
 }
 
-// Every call the web app's API has, read from its route files, as "POST /api/strategies/[id]/trade"
+// Every call the API has for people, read from its controllers, as "POST /strategies/:id/trade"
 export function appCalls() {
-  return routeFiles(API).flatMap((file) => {
-    const path = "/api/" + relative(API, join(file, "..")).split(sep).join("/")
+  return controllerFiles(FEATURES).flatMap((file) => {
     const source = readFileSync(file, "utf8")
-    return [...source.matchAll(METHOD)].map(([, method]) => `${method} ${path.replace(/\/$/, "")}`)
+    if (!FOR_PEOPLE.test(source)) return []
+    const prefix = PREFIX.exec(source)?.[1] ?? ""
+    return [...source.matchAll(ROUTE)].map(([, method = "", path]) => `${method.toUpperCase()} /${[prefix, path].filter(Boolean).join("/")}`)
   })
 }

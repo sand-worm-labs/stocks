@@ -1,13 +1,13 @@
 import type { McpServer, ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js"
 import type { z } from "zod"
 
-import { WebError } from "./web"
+import { ApiError } from "./api"
 
 const text = (value: string, isError = false) => ({ isError, content: [{ type: "text" as const, text: value }] })
 
 // What the app refused is said as it was, so the agent can act on it. Anything else is ours, and is not shown.
 function failure(error: unknown) {
-  if (error instanceof WebError) return text(error.message, true)
+  if (error instanceof ApiError) return text(error.message, true)
   console.error(error)
   return text("Something went wrong on our side", true)
 }

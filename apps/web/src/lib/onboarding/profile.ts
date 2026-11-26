@@ -1,15 +1,18 @@
 import { cookies } from "next/headers"
 
-import { INTERESTS, NAME_MAX_LENGTH, ONBOARDING_COOKIES } from "@/constants/onboarding"
+import { NAME_MAX_LENGTH, ONBOARDING_COOKIES } from "@/constants/onboarding"
 import { getSignedInUserId } from "@/lib/auth/session"
 
 import type { OnboardingProfile } from "@/types/onboarding"
 import { onboardedMarker } from "./profile-marker"
 
-const known = new Set(INTERESTS.map(({ id }) => id))
+// An interest is a category's id. Which ids exist is the database's business, so only the shape is checked here: one that has since gone
+// matches nothing.
+const INTEREST_ID = /^[a-z0-9-]{1,40}$/
+const MOST_INTERESTS = 20
 
 export const cleanName = (value: string) => value.trim().replace(/\s+/g, " ").slice(0, NAME_MAX_LENGTH)
-export const cleanInterests = (values: string[]) => values.filter((value) => known.has(value))
+export const cleanInterests = (values: string[]) => values.filter((value) => INTEREST_ID.test(value)).slice(0, MOST_INTERESTS)
 
 export async function readOnboarding(userId?: string) {
   try {

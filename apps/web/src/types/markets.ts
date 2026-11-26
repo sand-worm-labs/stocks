@@ -1,12 +1,9 @@
-import type { StockTheme } from "@/constants/markets"
-
 export type Stock = {
   symbol: string
   name: string
   // A stock with no price or liquidity is listed, but has no token to buy yet.
   price?: number
   liquidity?: number
-  theme?: StockTheme
   series?: number[]
   preIpo?: boolean
   // The share's change over the month, as a fraction, once it has been looked up
@@ -17,7 +14,6 @@ export type Stock = {
 export type MarketSummary = {
   listed: number
   buyable: number
-  themeCounts: Partial<Record<StockTheme, number>>
   asOf: string
   source: Source
 }
@@ -39,4 +35,11 @@ export type StockDetail = {
   risk?: { beta: number; worstDrop: number }
 }
 
+// A category as it is kept: its stocks by their shares' tickers
+export type CategoryRecord = { id: string; label: string; isHot: boolean; isInterest: boolean; tickers: string[] }
+
+// A category against the stocks on offer: the ones that can be bought, and the ones listed with no token yet
 export type StockCategory = { id: string; label: string; symbols: string[]; unavailable?: string[] }
+
+// What the API answers with
+export type Category = CategoryRecord & StockCategory

@@ -4,6 +4,7 @@ import { splitDeposit } from "@/lib/portfolios/deposit"
 import { ResearchFailure } from "@/lib/research/failure"
 import { isSandwormLink, type ResearchResult, researchResultSchema } from "@/lib/research/result"
 import type { RuleSpec } from "@/lib/rules/spec"
+import { StoreConflict } from "@/lib/store/conflict"
 import { withFee } from "@/lib/trade/fee"
 import { depositLines, LedgerError, ledgerOf, positionsOf, saleLines, withdrawLine, withLines } from "@/lib/trade/ledger"
 import type { AgentStep } from "@/types/agent"
@@ -24,6 +25,29 @@ export class StrategyError extends Error {
     readonly status: 400 | 401 | 404 | 409 | 422
   ) {
     super(message)
+  }
+}
+
+// A step that was made from a read that is out of date: the strategy was saved by another step in between. The person can do it again.
+export class StrategyConflict extends StrategyError {
+  constructor() {
+    super("It changed while you were working on it. Try again", 409)
+  }
+}
+
+const MOST_ATTEMPTS = 3
+
+const doneCount = (steps?: AgentStep[]) => steps?.filter(({ state }) => state === "done").length ?? 0
+
+// Does `work` again, from a fresh read, when it was refused because the strategy changed under it. For steps that belong to the system and
+// not to a person's click (research finishing), which have nobody to tell to try again.
+async function afresh<T>(work: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await work()
+    } catch (error) {
+      if (!(error instanceof StrategyConflict) || attempt === MOST_ATTEMPTS) throw error
+    }
   }
 }
 
@@ -99,10 +123,15 @@ export function createStrategyService({
     return record
   }
 
+  // Keeps the record, at the revision the store gives it. Refused, as a StrategyConflict, if the strategy was saved since the revision this record was read at.
   const save = async (record: StrategyRecord) => {
     const next = { ...record, updatedAt: now().toISOString() }
-    await store.save(next)
-    return next
+    try {
+      return { ...next, revision: await store.save(next) }
+    } catch (error) {
+      if (error instanceof StoreConflict) throw new StrategyConflict()
+      throw error
+    }
   }
 
   const happened = (record: StrategyRecord, kind: StrategyEvent["kind"]) => [
@@ -120,13 +149,16 @@ export function createStrategyService({
   // The one place a real run ends well. A result is checked in full here, whoever it comes from, and only taken while the strategy is
   // being researched, so it can't replace the findings of one that is ready or trading.
   async function completeResearch(ownerId: string, id: string, result: unknown) {
-    const record = await owned(ownerId, id)
-    if (!isResearching(record) || record.research?.mode !== "waiting")
-      throw new StrategyError("It isn't waiting for research", 409)
     const parsed = researchResultSchema.safeParse(result)
     if (!parsed.success) throw new StrategyError("The research result is missing something or has something wrong in it", 422)
     if (!isSandwormLink(parsed.data.notebook.url)) throw new StrategyError("The notebook link has to lead to Sandworm", 422)
-    return finish({ ...record, research: { ...record.research, result: parsed.data, error: undefined } })
+
+    // Progress is being written as the run goes, so a read can be out of date by the time this saves; it is read again and saved again
+    return afresh(async () => {
+      const record = await owned(ownerId, id)
+      if (!isResearching(record) || record.research?.mode !== "waiting") throw new StrategyError("It isn't waiting for research", 409)
+      return finish({ ...record, research: { ...record.research, result: parsed.data, error: undefined } })
+    })
   }
 
   // A live strategy that trades on paper, whose money this app can move. One that trades from a wallet has trades signed on the chain,
@@ -157,7 +189,15 @@ export function createStrategyService({
   // Research that has run its time is finished as it is read
   const settle = async (record: StrategyRecord) => {
     const due = record.research?.readyAt && Date.parse(record.research.readyAt) <= now().getTime()
-    return isResearching(record) && record.report && due ? finish(record) : record
+    if (!isResearching(record) || !record.report || !due) return record
+
+    // Looking at a strategy must never fail because it changed while it was looked at: if another step got there first, what it did stands
+    try {
+      return await finish(record)
+    } catch (error) {
+      if (error instanceof StrategyConflict) return (await store.get(record.id)) ?? record
+      throw error
+    }
   }
 
   const capOf = ({ rules }: StrategyRecord) => rules.find((rule) => rule.type === "max-weight")?.limit ?? 1
@@ -283,20 +323,30 @@ export function createStrategyService({
       if (!producer?.run) return
       const record = await owned(ownerId, id)
       if (!isResearching(record) || record.research?.mode !== "waiting") return
+      // Progress only tells the person where the run is, so one that is out of date is dropped, not forced in over what came after
       const progress = async (steps: AgentStep[]) => {
-        const fresh = await owned(ownerId, id)
-        if (isResearching(fresh) && fresh.research) await save({ ...fresh, research: { ...fresh.research, progress: steps } })
+        try {
+          await afresh(async () => {
+            const fresh = await owned(ownerId, id)
+            const isBehind = doneCount(steps) < doneCount(fresh.research?.progress)
+            if (isResearching(fresh) && fresh.research && !isBehind) await save({ ...fresh, research: { ...fresh.research, progress: steps } })
+          })
+        } catch (error) {
+          if (!(error instanceof StrategyConflict)) throw error
+        }
       }
       try {
         await completeResearch(ownerId, id, await producer.run(record, { ...context, progress }))
       } catch (error) {
         console.error("Research failed", error)
-        const fresh = await owned(ownerId, id)
-        if (!isResearching(fresh) || !fresh.research) return
         // What is safe to say is said as it is; anything else is said in full only while building the app, where it is what is needed
         const known = error instanceof ResearchFailure || process.env.NODE_ENV !== "production"
         const reason = error instanceof Error && known ? error.message : "Something went wrong on our side"
-        await save({ ...fresh, research: { ...fresh.research, error: `The research stopped: ${reason}` } })
+        await afresh(async () => {
+          const fresh = await owned(ownerId, id)
+          if (!isResearching(fresh) || !fresh.research) return
+          await save({ ...fresh, research: { ...fresh.research, error: `The research stopped: ${reason}` } })
+        })
       }
     },
 

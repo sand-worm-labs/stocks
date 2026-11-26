@@ -4,6 +4,7 @@ import { mkdtemp } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
+import { StoreConflict } from "@/lib/store/conflict"
 import { FileStore } from "@/lib/store/file"
 import type { StrategyRecord, StrategyStore } from "@/types/store"
 
@@ -61,14 +62,14 @@ describe.each(stores)("the %s store", (_name, make) => {
     const store = await make()
     const saved = record("a", ME, { startedAt: "2026-11-24T11:00:00.000Z" })
     await store.save(saved)
-    expect(await store.get("a")).toEqual(saved)
+    expect(await store.get("a")).toEqual({ ...saved, revision: 1 })
     expect(await store.get("missing")).toBeUndefined()
   })
 
   it("replaces a record saved again under its id", async () => {
     const store = await make()
     await store.save(record("a"))
-    await store.save(record("a", ME, { name: "Renamed", stage: "researching", updatedAt: "2026-11-24T12:00:00.000Z" }))
+    await store.save(record("a", ME, { revision: 1, name: "Renamed", stage: "researching", updatedAt: "2026-11-24T12:00:00.000Z" }))
     expect(await store.get("a")).toMatchObject({
       name: "Renamed",
       stage: "researching",
@@ -89,6 +90,41 @@ describe.each(stores)("the %s store", (_name, make) => {
     const store = await make()
     const saved = live("a")
     await store.save(saved)
-    expect(await store.get("a")).toEqual(saved)
+    expect(await store.get("a")).toEqual({ ...saved, revision: 1 })
+  })
+
+  describe("revisions", () => {
+    it("starts a new strategy at revision 1 and says so, and moves on by one with each save", async () => {
+      const store = await make()
+      expect(await store.save(record("a"))).toBe(1)
+      expect(await store.save(record("a", ME, { revision: 1 }))).toBe(2)
+      expect((await store.get("a"))?.revision).toBe(2)
+    })
+
+    it("refuses a save made from a read that is out of date, and keeps what is there", async () => {
+      const store = await make()
+      await store.save(record("a"))
+      await store.save(record("a", ME, { revision: 1, name: "First change" }))
+
+      await expect(store.save(record("a", ME, { revision: 1, name: "Stale change" }))).rejects.toBeInstanceOf(StoreConflict)
+      expect((await store.get("a"))?.name).toBe("First change")
+    })
+
+    it("refuses a save of a strategy that exists from a record that carries no revision", async () => {
+      const store = await make()
+      await store.save(record("a"))
+      await expect(store.save(record("a"))).rejects.toBeInstanceOf(StoreConflict)
+    })
+
+    it("lets only one of two saves made at the same moment from the same read through", async () => {
+      const store = await make()
+      await store.save(record("a"))
+      const results = await Promise.allSettled([
+        store.save(record("a", ME, { revision: 1, name: "One" })),
+        store.save(record("a", ME, { revision: 1, name: "Two" })),
+      ])
+      expect(results.filter(({ status }) => status === "fulfilled")).toHaveLength(1)
+      expect((await store.get("a"))?.revision).toBe(2)
+    })
   })
 })

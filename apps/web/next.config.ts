@@ -3,10 +3,16 @@ import { type NextConfig } from "next"
 
 import { env } from "./env.mjs"
 
+const API_URL = env.STOCKS_API_URL ?? "http://localhost:4000"
+
 const config: NextConfig = {
   // A second dev server can keep its own cache folder, so one that has gone wrong never spoils the other
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   reactStrictMode: true,
+  // The repo's root has a lockfile of its own, for the one command that starts every server. Without saying where this app is, Next takes that
+  // folder for the project and compiles from there.
+  turbopack: { root: __dirname },
+  outputFileTracingRoot: __dirname,
   // Opening the dev server through a tunnel is a request from another origin, and its scripts are refused without this
   allowedDevOrigins: ["*.ngrok-free.dev", "*.ngrok-free.app"],
   images: {
@@ -26,11 +32,10 @@ const config: NextConfig = {
     { source: "/portfolios", destination: "/strategies", permanent: true },
     { source: "/portfolios/:path*", destination: "/strategies/:path*", permanent: true },
   ],
+  // This app has no API of its own: `/api/*` is the Stocks API, passed through so the browser stays on one origin and its cookie with it
   rewrites: async () => [
-    { source: "/healthz", destination: "/api/health" },
-    { source: "/api/healthz", destination: "/api/health" },
-    { source: "/health", destination: "/api/health" },
-    { source: "/ping", destination: "/api/health" },
+    ...["/healthz", "/api/healthz", "/health", "/ping"].map((source) => ({ source, destination: `${API_URL}/health` })),
+    { source: "/api/:path*", destination: `${API_URL}/:path*` },
   ],
 }
 

@@ -1,14 +1,28 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "ES2022",
+    "target": "ES2023",
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@/common/*": ["src/common/*"],
-      "@/core/*": ["src/core/*"],
-      "@/features/*": ["src/features/*"],
-      "@/infrastructure/*": ["src/infrastructure/*"]
+      "@/common/*": [
+        "src/common/*"
+      ],
+      "@/core/*": [
+        "src/core/*"
+      ],
+      "@/features/*": [
+        "src/features/*"
+      ],
+      "@/infrastructure/*": [
+        "src/infrastructure/*"
+      ],
+      "@/config/*": [
+        "src/config/*"
+      ],
+      "@/_mockdata/*": [
+        "src/_mockdata/*"
+      ]
     },
     "strict": true,
     "noUncheckedIndexedAccess": true,

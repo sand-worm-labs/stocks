@@ -21,7 +21,6 @@ type StockPickerProps = {
   stocks: Stock[]
   categories: StockCategory[]
   buyableCount: number
-  initialCategoryIds: string[]
 }
 
 const toggle = <T,>(set: Set<T>, item: T) => {
@@ -30,10 +29,10 @@ const toggle = <T,>(set: Set<T>, item: T) => {
   return next
 }
 
-export function StockPicker({ stocks, categories, buyableCount, initialCategoryIds }: StockPickerProps) {
+export function StockPicker({ stocks, categories, buyableCount }: StockPickerProps) {
   const { start, busy } = useStartStrategy()
   const [query, setQuery] = useState("")
-  const [pickedCategories, setPickedCategories] = useState(() => new Set(initialCategoryIds))
+  const [pickedCategories, setPickedCategories] = useState(() => new Set<string>())
   const [pickedStocks, setPickedStocks] = useState(() => new Set<string>())
 
   const view = useMemo(() => filterPicker(query, stocks, categories), [query, stocks, categories])

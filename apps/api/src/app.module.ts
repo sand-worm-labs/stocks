@@ -1,20 +1,20 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 
 import { ApiModule } from './api.module';
-import appConfig from '@/core/config/app.config';
 import { DatabaseModule } from '@/infrastructure/database/database.module';
+import { settings } from '@/config/settings';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [appConfig] }),
-    LoggerModule.forRoot({
-      pinoHttp: {
-        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-        transport: process.env.NODE_ENV === 'production' ? undefined : { target: 'pino-pretty', options: { singleLine: true } },
-        redact: ['req.headers.authorization'],
-      },
+    LoggerModule.forRootAsync({
+      useFactory: () => ({
+        pinoHttp: {
+          level: settings().logLevel,
+          transport: settings().isProduction ? undefined : { target: 'pino-pretty', options: { singleLine: true } },
+          redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+        },
+      }),
     }),
     DatabaseModule,
     ApiModule,

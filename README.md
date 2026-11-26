@@ -132,7 +132,7 @@ It is built on:
 - Tailwind CSS v4 with Sandworm's tokens and fonts, copied from `sandworm-web`
 - Vitest, React Testing Library, Playwright, Storybook
 - ESLint, Prettier, conventional commits, T3 Env for typed env vars
-- A `/api/health` route and Vercel config
+- `/api/*` passed through to the API, and Vercel config
 
 Not yet built:
 
@@ -158,7 +158,27 @@ One continuous run that shows:
 
 ## Getting started
 
-Requires Node.js and [pnpm](https://pnpm.io/) (via Corepack).
+Requires Node.js, [pnpm](https://pnpm.io/) (via Corepack) and Docker.
+
+**Everything at once**, from the repo root:
+
+```bash
+pnpm setup   # once: the git submodules and each app's packages
+pnpm dev     # the database and API (Docker), the web app, the MCP server and the realtime server
+pnpm stop    # stops the database and API
+```
+
+| Server | Where |
+|---|---|
+| Web app | http://localhost:3001 |
+| API (NestJS) | http://localhost:4000 |
+| MCP server | http://localhost:4100/mcp |
+| Realtime (chat and live market) | ws://localhost:3002 |
+| Postgres | localhost:5433 |
+
+The API reads the same settings file as the web app, `apps/web/.env.local` (Docker Compose passes it in), so both have the same `AUTH_SECRET`. Put `COINGECKO_API_KEY=…` there too.
+
+One app on its own:
 
 ```bash
 cd apps/web
@@ -166,7 +186,7 @@ pnpm install
 pnpm dev          # dev server with Turbopack
 ```
 
-The API and its database: `docker compose up -d` from the repo root (the API is on :4000).
+The API and its database on their own: `docker compose up -d` from the repo root (the API is on :4000).
 
 ```bash
 pnpm build        # production build

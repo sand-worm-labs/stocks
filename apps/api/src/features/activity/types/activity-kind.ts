@@ -1,0 +1,17 @@
+// The kinds of thing that happen to a strategy, as the activity list names them
+export type ActivityKind =
+  | "drafted"
+  | "researching"
+  | "ready"
+  | "started"
+  | "checked"
+  | "locked"
+  | "report"
+  | "adapted"
+  | "bought"
+  | "sold"
+  | "deposit"
+  | "withdrew"
+  | "refused"
+  | "alert"
+  | "gap"

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
-import { Profile } from './entities/profile.entity';
-import { Wallet } from './entities/wallet.entity';
+import { Profile } from '@/features/accounts/entities/profile.entity';
+import { Wallet } from '@/features/accounts/entities/wallet.entity';
 
 @Injectable()
 export class AccountsService {

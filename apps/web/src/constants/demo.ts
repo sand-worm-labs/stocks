@@ -12,5 +12,3 @@ export const DEMO_MODEL_CHOICES = [
   { value: 200, label: "200" },
   { value: MAX_DEMO_MODELS, label: "1,000" },
 ]
-
-export const DEMO_PICKED_CATEGORY = "robotics"

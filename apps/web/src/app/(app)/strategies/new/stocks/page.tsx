@@ -4,7 +4,6 @@ import { BriefTabs } from "@/components/Brief/BriefTabs"
 import { FlowLayout } from "@/components/Flow/FlowLayout"
 import { StepProgress } from "@/components/Flow/StepProgress"
 import { StockPicker } from "@/components/StockPicker/StockPicker"
-import { DEMO_PICKED_CATEGORY } from "@/constants/demo"
 import { getCategories, getMarketSummary, getStocks } from "@/lib/markets/source"
 
 export const metadata: Metadata = { title: "Stocks or a category" }
@@ -21,9 +20,8 @@ export default async function StockPickerPage() {
         <BriefTabs current="stockPicker" />
         <StockPicker
           stocks={stocks}
-          categories={categories}
+          categories={categories.filter(({ symbols }) => symbols.length)}
           buyableCount={summary.buyable}
-          initialCategoryIds={[DEMO_PICKED_CATEGORY]}
         />
       </FlowLayout>
     </div>

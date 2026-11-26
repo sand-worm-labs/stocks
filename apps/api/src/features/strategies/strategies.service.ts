@@ -1,17 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { DataSource, EntityManager, In } from 'typeorm';
 
 import { Profile } from '@/features/accounts/entities/profile.entity';
 import { Activity } from '@/features/activity/entities/activity.entity';
 
-import { ACTIVITY_KINDS, EVENT_OF_ACTIVITY, activityOf } from './activity-of';
-import { LedgerEntry } from './entities/ledger-entry.entity';
-import { ResearchRun } from './entities/research-run.entity';
-import { StrategyVersion } from './entities/strategy-version.entity';
-import { Strategy } from './entities/strategy.entity';
-import { TradeApproval } from './entities/trade-approval.entity';
-import { depositedIn, LedgerLine, openingLines, positionsOf } from './ledger';
-import { StrategyRecord } from './strategy-record';
+import { ACTIVITY_KINDS, EVENT_OF_ACTIVITY, activityOf } from '@/features/activity/activity-of';
+import { LedgerEntry } from '@/features/strategies/entities/ledger-entry.entity';
+import { ResearchRun } from '@/features/strategies/entities/research-run.entity';
+import { StrategyVersion } from '@/features/strategies/entities/strategy-version.entity';
+import { Strategy } from '@/features/strategies/entities/strategy.entity';
+import { TradeApproval } from '@/features/strategies/entities/trade-approval.entity';
+import { depositedIn, LedgerLine, openingLines, positionsOf } from '@/features/strategies/trading/kept-ledger';
+import { StrategyRecord } from '@/features/strategies/types/kept-record';
 
 const VERSION = 1;
 
@@ -44,14 +44,18 @@ export class StrategiesService {
     return record;
   }
 
-  async save(record: StrategyRecord) {
-    await this.dataSource.transaction(async (tx) => {
+  /// Keeps the record, and says which revision it now is. Refused (409) if the strategy has been saved since the revision the record carries,
+  /// so a save made from an old read can't undo what came after.
+  async save(record: StrategyRecord): Promise<number> {
+    return this.dataSource.transaction(async (tx) => {
       await tx.createQueryBuilder().insert().into(Profile).values({ userId: record.ownerId }).orIgnore().execute();
-      await saveStrategy(tx, record);
+      const revision = await nextRevision(tx, record);
+      await saveStrategy(tx, record, revision);
       await saveResearch(tx, record);
       await openLedger(tx, record);
       await saveApproval(tx, record);
       await saveEvents(tx, record);
+      return revision;
     });
   }
 
@@ -100,6 +104,7 @@ export class StrategiesService {
 
       return {
         id: row.id,
+        revision: row.revision,
         ownerId: row.ownerId,
         name: row.name,
         brief: row.brief,
@@ -151,7 +156,16 @@ export class StrategiesService {
   }
 }
 
-async function saveStrategy(tx: EntityManager, record: StrategyRecord) {
+// The revision a record is saved as. The row is locked while it is read, so two saves of one strategy at once are taken one after the other, and
+// the second sees what the first did.
+async function nextRevision(tx: EntityManager, record: StrategyRecord): Promise<number> {
+  const current = await tx.findOne(Strategy, { where: { id: record.id }, lock: { mode: 'pessimistic_write' } });
+  if (!current) return 1;
+  if (record.revision !== current.revision) throw new ConflictException('It changed while you were working on it. Load it again');
+  return current.revision + 1;
+}
+
+async function saveStrategy(tx: EntityManager, record: StrategyRecord, revision: number) {
   await tx.upsert(
     Strategy,
     {
@@ -163,6 +177,7 @@ async function saveStrategy(tx: EntityManager, record: StrategyRecord) {
       stage: record.stage,
       mode: record.funding && (record.funding.mode === 'live' ? 'wallet' : 'paper'),
       currentVersion: VERSION,
+      revision,
       createdAt: new Date(record.createdAt),
       updatedAt: new Date(record.updatedAt),
       startedAt: record.startedAt ? new Date(record.startedAt) : null,

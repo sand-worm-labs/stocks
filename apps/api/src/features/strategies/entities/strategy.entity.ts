@@ -11,6 +11,8 @@ export class Strategy {
   @Column('text', { nullable: true }) mode: 'paper' | 'wallet' | null;
   @Column('integer', { name: 'current_version', default: 1 })
   currentVersion: number;
+  // How many times it has been saved: a save has to name the revision it read
+  @Column('integer', { default: 0 }) revision: number;
   @Column('timestamptz', { name: 'created_at' }) createdAt: Date;
   @Column('timestamptz', { name: 'updated_at' }) updatedAt: Date;
   @Column('timestamptz', { name: 'started_at', nullable: true })

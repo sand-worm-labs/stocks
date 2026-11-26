@@ -3,10 +3,10 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { vi } from "vitest"
 
 import { createServer } from "../../src/server"
-import type { Web } from "../../src/web"
+import type { Api } from "../../src/api"
 
 // The app, stood in for: every call answers `{ ok: true }` unless a test says otherwise, and can be asked what it was called with
-export const fakeWeb = (): { [K in keyof Web]: ReturnType<typeof vi.fn> } => ({
+export const fakeApi = (): { [K in keyof Api]: ReturnType<typeof vi.fn> } => ({
   get: vi.fn().mockResolvedValue({ ok: true }),
   post: vi.fn().mockResolvedValue({ ok: true }),
   patch: vi.fn().mockResolvedValue({ ok: true }),
@@ -14,9 +14,9 @@ export const fakeWeb = (): { [K in keyof Web]: ReturnType<typeof vi.fn> } => ({
 })
 
 // An agent connected to the server, as it would be, over a pipe in memory
-export async function connect(web: Web) {
+export async function connect(api: Api) {
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
-  await createServer(web).connect(serverSide)
+  await createServer(api).connect(serverSide)
   const client = new Client({ name: "test", version: "0" })
   await client.connect(clientSide)
   return client

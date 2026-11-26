@@ -7,8 +7,8 @@ import { createHandler } from "../src/http"
 let server: Server | undefined
 afterEach(() => new Promise<void>((done) => (server ? server.close(() => done()) : done())))
 
-async function start(web: typeof fetch) {
-  server = createServer(createHandler({ publicUrl: "https://mcp.example", webUrl: "http://app.test", webPublicUrl: "https://stocks.example", fetchImpl: web }))
+async function start(api: typeof fetch) {
+  server = createServer(createHandler({ publicUrl: "https://mcp.example", apiUrl: "http://api.test", webPublicUrl: "https://stocks.example", fetchImpl: api }))
   await new Promise<void>((done) => server?.listen(0, done))
   return `http://localhost:${(server.address() as AddressInfo).port}`
 }
@@ -35,22 +35,22 @@ describe("how a client finds out where to sign in", () => {
   })
 
   it("answers a request with no token with the standard 401 that points there", async () => {
-    const web = reply(200, {})
-    const url = await start(web)
+    const api = reply(200, {})
+    const url = await start(api)
     const response = await post(url)
     expect(response.status).toBe(401)
     expect(response.headers.get("www-authenticate")).toBe('Bearer resource_metadata="https://mcp.example/.well-known/oauth-protected-resource"')
-    expect(web).not.toHaveBeenCalled()
+    expect(api).not.toHaveBeenCalled()
   })
 })
 
 describe("a request with a token", () => {
   it("is checked with the app, with the token on it, before anything is answered", async () => {
-    const web = reply(200, { ok: true })
-    const url = await start(web)
+    const api = reply(200, { ok: true })
+    const url = await start(api)
     await post(url, "agent-token")
-    const [address, init] = web.mock.calls[0] ?? []
-    expect(String(address)).toBe("http://app.test/api/oauth/whoami")
+    const [address, init] = api.mock.calls[0] ?? []
+    expect(String(address)).toBe("http://api.test/oauth/whoami")
     expect(init.headers.Authorization).toBe("Bearer agent-token")
   })
 

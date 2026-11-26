@@ -8,8 +8,8 @@ import { TokenTable } from "@/components/Markets/TokenTable"
 import { TradeTape } from "@/components/Markets/TradeTape"
 import { Reveal } from "@/components/Reveal/Reveal"
 import { SearchInput } from "@/components/SearchInput/SearchInput"
-import { ALL_TOKENS } from "@/constants/categories"
-import { categoryCounts, filterByCategory, parseCategory } from "@/lib/markets/categories"
+import { ALL_TOKENS, categoryCounts, filterByCategory, parseCategory } from "@/lib/markets/categories"
+import { getCategories } from "@/lib/markets/source"
 import { ALL_ISSUERS, filterByIssuer, getBaseTokens, issuerCounts, searchTokens } from "@/lib/markets/tokens"
 
 export const metadata: Metadata = { title: "Markets" }
@@ -18,11 +18,11 @@ type MarketsPageProps = { searchParams: Promise<{ issuer?: string; q?: string; c
 
 export default async function MarketsPage({ searchParams }: MarketsPageProps) {
   const { issuer: issuerParam, q = "", category: categoryParam } = await searchParams
-  const tokens = await getBaseTokens()
+  const [tokens, categories] = await Promise.all([getBaseTokens(), getCategories()])
   const issuers = issuerCounts(tokens)
   const category = parseCategory(
     categoryParam,
-    categoryCounts(tokens).map(({ id }) => id)
+    categoryCounts(tokens, categories).map(({ id }) => id)
   )
   const issuer = issuers.some((option) => option.issuer === issuerParam) ? (issuerParam as string) : ALL_ISSUERS
 
@@ -39,6 +39,7 @@ export default async function MarketsPage({ searchParams }: MarketsPageProps) {
         </Reveal>
         <CategoryChips
           tokens={tokens}
+          categories={categories}
           active={category}
           keep={{ ...(q && { q }), ...(issuer !== ALL_ISSUERS && { issuer }) }}
         />
@@ -57,7 +58,7 @@ export default async function MarketsPage({ searchParams }: MarketsPageProps) {
           />
         </div>
         <Reveal index={4}>
-          <TokenTable tokens={searchTokens(filterByIssuer(filterByCategory(tokens, category), issuer), q)} />
+          <TokenTable tokens={searchTokens(filterByIssuer(filterByCategory(tokens, category, categories), issuer), q)} />
         </Reveal>
       </div>
     </>

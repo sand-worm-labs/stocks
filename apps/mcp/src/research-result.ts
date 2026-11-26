@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-// What an agent hands back as research. This is a copy of the app's own schema (apps/web/src/lib/research/result.ts), so the agent is told
+// What an agent hands back as research. This is a copy of the app's own schema (apps/api/src/features/research/research-result.ts), so the agent is told
 // what shape to build. The app checks the result in full when it arrives, so a difference here can't let a bad one in; a test (see
 // research-result.test.ts) fails when the two stop matching, so the agent is never told the wrong shape.
 const text = (max: number) => z.string().trim().min(1).max(max)

@@ -4,6 +4,7 @@ import { dirname } from "node:path"
 import type { StrategyRecord, StrategyStore } from "@/types/store"
 
 import { completeRecord } from "./complete"
+import { StoreConflict } from "./conflict"
 
 type Data = Record<string, StrategyRecord>
 
@@ -14,9 +15,11 @@ export class FileStore implements StrategyStore {
 
   constructor(private readonly path: string) {}
 
+  // A strategy kept before revisions existed is at revision 0, which is what whoever reads it sends back
   private async read(): Promise<Data> {
     try {
-      return JSON.parse(await readFile(this.path, "utf8")) as Data
+      const data = JSON.parse(await readFile(this.path, "utf8")) as Data
+      return Object.fromEntries(Object.entries(data).map(([id, record]) => [id, { ...record, revision: record.revision ?? 0 }]))
     } catch {
       return {}
     }
@@ -48,10 +51,15 @@ export class FileStore implements StrategyStore {
   save(record: StrategyRecord) {
     return this.serial(async () => {
       const data = await this.read()
-      data[record.id] = record
+      const current = data[record.id]
+      if (current && record.revision !== current.revision) throw new StoreConflict()
+
+      const revision = (current?.revision ?? 0) + 1
+      data[record.id] = { ...record, revision }
       await mkdir(dirname(this.path), { recursive: true })
       await writeFile(`${this.path}.tmp`, JSON.stringify(data, null, 2))
       await rename(`${this.path}.tmp`, this.path)
+      return revision
     })
   }
 }

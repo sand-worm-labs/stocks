@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { researchResultSchema as appSchema } from "../../web/src/lib/research/result"
+import { researchResultSchema as appSchema } from "../../api/src/features/research/research-result"
 import { researchResultSchema } from "../src/research-result"
 
 const sample = {

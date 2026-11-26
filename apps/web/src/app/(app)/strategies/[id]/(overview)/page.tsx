@@ -12,11 +12,12 @@ import { DraftWorkspace } from "@/components/Workspace/DraftWorkspace"
 import { getActivity } from "@/lib/activity/source"
 import { getCantMeetScript } from "@/lib/agent/source"
 import { getBenchmarks } from "@/lib/benchmarks/source"
-import { getMarketSummary, getStocks } from "@/lib/markets/source"
+import { getCategories, getMarketSummary, getStocks } from "@/lib/markets/source"
 import { getHeldAddresses } from "@/lib/portfolios/addresses"
 import { getChartData } from "@/lib/portfolios/chart"
 import { getPortfolio } from "@/lib/portfolios/source"
 import { maxWeightOf } from "@/lib/rules/readings"
+import { stocksNamedIn } from "@/lib/markets/categories"
 import { getRules } from "@/lib/rules/source"
 import { getSession } from "@/lib/session/source"
 import { getStrategy } from "@/lib/strategy/source"
@@ -29,7 +30,12 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
   if (!portfolio) notFound()
   if (portfolio.status === "draft") return <DraftWorkspace portfolio={portfolio} />
 
-  const [{ rules }, stocks, summary] = await Promise.all([getRules(portfolio), getStocks(), getMarketSummary()])
+  const [{ rules }, stocks, summary, categories] = await Promise.all([
+    getRules(portfolio),
+    getStocks(),
+    getMarketSummary(),
+    getCategories(),
+  ])
 
   if (portfolio.status === "unbuildable") {
     const script = await getCantMeetScript(portfolio)
@@ -38,7 +44,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
       <CantMeetView
         portfolio={portfolio}
         rules={rules}
-        universe={stocks.filter(({ theme }) => theme === "robotics")}
+        universe={stocksNamedIn(portfolio.brief, categories, stocks)}
         summary={summary}
         script={script}
       />

@@ -8,10 +8,13 @@ import { reportMockData } from "@/_mockdata/reports"
 import { BRIEF, market } from "@/lib/pipeline/fixtures"
 import { createLocalPipeline } from "@/lib/pipeline/local"
 import type { ResearchResult } from "@/lib/research/result"
+import { StoreConflict } from "@/lib/store/conflict"
 import { FileStore } from "@/lib/store/file"
 
 import { toPortfolio } from "@/lib/strategies/portfolio"
-import { createStrategyService, fill, RESEARCH_MS, StrategyError, type StrategyService } from "@/lib/strategies/service"
+import { createStrategyService, fill, RESEARCH_MS, StrategyConflict, StrategyError, type StrategyService } from "@/lib/strategies/service"
+import type { AgentStep } from "@/types/agent"
+import type { StrategyRecord, StrategyStore } from "@/types/store"
 
 let service: StrategyService
 let store: FileStore
@@ -430,5 +433,148 @@ describe("moving a live strategy's money", () => {
     await money.finishResearch("u1", wallet.id)
     await money.goLive("u1", wallet.id, 400, { mode: "live", from: "0xabc", chainId: 84532 })
     await expect(money.sell("u1", wallet.id, { share: 1 })).rejects.toThrow(/wallet/)
+  })
+})
+
+// A store that lets another writer in just before the next saves: what happens when a progress write lands while a step is being made
+function withRivals(inner: StrategyStore, rivals: () => number) {
+  let rivalsLeft = rivals()
+  const saves = { count: 0 }
+  const racing: StrategyStore = {
+    list: (ownerId) => inner.list(ownerId),
+    get: (id) => inner.get(id),
+    async save(record: StrategyRecord) {
+      saves.count += 1
+      if (rivalsLeft > 0 && record.id) {
+        rivalsLeft -= 1
+        const current = await inner.get(record.id)
+        // The other writer saves first, so the revision this save was made from is no longer the latest
+        if (current) await inner.save({ ...current, updatedAt: `rival-${rivalsLeft}` })
+      }
+      return inner.save(record)
+    },
+  }
+  return { store: racing, saves }
+}
+
+describe("a strategy that changes while a step is being made", () => {
+  const result: ResearchResult = {
+    headline: "Holds up in a test",
+    summary: "Example numbers.",
+    metrics: [],
+    charts: [],
+    checks: [],
+    holdings: [],
+    steps: [],
+    selection: [],
+    sources: [],
+    notebook: { title: "Research", url: "https://app.sandwormlab.xyz/workspace/w/documents/d/notebook/edit" },
+    notes: [],
+    isExample: true,
+  }
+
+  const serviceWith = (kept: StrategyStore, producer?: { run?: (record: StrategyRecord, context: { progress?: (steps: AgentStep[]) => Promise<void> }) => Promise<ResearchResult> }) =>
+    createStrategyService({
+      store: kept,
+      pipeline: createLocalPipeline(reportMockData[1]),
+      producer: producer ?? {},
+      market: async () => market,
+      now: () => clock,
+      random: () => `c${++counter}`,
+    })
+
+  const waitingRecord = async () => {
+    const waiting = serviceWith(store)
+    const { id } = await waiting.create("u1", BRIEF)
+    await waiting.confirmRules("u1", id)
+    return id
+  }
+
+  it("tells the person to try again, when it is their own step that was out of date", async () => {
+    const id = await waitingRecord()
+    const { store: racing } = withRivals(store, () => 1)
+
+    const refused = await serviceWith(racing).rename("u1", id, "A new name").catch((error: unknown) => error)
+
+    expect(refused).toBeInstanceOf(StrategyConflict)
+    expect(refused).toMatchObject({ status: 409, message: expect.stringMatching(/Try again/) })
+  })
+
+  it("finishes the research from a fresh read when a progress write got in first", async () => {
+    const id = await waitingRecord()
+    const { store: racing, saves } = withRivals(store, () => 1)
+
+    const done = await serviceWith(racing).completeResearch("u1", id, result)
+
+    expect(done.stage).toBe("ready")
+    expect(saves.count).toBe(2)
+    expect((await store.get(id))?.research?.result?.headline).toBe("Holds up in a test")
+  })
+
+  it("gives up after three tries, so a strategy that keeps changing is not looped on", async () => {
+    const id = await waitingRecord()
+    const { store: racing, saves } = withRivals(store, () => 10)
+
+    await expect(serviceWith(racing).completeResearch("u1", id, result)).rejects.toBeInstanceOf(StrategyConflict)
+    expect(saves.count).toBe(3)
+    expect((await store.get(id))?.stage).toBe("researching")
+  })
+
+  it("checks the result before it touches the strategy", async () => {
+    const id = await waitingRecord()
+    const { store: racing, saves } = withRivals(store, () => 0)
+
+    await expect(serviceWith(racing).completeResearch("u1", id, { headline: "x" })).rejects.toMatchObject({ status: 422 })
+    expect(saves.count).toBe(0)
+  })
+
+  it("shows the strategy as the other step left it, and does not fail, when it is looked at as research finishes", async () => {
+    const stand = createStrategyService({
+      store,
+      pipeline: createLocalPipeline(reportMockData[1]),
+      market: async () => market,
+      now: () => clock,
+      random: () => `s${++counter}`,
+    })
+    const { id } = await stand.create("u1", BRIEF)
+    await stand.confirmRules("u1", id)
+    const record = (await store.get(id))!
+
+    // Time passes, and the look that would finish it races with another that did
+    clock = new Date(clock.getTime() + RESEARCH_MS + 1000)
+    const { store: racing } = withRivals(store, () => 1)
+    const looked = await createStrategyService({ store: racing, pipeline: createLocalPipeline(reportMockData[1]), market: async () => market, now: () => clock }).settle(record)
+
+    expect(looked.id).toBe(id)
+  })
+
+  it("drops a progress report that is behind what is kept, and keeps one that is ahead", async () => {
+    const id = await waitingRecord()
+    const steps = (done: number): AgentStep[] =>
+      ["Read the idea", "Get prices", "Research", "Check", "Results"].map((label, i) => ({ label, state: i < done ? "done" : "waiting" }))
+
+    const run = async (_record: StrategyRecord, { progress }: { progress?: (steps: AgentStep[]) => Promise<void> }) => {
+      await progress?.(steps(3))
+      await progress?.(steps(1))
+      return result
+    }
+    // Read what progress was kept after the second report, before the result comes in
+    let keptAfterBehind: AgentStep[] | undefined
+    const watching: StrategyStore = {
+      list: (ownerId) => store.list(ownerId),
+      get: (storeId) => store.get(storeId),
+      async save(record) {
+        if (record.stage === "ready") keptAfterBehind = (await store.get(id))?.research?.progress
+        return store.save(record)
+      },
+    }
+
+    await serviceWith(watching, { run }).produce("u1", id, {})
+
+    expect(keptAfterBehind?.filter(({ state }) => state === "done")).toHaveLength(3)
+  })
+
+  it("does not make a record out of nothing: a conflict is only ever a store refusing a save", () => {
+    expect(new StoreConflict().message).toMatch(/changed/)
   })
 })

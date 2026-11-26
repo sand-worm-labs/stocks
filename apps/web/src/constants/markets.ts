@@ -1,11 +1,3 @@
-export type StockTheme = "robotics"
-
-export const QUOTE_URL = "https://query1.finance.yahoo.com/v8/finance/chart"
-
-export const COINGECKO_URL = "https://api.coingecko.com/api/v3"
-
-export const DEXSCREENER_URL = "https://api.dexscreener.com/tokens/v1/base"
-
 export const POOL_CHART_URL = "https://dexscreener.com/base"
 export const POOL_CHART_INTERVAL = "1"
 

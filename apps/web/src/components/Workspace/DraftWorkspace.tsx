@@ -28,6 +28,8 @@ export async function DraftWorkspace({ portfolio }: { portfolio: Portfolio }) {
     getOwnStrategy(portfolio.id),
   ])
   const real = Boolean(own)
+  // Only a strategy the person made has a conversation kept for it
+  const strategyId = real ? portfolio.id : undefined
   const { rules } = rulesData
   // What real research found, when there is any; until then the stand-in's template report is what is shown, and says so
   const result = own?.research?.result
@@ -45,9 +47,9 @@ export async function DraftWorkspace({ portfolio }: { portfolio: Portfolio }) {
       research={own?.research}
       stage={portfolio.stage}
       agents={{
-        rules: <AgentWorkspace script={rulesScript} />,
-        researching: <AgentWorkspace script={researchScript} />,
-        ready: <AgentWorkspace script={reportScript} />,
+        rules: <AgentWorkspace script={rulesScript} strategyId={strategyId} />,
+        researching: <AgentWorkspace script={researchScript} strategyId={strategyId} />,
+        ready: <AgentWorkspace script={reportScript} strategyId={strategyId} />,
       }}
       breadcrumb={<PortfolioBreadcrumb name={portfolio.name} />}
       name={portfolio.name}

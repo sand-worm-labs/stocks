@@ -13,5 +13,6 @@ import { StrategyStoreController } from './strategy-store.controller';
   imports: [AuthModule, MarketModule],
   controllers: [StrategiesController, StrategyStoreController, ActivityController],
   providers: [StrategiesService, StrategyEngine],
+  exports: [StrategyEngine],
 })
 export class StrategiesModule {}

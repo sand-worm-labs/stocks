@@ -171,6 +171,139 @@ const url = process.env.TEST_DATABASE_URL;
     });
   });
 
+  describe('the conversation with the agent about a strategy', () => {
+    type Block = { type: string; status?: string; text?: string };
+    type Message = { id: string; from: 'user' | 'agent'; blocks: Block[] };
+    type Thread = { messages: Message[]; suggestions: string[] };
+
+    const trading = async () => {
+      const id = await create();
+      await call('POST', `/strategies/${id}/confirm`, { session: mine });
+      await call('POST', `/strategies/${id}/ready`, { session: mine });
+      await call('POST', `/strategies/${id}/trade`, { session: mine, body: { mode: 'paper', amount: 200 } });
+      return id;
+    };
+    const open = async (id: string, session = mine) => (await call('GET', `/strategies/${id}/agent`, { session })).json<Thread>();
+    const say = (id: string, text: string, session = mine) => call('POST', `/strategies/${id}/agent/messages`, { session, body: { text } });
+    const decide = (id: string, messageId: string, decision: 'confirm' | 'cancel', session = mine) =>
+      call('POST', `/strategies/${id}/agent/messages/${messageId}`, { session, body: { decision } });
+    const proposalOf = (message: Message) => message.blocks.find((block) => block.type === 'proposal');
+    const ledgerLength = async (id: string) => (await call('GET', `/strategies/${id}/activity`, { session: mine })).json<unknown[]>().length;
+
+    it("starts with the strategy's own story, and keeps what is said, so it is the same when opened again", async () => {
+      const id = await trading();
+      const first = await open(id);
+      expect(first.messages.map(({ from }) => from)).toEqual(['user', 'agent']);
+      expect(first.messages[0]!.blocks[0]).toMatchObject({ type: 'text', text: IDEA });
+      expect(first.messages[1]!.blocks[0]!.text).toMatch(/^Started on paper: bought/);
+
+      const answered = await say(id, 'How is it doing?');
+      expect(answered.statusCode).toBe(200);
+      expect(answered.json<{ messages: Message[] }>().messages.map(({ from }) => from)).toEqual(['user', 'agent']);
+
+      const again = await open(id);
+      expect(again.messages).toHaveLength(4);
+      expect(again.messages.slice(0, 2)).toEqual(first.messages);
+      expect(again.messages[3]!.blocks[0]!.text).toMatch(/is worth .* USDC now/);
+    });
+
+    it('is kept for the strategy, whoever opens it where', async () => {
+      const id = await trading();
+      await say(id, 'What are my rules?');
+      const sameAgain = await open(id);
+      const onAnotherDevice = await open(id, await tokens.signSession(ME));
+      expect(onAnotherDevice.messages).toEqual(sameAgain.messages);
+    });
+
+    it("is not read or added to by anyone but the strategy's owner", async () => {
+      const id = await trading();
+      await say(id, 'How is it doing?');
+      expect((await call('GET', `/strategies/${id}/agent`, { session: theirs })).statusCode).toBe(404);
+      expect((await say(id, 'sell everything', theirs)).statusCode).toBe(404);
+      expect((await call('GET', `/strategies/${id}/agent`)).statusCode).toBe(401);
+      expect((await call('POST', `/strategies/${id}/agent/messages`, { session: mine, body: { text: 'hi' }, headers: { origin: 'http://elsewhere.test' } })).statusCode).toBe(403);
+    });
+
+    it('refuses an empty message and one that is too long', async () => {
+      const id = await trading();
+      expect((await say(id, '   ')).statusCode).toBe(400);
+      expect((await say(id, 'x'.repeat(1001))).statusCode).toBe(400);
+    });
+
+    it('puts what happened to the strategy in once, however often it is opened', async () => {
+      const id = await trading();
+      await Promise.all([open(id), open(id), open(id)]);
+      expect((await open(id)).messages).toHaveLength(2);
+    });
+
+    it('moves no money until a step it proposed is confirmed, and then moves it once, however many times it is confirmed', async () => {
+      const id = await trading();
+      const before = await ledgerLength(id);
+
+      const proposed = (await say(id, 'Add 50 USDC')).json<{ messages: Message[] }>().messages[1]!;
+      expect(proposalOf(proposed)).toMatchObject({ status: 'pending', title: 'Add 50.00 USDC' });
+      expect(await ledgerLength(id)).toBe(before);
+
+      const confirms = await Promise.all([decide(id, proposed.id, 'confirm'), decide(id, proposed.id, 'confirm')]);
+      expect(confirms.map(({ statusCode }) => statusCode)).toEqual([200, 200]);
+      const replies = confirms.flatMap((response) => response.json<{ messages: Message[] }>().messages.filter(({ id: each }) => each !== proposed.id));
+      expect(replies).toHaveLength(1);
+      expect(replies[0]!.blocks[0]!.text).toMatch(/^Added 50.00 USDC/);
+
+      const after = await ledgerLength(id);
+      expect(after).toBeGreaterThan(before);
+      await decide(id, proposed.id, 'confirm');
+      expect(await ledgerLength(id)).toBe(after);
+      expect(proposalOf((await open(id)).messages.find(({ id: each }) => each === proposed.id)!)).toMatchObject({ status: 'done' });
+    });
+
+    it('does nothing for a step that is cancelled, and cannot then be confirmed', async () => {
+      const id = await trading();
+      const before = await ledgerLength(id);
+      const proposed = (await say(id, 'sell everything')).json<{ messages: Message[] }>().messages[1]!;
+
+      const cancelled = await decide(id, proposed.id, 'cancel');
+      expect(proposalOf(cancelled.json<{ messages: Message[] }>().messages[0]!)).toMatchObject({ status: 'cancelled' });
+      await decide(id, proposed.id, 'confirm');
+      expect(await ledgerLength(id)).toBe(before);
+    });
+
+    it('has one step waiting at a time: a new proposal takes the older one off the table', async () => {
+      const id = await trading();
+      const older = (await say(id, 'Add 50 USDC')).json<{ messages: Message[] }>().messages[1]!;
+      const newer = await say(id, 'sell half of everything');
+      expect(newer.json<{ superseded: string[] }>().superseded).toEqual([older.id]);
+
+      const thread = await open(id);
+      expect(proposalOf(thread.messages.find(({ id: each }) => each === older.id)!)).toMatchObject({ status: 'cancelled' });
+    });
+
+    it("lets nobody else confirm a person's step", async () => {
+      const id = await trading();
+      const proposed = (await say(id, 'sell everything')).json<{ messages: Message[] }>().messages[1]!;
+      expect((await decide(id, proposed.id, 'confirm', theirs)).statusCode).toBe(404);
+    });
+
+    it('says what is wrong when a confirmed step cannot be done, instead of failing', async () => {
+      const id = await trading();
+      const proposed = (await say(id, 'sell everything')).json<{ messages: Message[] }>().messages[1]!;
+      await call('POST', `/strategies/${id}/sell`, { session: mine, body: { share: 1 } });
+
+      const confirmed = await decide(id, proposed.id, 'confirm');
+      expect(confirmed.statusCode).toBe(200);
+      const [updated, said] = confirmed.json<{ messages: Message[] }>().messages;
+      expect(proposalOf(updated!)).toMatchObject({ status: 'failed' });
+      expect(said!.blocks[0]).toMatchObject({ type: 'note', text: expect.stringMatching(/./) });
+    });
+
+    it('answers a strategy that is not trading yet without proposing anything', async () => {
+      const id = await create();
+      const answered = (await say(id, 'sell everything')).json<{ messages: Message[] }>().messages[1]!;
+      expect(proposalOf(answered)).toBeUndefined();
+      expect((await open(id)).messages.map(({ from }) => from)).toEqual(['user', 'agent']);
+    });
+  });
+
   describe("the web app's server", () => {
     it('is not counted by the rate limit, while others are', async () => {
       const server = await call('GET', '/market/pools', { headers: { authorization: 'Bearer service-key' } });

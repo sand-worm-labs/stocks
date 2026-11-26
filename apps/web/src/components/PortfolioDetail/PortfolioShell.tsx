@@ -29,7 +29,7 @@ export async function PortfolioShell({
   return (
     <div className="flex flex-col gap-4">
       <PortfolioBreadcrumb name={portfolio.name} />
-      <FlowLayout aside={<AgentWorkspace script={script} />} agent="on-demand">
+      <FlowLayout aside={<AgentWorkspace script={script} strategyId={portfolio.own ? portfolio.id : undefined} />} agent="on-demand">
         <PortfolioHeader
           portfolio={portfolio}
           current={current}

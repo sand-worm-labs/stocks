@@ -34,7 +34,7 @@ export function CantMeetView({ portfolio, rules, universe, summary, script }: Ca
       <PortfolioBreadcrumb name={portfolio.name} />
       <FlowLayout
         steps={<StepProgress current="rules" portfolioId={portfolio.id} />}
-        aside={<AgentWorkspace script={script} />}
+        aside={<AgentWorkspace script={script} strategyId={portfolio.own ? portfolio.id : undefined} />}
       >
         <header className="flex flex-col gap-2">
           <h1 className="text-2xl font-medium md:text-[32px] md:leading-10">This strategy can&apos;t exist</h1>

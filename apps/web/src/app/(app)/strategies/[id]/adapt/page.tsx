@@ -37,7 +37,7 @@ export default async function AdaptPage({ params }: { params: Promise<{ id: stri
       <PortfolioBreadcrumb name={portfolio.name} />
       <FlowLayout
         steps={<StepProgress current="report" portfolioId={portfolio.id} />}
-        aside={<AgentWorkspace script={script} />}
+        aside={<AgentWorkspace script={script} strategyId={portfolio.own ? portfolio.id : undefined} />}
       >
         <ReportActionBar plan={report.plan} verdict={report.verdict} />
         <ReportHeader report={report} eyebrow={`Strategy results · ${portfolio.name}`} />

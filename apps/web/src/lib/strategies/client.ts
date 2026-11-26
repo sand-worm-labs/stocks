@@ -1,6 +1,6 @@
 import type { AgentStep } from "@/types/agent"
 
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number
@@ -9,7 +9,7 @@ class ApiError extends Error {
   }
 }
 
-async function call<T>(path: string, method: "POST" | "PATCH", body?: unknown): Promise<T> {
+export async function call<T>(path: string, method: "GET" | "POST" | "PATCH", body?: unknown): Promise<T> {
   const response = await fetch(path, {
     method,
     headers: { "Content-Type": "application/json" },

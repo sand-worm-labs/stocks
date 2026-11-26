@@ -67,7 +67,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       <PortfolioBreadcrumb name={portfolio.name} />
       <FlowLayout
         steps={<StepProgress current="report" portfolioId={portfolio.id} />}
-        aside={<AgentWorkspace script={script} />}
+        aside={<AgentWorkspace script={script} strategyId={portfolio.own ? portfolio.id : undefined} />}
         agent={portfolio.status === "live" ? "on-demand" : "open"}
       >
         <ReportActionBar plan={report.plan} verdict={result?.verdict ? verdictOf(result.verdict) : report.verdict}>

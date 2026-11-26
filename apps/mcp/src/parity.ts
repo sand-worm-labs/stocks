@@ -33,5 +33,8 @@ export const NOT_FOR_AGENTS = {
   "GET /health": "The API's own health check",
   "POST /auth/session": "Signing in is a person's wallet signature in a browser; an agent comes in with its token",
   "POST /auth/logout": "Ends a browser's sign-in; an agent has none",
+  "GET /strategies/:id/agent": "The conversation with the app's own agent is a screen; an agent has a tool for each thing that agent can do (rules, activity, funds, sell)",
+  "POST /strategies/:id/agent/messages": "Talking to the app's own agent; an agent calls the tools it answers with (get_report, get_rules, change_funds, sell)",
+  "POST /strategies/:id/agent/messages/:messageId": "A person's confirm or cancel of a step the app's agent proposed; an agent makes that call itself with change_funds or sell",
   "GET /chat/ticket": "A ticket for the browser's live chat connection, which is a screen and not an action",
 } as const

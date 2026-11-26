@@ -29,7 +29,7 @@ export default async function ResearchPage({ params }: { params: Promise<{ id: s
       <PortfolioBreadcrumb name={portfolio.name} />
       <FlowLayout
         steps={<StepProgress current="research" portfolioId={portfolio.id} />}
-        aside={<AgentWorkspace script={script} />}
+        aside={<AgentWorkspace script={script} strategyId={portfolio.own ? portfolio.id : undefined} />}
       >
         <Card data-tour="research-progress" className="flex flex-col gap-3 p-4 md:p-6">
           <div className="flex items-baseline justify-between gap-3">

@@ -211,28 +211,11 @@ export async function getCantMeetScript(portfolio: Portfolio): Promise<AgentScri
   }
 }
 
+// The sidebar of a strategy that is trading. What is said in it is the conversation the API keeps for the strategy, not a script.
 export async function getLiveScript(portfolio: Portfolio): Promise<AgentScript> {
-  const { status, intro, refusal, followUp, quickAsks } = agentMockData.live
-  const say = (id: string, from: "user" | "agent", ...blocks: AgentMessage["blocks"]): AgentMessage => ({
-    id: `${portfolio.id}-${id}`,
-    from,
-    blocks,
-  })
-
   return {
-    status: { label: status, tone: "positive" },
+    status: { label: "Watching", tone: "positive" },
     activityHref: routeHref("portfolioActivity", undefined, portfolio.id) ?? undefined,
-    messages: [
-      say("live", "agent", { type: "text", text: intro }),
-      say("ask", "user", { type: "text", text: refusal.ask }),
-      say(
-        "refused",
-        "agent",
-        { type: "note", label: refusal.label, text: refusal.reason, tone: "negative" },
-        { type: "actions", actions: [{ label: "Change rules", route: "adapt", slug: portfolio.id, intent: "outline" }] }
-      ),
-      say("follow-up", "user", { type: "text", text: followUp.ask }),
-      say("answer", "agent", { type: "text", text: followUp.answer }, { type: "chips", chips: [...quickAsks] }),
-    ],
+    messages: [],
   }
 }

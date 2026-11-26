@@ -11,12 +11,15 @@ import { cn } from "@/lib/utils"
 
 type AgentComposerProps = {
   onSend?: (message: string) => void
+  // What the box hints at while it is empty. For a strategy's own conversation these are things the agent really does.
+  prompts?: readonly string[]
+  isDisabled?: boolean
   className?: string
 }
 
-export function AgentComposer({ onSend, className }: AgentComposerProps) {
+export function AgentComposer({ onSend, prompts = AGENT_PROMPTS, isDisabled = false, className }: AgentComposerProps) {
   const [message, setMessage] = useState("")
-  const canSend = message.trim().length > 0
+  const canSend = !isDisabled && message.trim().length > 0
 
   function send() {
     if (!canSend) return
@@ -31,7 +34,7 @@ export function AgentComposer({ onSend, className }: AgentComposerProps) {
       value={message}
       onChange={setMessage}
       onSubmit={send}
-      prompts={AGENT_PROMPTS}
+      prompts={prompts.length ? prompts : AGENT_PROMPTS}
       className={className}
       controls={
         <>

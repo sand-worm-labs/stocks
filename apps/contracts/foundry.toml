@@ -1,0 +1,28 @@
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+libs = ["lib"]
+solc = "0.8.28"
+# Conservative on purpose: the Reactive Network and the chains it calls back to don't all run the newest opcodes. Raise it once every chain
+# a contract is deployed to is known to support it.
+evm_version = "paris"
+optimizer = true
+optimizer_runs = 200
+remappings = [
+  "forge-std/=lib/forge-std/src/",
+  "reactive-lib/=lib/reactive-lib/src/",
+]
+
+# Read from the environment (see .env.example) when a command uses one, e.g. `forge create --rpc-url lasna`
+[rpc_endpoints]
+lasna = "${LASNA_RPC_URL}"
+reactive = "${REACTIVE_RPC_URL}"
+base = "${BASE_RPC_URL}"
+base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
+sepolia = "${SEPOLIA_RPC_URL}"
+
+[fmt]
+line_length = 120
+tab_width = 4

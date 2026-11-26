@@ -18,7 +18,7 @@ services:
       retries: 20
 
   api:
-    build: ./app/api
+    build: ./apps/api
     ports:
       - "4000:4000"
     environment:

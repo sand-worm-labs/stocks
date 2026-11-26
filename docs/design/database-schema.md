@@ -1,7 +1,7 @@
 # Database schema: first design
 
 Drafted 2026-11-24. **Decided:** Stocks has its own Postgres (not the main app's) and accounts come from the main Sandworm app. **Update 2026-11-25:** Drizzle is gone. The web app has no
-database; the tables live in the API (`app/api`, TypeORM migrations in `app/api/src/infrastructure/database/migrations`, the first one a copy of what Drizzle made).
+database; the tables live in the API (`apps/api`, TypeORM migrations in `apps/api/src/infrastructure/database/migrations`, the first one a copy of what Drizzle made).
 This file is the design the API's entities follow. **Not built yet:** moving strategies, ledger and the rest from the web app's file store into the API.
 
 ## Where we are
@@ -237,5 +237,5 @@ Still open:
 
 ## Working with it
 
-- Change an entity in `app/api/src/features/<name>/entities`, generate a TypeORM migration, commit it; the API applies migrations when it boots.
+- Change an entity in `apps/api/src/features/<name>/entities`, generate a TypeORM migration, commit it; the API applies migrations when it boots.
 - Locally, `docker compose up -d` starts the database and the API. `docker compose down -v` empties it.

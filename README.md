@@ -112,7 +112,7 @@ A violated constraint is a failure, not a trade-off to weigh against returns.
 
 The UI is being built first, on mock data. Screens built: sign-in, Home, Portfolios, Markets, stock detail, Activity and Settings.
 
-The repo has two apps, `app/web` (the Next.js front end) and `app/api` (the NestJS API and its Postgres). Inside `app/web`, the layout follows `sandworm-web/apps/terminal`; paths below are relative to it:
+The repo has three apps in `apps/`, `apps/web` (the Next.js front end) `apps/api` (the NestJS API and its Postgres) and `apps/mcp` (the MCP server for agents). Inside `apps/web`, the layout follows `sandworm-web/apps/terminal`; paths below are relative to it:
 
 | Folder | Holds |
 | --- | --- |
@@ -161,7 +161,7 @@ One continuous run that shows:
 Requires Node.js and [pnpm](https://pnpm.io/) (via Corepack).
 
 ```bash
-cd app/web
+cd apps/web
 pnpm install
 pnpm dev          # dev server with Turbopack
 ```

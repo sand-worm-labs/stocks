@@ -90,7 +90,36 @@ FAUCET=0x... STOCK_NAME="Test Acme Foods" STOCK_SYMBOL=tACMEc forge script scrip
 FAUCET=0x... forge script script/CreateStock.s.sol --rpc-url base_sepolia --private-key $PRIVATE_KEY --broadcast
 ```
 
-At most 200 stocks are made, so a list of them stays readable. The randomness is the chain's own, fine for a test token and for nothing else. These tokens have no pools yet: a mock pool and router come next, for testing the strategies end to end on a test network.
+**An address like the real token's.** Stocks are made with CREATE2, so a salt can pick the address. `tools/mine-vanity.sh` finds a salt that makes a test stock start and end like its mainnet twin (the real NVDAc is `0xb200…108c`), and `createStockAt` (or `SALT=` on `CreateStock.s.sol`) uses it:
+
+```
+tools/mine-vanity.sh $FAUCET "Test NVIDIA" tNVDAc 0xb20000000000000000000078ee7ce2fe4908108c    # 4 digits at the start, 4 at the end
+FAUCET=$FAUCET STOCK_NAME="Test NVIDIA" STOCK_SYMBOL=tNVDAc SALT=0x... forge script script/CreateStock.s.sol --rpc-url base_sepolia --private-key $PRIVATE_KEY --broadcast
+```
+
+Every extra digit takes 16 times longer. On an 8-core Mac 7 digits took about 6 seconds, so 4 + 4 takes about a minute and a half; 6 + 4 would take days. The salt belongs to the faucet, the name and the symbol: change any of them and it must be mined again.
+
+At most 200 stocks are made, so a list of them stays readable. The randomness is the chain's own, fine for a test token and for nothing else. The next section gives these tokens pools.
+
+## Mirroring Base pools (test networks only)
+
+The strategies trade in Aerodrome Slipstream pools, which only exist on Base mainnet. To try them end to end on Base Sepolia, each mainnet stock pool gets a copy there:
+
+- `MirrorPool` answers like a Slipstream pool (`slot0`, `observe`, `token0`, `token1`, `factory`, `tickSpacing`), so the vault and the rule modules read it unchanged. Its price and depth are the mainnet pool's, as the relayer (`apps/relayer`) last wrote them to the `MirrorBook`. Its reserves are real test tokens, which the vault reads as depth.
+- `MirrorPoolFactory` makes the copies, one per mainnet pool, and keeps them in the mainnet pool's token order so a mirrored price means the same.
+- `MirrorRouter` swaps like Slipstream's `exactInputSingle`. A trade is priced as in the mainnet pool, inside its current price range: the mirrored depth decides how far it moves the price, the fee is kept, and the output is paid from the copy's reserves, so a trade larger than the reserves fails.
+- `TestUSDC` is the quote token (6 decimals). The faucet's `ownerMint` seeds a copy with stock.
+
+**What is not the same as mainnet.** A swap here does not move the pool's price: the price is the mainnet pool's, so test trades never drift from the market they imitate. Price ranges beyond the current one are not modelled. `observe` returns the mirrored price as its own average, because a copy has no history, so the vault's check against a sudden move cannot fire on a test network. Everything is trusted to the relayer's key.
+
+```bash
+# the mirror, the faucet and the market (the same account for all three)
+forge create src/testnet/MirrorBook.sol:MirrorBook --rpc-url base_sepolia --private-key $PRIVATE_KEY --broadcast
+forge script script/DeployStockFaucet.s.sol --rpc-url base_sepolia --private-key $PRIVATE_KEY --broadcast
+MIRROR_BOOK=0x... forge script script/DeployMirrorMarket.s.sol --rpc-url base_sepolia --private-key $PRIVATE_KEY --broadcast
+```
+
+Then, in `apps/relayer`, `pnpm provision` makes a test stock and a copy of each pool, seeds it, and writes `testnet-market.json`; `pnpm start` with `DISCOVER_POOLS=true` keeps the copies' prices current.
 
 ## Deploying
 

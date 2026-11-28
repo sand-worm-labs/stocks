@@ -42,6 +42,18 @@ export function addStrategyTools(server: McpServer, api: Api) {
 
   addTool(
     server,
+    "get_market",
+    [
+      "What the market on Base holds for a strategy's idea: the stocks it is about, found by what each one is (its sector and industry, from the data) and not by a fixed list.",
+      "Each candidate has its symbol, company, sector, industry, contract address, price and `liquidity` (what its pool on Base holds; missing means it can't be bought yet), and why it matched. `topics` says, for each kind of company the idea names, how many are listed and how many can be bought; `notes` says what is missing; `sectors` says what the market is made of.",
+      "Start your research here: look at these stocks, say which you used and why, and don't claim a stock that isn't in it.",
+    ].join(" "),
+    { strategyId },
+    (input) => api.get(`/strategies/${path(input.strategyId)}/market`)
+  )
+
+  addTool(
+    server,
     "get_rules",
     "A strategy's rules as the person sees them: each in plain words with the exact setting behind it, whether they are confirmed yet, and, once it is trading, how close each is to its limit. `coverage` says what of the person's idea isn't on Base and what is tested instead.",
     { strategyId },
@@ -109,7 +121,8 @@ export function addStrategyTools(server: McpServer, api: Api) {
     "submit_research",
     [
       "Hand back the research for a strategy that is waiting for it. Only works once per strategy, and only while it is waiting.",
-      "Build the work as ONE Sandworm notebook for this strategy first (the Sandworm tools: create_notebook, add_cell, run_notebook), laid out as get_strategy's `report.outline` says: a 'Start here' cell, then each numbered part with a heading cell titled exactly as given. Never make a second notebook; add to the first. Then pass what it shows here.",
+      "First read get_market for the strategy: the stocks the idea is about, found from real data, and what can and cannot be bought on Base. Build the work as ONE Sandworm notebook for this strategy next (the Sandworm tools: create_notebook, add_cell, run_notebook), laid out as get_strategy's `report.outline` says: a 'Start here' cell, then each numbered part with a heading cell titled exactly as given. Never make a second notebook; add to the first. Then pass what it shows here.",
+      "Pass `name` too: a short, specific name for the strategy that fits the person's idea (under 60 characters, plain words, no quotes). It replaces the made-up one unless the person chose their own.",
       "Pass `blocks` too: the id of each part's heading cell, by the part's id (answer, numbers, growth, checks, drawdown, risk, buyable, stocks, sources), so each part of the report links to its own place in the notebook. Every step's url must be the notebook's own.",
       "Keep it small: a one-line headline, a short summary, up to 8 metrics, a couple of charts and up to 8 notes. The full analysis stays in the notebook, and it must be linked with its Sandworm url.",
       "Set isExample to true when the numbers are made up or from dummy data, so the person is told.",
@@ -117,6 +130,28 @@ export function addStrategyTools(server: McpServer, api: Api) {
     ].join(" "),
     { strategyId, result: researchResultSchema },
     ({ strategyId: id, result }) => api.post(`/strategies/${path(id)}/research`, { result })
+  )
+
+  addTool(
+    server,
+    "log_research",
+    "Tell the person what you are doing while you research a strategy that is waiting for it, so they can follow your work from its chat in Sandworm Stocks, as they can in the Sandworm notebook. Call it as you go: after you write or run a cell (state making, made or ran, the cell's title and kind), and with a line on what you found or are about to do. Keep each line short. Only while the strategy is waiting for research.",
+    {
+      strategyId,
+      notebookUrl: z.string().url().optional(),
+      status: z.enum(["running", "failed"]).optional(),
+      parts: z
+        .array(
+          z.discriminatedUnion("type", [
+            z.object({ type: z.literal("thinking"), text: z.string().min(1).max(1200) }),
+            z.object({ type: z.literal("action"), state: z.enum(["making", "made", "ran"]), title: z.string().min(1).max(120), blockType: z.string().max(30).optional() }),
+            z.object({ type: z.literal("text"), text: z.string().min(1).max(3000) }),
+            z.object({ type: z.literal("error"), message: z.string().min(1).max(300) }),
+          ])
+        )
+        .max(20),
+    },
+    ({ strategyId: id, ...told }) => api.post(`/strategies/${path(id)}/research/log`, told)
   )
 
   addTool(

@@ -42,6 +42,8 @@ export const researchResultSchema = z.object({
   sources: z.array(z.object({ name: text(40), title: text(120), url: z.string().url().max(500).optional(), note: text(80).optional() })).max(8).default([]),
   notes: z.array(text(300)).max(8).default([]),
   notebook: z.object({ title: text(100), url: z.string().url().max(500) }),
+  // A short, specific name for the strategy that fits the idea, chosen by whoever did the research; replaces the made-up one, never the person's own
+  name: text(60).optional(),
   // The block of that notebook each part of the report is built from, by the part's id: what a link from that part of the report opens
   blocks: z.record(z.enum(SECTION_IDS), z.string().min(1).max(100)).optional(),
   dataNote: text(200).optional(),

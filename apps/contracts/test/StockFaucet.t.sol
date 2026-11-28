@@ -25,6 +25,25 @@ contract StockFaucetTest is Test {
         return faucet.createStock(name, symbol);
     }
 
+    // ---------------------------------------------------------------------------------------------------------- a stock at an address of your choosing
+    function test_aSaltPicksTheAddress_andTheFaucetSaysWhereItWillBe() public {
+        bytes32 salt = bytes32(uint256(12345));
+        address expected = faucet.stockAddress("Test Acme Foods", "tACMEc", salt);
+
+        vm.prank(person);
+        TestStock token = faucet.createStockAt("Test Acme Foods", "tACMEc", salt);
+
+        assertEq(address(token), expected);
+        assertTrue(faucet.isStock(expected));
+        assertEq(token.balanceOf(person), AMOUNT);
+    }
+
+    function test_theSameNameAndSaltAreRefusedTwice() public {
+        faucet.createStockAt("Test Acme Foods", "tACMEc", bytes32(uint256(1)));
+        vm.expectRevert(abi.encodeWithSelector(StockFaucet.SymbolTaken.selector, "tACMEc"));
+        faucet.createStockAt("Test Acme Foods", "tACMEc", bytes32(uint256(1)));
+    }
+
     // ---------------------------------------------------------------------------------------------------------- it starts with nothing
     function test_startsWithNoStocksAtAll() public view {
         assertEq(faucet.tokenCount(), 0);

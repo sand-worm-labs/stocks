@@ -51,7 +51,19 @@ contract StockFaucet {
     /// @notice Makes a stock with a name and a symbol you choose, such as "Test Acme Foods" and "tACMEc". A "t" on the front and a "c" on the end
     /// follow the real tokens' naming (NVDAc) and say it is a test token, but nothing forces them: the symbol is yours. The maker gets the first claim.
     function createStock(string calldata name, string calldata symbol) external returns (TestStock) {
-        return _create(name, symbol);
+        return _create(name, symbol, bytes32(0));
+    }
+
+    /// @notice Makes a stock at an address of your choosing: the address is fixed by the faucet, the salt, the name and the symbol, so a salt found
+    /// off-chain (tools/mine-vanity.sh) gives an address that starts and ends like the real token's. `stockAddress` says where it will land.
+    function createStockAt(string calldata name, string calldata symbol, bytes32 salt) external returns (TestStock) {
+        return _create(name, symbol, salt);
+    }
+
+    /// @notice Where a stock made with this name, symbol and salt will be
+    function stockAddress(string calldata name, string calldata symbol, bytes32 salt) external view returns (address) {
+        bytes32 initCodeHash = keccak256(abi.encodePacked(type(TestStock).creationCode, abi.encode(name, symbol)));
+        return address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, initCodeHash)))));
     }
 
     /// @notice Makes a stock with a name and a symbol made up here, such as "Test Nova Dynamics" and "tNODYc", so there is something to try without
@@ -60,19 +72,20 @@ contract StockFaucet {
         // A made-up symbol may already be taken, so a few are tried
         for (uint256 attempt = 0; attempt < 8; attempt++) {
             (string memory name, string memory symbol) = _randomListing(attempt);
-            if (stockBySymbol[keccak256(bytes(symbol))] == address(0)) return _create(name, symbol);
+            if (stockBySymbol[keccak256(bytes(symbol))] == address(0)) return _create(name, symbol, bytes32(0));
         }
         revert TryAgain();
     }
 
-    function _create(string memory name, string memory symbol) private returns (TestStock token) {
+    function _create(string memory name, string memory symbol, bytes32 salt) private returns (TestStock token) {
         if (tokens.length >= MOST_STOCKS) revert TooManyStocks();
         if (bytes(name).length == 0 || bytes(name).length > 48) revert BadName();
         if (!_isSymbol(bytes(symbol))) revert BadSymbol();
         bytes32 symbolHash = keccak256(bytes(symbol));
         if (stockBySymbol[symbolHash] != address(0)) revert SymbolTaken(symbol);
 
-        token = new TestStock(name, symbol);
+        // CREATE2, so a salt can pick the address; with no salt it is the same as any other, and a repeat of one name and symbol is refused above
+        token = new TestStock{salt: salt}(name, symbol);
         tokens.push(token);
         isStock[address(token)] = true;
         stockBySymbol[symbolHash] = address(token);
@@ -110,6 +123,14 @@ contract StockFaucet {
         lastClaim[to][address(token)] = block.timestamp;
         token.mint(to, amountPerToken);
         emit Claimed(to, address(token), block.timestamp);
+    }
+
+    /// @notice Mints a stock to an address, for the owner only: it seeds the mirror pools with the depth of the mainnet pools they copy, which is
+    /// far more than a daily claim gives
+    function ownerMint(TestStock token, address to, uint256 amount) external {
+        if (msg.sender != owner) revert OwnerOnly();
+        if (!isStock[address(token)]) revert NotOurStock(address(token));
+        token.mint(to, amount);
     }
 
     function setAmountPerToken(uint256 amount) external {

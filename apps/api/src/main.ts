@@ -1,3 +1,5 @@
+import { setDefaultResultOrder } from 'node:dns';
+import { setDefaultAutoSelectFamilyAttemptTimeout } from 'node:net';
 import { NestFactory } from '@nestjs/core';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -6,6 +8,12 @@ import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { createAdapter, setUp } from '@/core/setup';
 import { checkSettings, settings } from '@/config/settings';
+
+// The market feeds are reached over IPv4 first: a container or home network that has IPv6 addresses for a host but no route to them would
+// otherwise wait for each one to time out, and the feed would look down. A connection is given ten seconds before the other family is tried,
+// as these feeds are slow to answer the first time.
+setDefaultResultOrder('ipv4first');
+setDefaultAutoSelectFamilyAttemptTimeout(10_000);
 
 async function bootstrap() {
   checkSettings();

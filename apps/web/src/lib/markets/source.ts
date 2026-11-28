@@ -1,39 +1,21 @@
-import { marketSummaryMockData } from "@/_mockdata/markets"
-import { stockDetailMock } from "@/_mockdata/stock-details"
-import { stocksMockData } from "@/_mockdata/stocks"
-
 import { fromMarket } from "@/lib/api/market"
-import type { Category, MarketSummary, Stock } from "@/types/markets"
+import type { Category, MarketSummary, Stock, StockDetail } from "@/types/markets"
 
-import { getQuotes } from "./quote"
-import { isBuyable, underlyingTicker } from "./stock"
+// All of it comes from the Stocks API, which lists the stocks on Base from the places that issue them and knows each one's pool and sector. Without
+// it the pages still draw, with none.
+export const getStocks = () => fromMarket<Stock[]>("/market/stocks", [])
 
-export async function getStocks(): Promise<Stock[]> {
-  const quotes = await getQuotes(stocksMockData.filter(({ preIpo }) => !preIpo).map(({ symbol }) => symbol))
-
-  return stocksMockData.map((stock) => {
-    const quote = quotes.get(underlyingTicker(stock.symbol))
-    return quote
-      ? {
-          ...stock,
-          name: quote.name ?? stock.name,
-          price: quote.price,
-          monthChange: quote.monthChange,
-          dayChange: quote.dayChange,
-          series: quote.series,
-        }
-      : stock
-  })
+const NO_SUMMARY: MarketSummary = {
+  listed: 0,
+  buyable: 0,
+  asOf: new Date(0).toISOString(),
+  source: { name: "base.org", url: "https://docs.base.org/sdks/tokenized-stocks/overview", title: "Base · tokenized stocks" },
 }
 
-export async function getMarketSummary(): Promise<MarketSummary> {
-  return marketSummaryMockData
-}
+export const getMarketSummary = () => fromMarket<MarketSummary>("/market/summary", NO_SUMMARY)
 
-export async function getStockDetail(symbol: string) {
-  const stock = (await getStocks()).find((s) => s.symbol === symbol)
-  return stock && isBuyable(stock) ? { stock, detail: stockDetailMock(stock) } : undefined
-}
+export const getStockDetail = (symbol: string) =>
+  fromMarket<{ stock: Stock; detail: StockDetail } | undefined>(`/market/stocks/${encodeURIComponent(symbol)}`, undefined)
 
-// Kept in the database, and read from the API. Without it the pages still draw, with none.
+// Kept in the database, and read from the API
 export const getCategories = () => fromMarket<Category[]>("/market/categories", [])

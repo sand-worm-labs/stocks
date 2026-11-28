@@ -37,6 +37,11 @@ services:
       RESEARCH_PRODUCER: ${RESEARCH_PRODUCER:-}
       STOCKS_AGENT_TOKEN: ${STOCKS_AGENT_TOKEN:-}
       STOCKS_AGENT_OWNER_ID: ${STOCKS_AGENT_OWNER_ID:-}
+    # Some home routers' resolvers fail on api.coinbase.com, the list of stocks on Base; public ones are asked instead. Remove this on a network
+    # that only lets its own resolver through.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     depends_on:
       db:
         condition: service_healthy

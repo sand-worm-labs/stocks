@@ -3,17 +3,17 @@ import { Injectable } from '@nestjs/common';
 import { CategoriesService } from '@/features/categories/categories.service';
 
 import { createStockSource, StockSource } from './stock-source';
+import { UniverseService } from './universe/universe.service';
 
-import { YahooService } from '@/infrastructure/datasource/yahoo/yahoo.service';
 
 // The stocks the product offers, each with its share's price on top
 @Injectable()
 export class StocksService {
   readonly source: StockSource;
 
-  constructor(yahoo: YahooService, categories: CategoriesService) {
+  constructor(universe: UniverseService, categories: CategoriesService) {
     this.source = createStockSource(
-      (tickers) => yahoo.quotes(tickers),
+      () => universe.stocks(),
       () => categories.list(),
     );
   }

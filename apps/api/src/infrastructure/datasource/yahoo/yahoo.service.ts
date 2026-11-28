@@ -1,8 +1,8 @@
 import { Inject, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { z } from 'zod';
 
-import { YAHOO_URL, MARKET_FETCH } from '@/infrastructure/datasource/datasource.constants';
-import { DailyPrices, HistoryWindow, PricePoint, Quote } from '@/infrastructure/datasource/datasource.types';
+import { YAHOO_URL, YAHOO_SEARCH_URL, MARKET_FETCH } from '@/infrastructure/datasource/datasource.constants';
+import { DailyPrices, HistoryWindow, PricePoint, Quote, SearchHit } from '@/infrastructure/datasource/datasource.types';
 import { KeyedCache, RememberedCache } from '@/infrastructure/datasource/cache/ttl-cache';
 
 const HEADERS = { 'User-Agent': 'Mozilla/5.0' };
@@ -26,6 +26,22 @@ const WINDOWS = { day: ['1d', '5m'], week: ['5d', '15m'], month: ['1mo', '1h'] }
 
 const MIN_DAYS = 200;
 export const BENCHMARK = 'SPY';
+
+const searchSchema = z.object({
+  quotes: z
+    .array(
+      z.object({
+        symbol: z.string(),
+        quoteType: z.string().optional(),
+        longname: z.string().optional(),
+        shortname: z.string().optional(),
+        exchDisp: z.string().optional(),
+        sector: z.string().optional(),
+        industry: z.string().optional(),
+      }),
+    )
+    .default([]),
+});
 
 const nullableCloses = z.array(z.number().nullable());
 const quoteSchema = z.object({
@@ -70,6 +86,28 @@ export class YahooService {
     const unique = [...new Set(tickers)];
     const found = await Promise.all(unique.map((ticker) => this.quoteCache.get(ticker)));
     return Object.fromEntries(unique.flatMap((ticker, i) => (found[i] ? [[ticker, found[i]]] : [])));
+  }
+
+  /// What Yahoo's search finds for a ticker or a company's name, with each company's sector and industry. Undefined when Yahoo could not be asked, which is not the
+  /// same as asking and finding nothing (an empty list).
+  async search(query: string): Promise<SearchHit[] | undefined> {
+    try {
+      const url = `${YAHOO_SEARCH_URL}?q=${encodeURIComponent(query)}&quotesCount=6&newsCount=0`;
+      const response = await this.send(url, { headers: HEADERS, signal: AbortSignal.timeout(8_000) });
+      if (!response.ok) return undefined;
+
+      const { quotes } = searchSchema.parse(await response.json());
+      return quotes.map((quote) => ({
+        symbol: quote.symbol,
+        name: quote.longname ?? quote.shortname ?? quote.symbol,
+        isEquity: quote.quoteType === 'EQUITY',
+        exchange: quote.exchDisp,
+        sector: quote.sector,
+        industry: quote.industry,
+      }));
+    } catch {
+      return undefined;
+    }
   }
 
   async chartSymbol(ticker: string): Promise<string> {

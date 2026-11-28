@@ -5,7 +5,19 @@ export type Stock = {
   price?: number
   liquidity?: number
   series?: number[]
+  // Not listed on an exchange yet, so there is no share price to test against
   preIpo?: boolean
+  // What the token is and where it came from. Missing on a stock the app was handed without a source.
+  address?: string
+  isin?: string
+  sector?: string
+  industry?: string
+  description?: string
+  // In tokens; missing or 0 until one has been minted
+  totalSupply?: number
+  firstMintDate?: string
+  // The places that list it, such as "coinbase"
+  sources?: string[]
   // The share's change over the month, as a fraction, once it has been looked up
   monthChange?: number
   dayChange?: number
@@ -27,9 +39,9 @@ export type StockDetail = {
   ownership: string
   tradingHours: string
   sources: Source[]
-  // Oldest first, one point a day, so a range is the tail of the series
-  tokenSeries: number[]
-  shareSeries: number[]
+  description?: string
+  sector?: string
+  industry?: string
   knowledge: Knowledge[]
   // Missing until there is enough history to measure
   risk?: { beta: number; worstDrop: number }

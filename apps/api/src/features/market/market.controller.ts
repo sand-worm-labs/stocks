@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Param, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { CoinGeckoService } from '@/infrastructure/datasource/coingecko/coingecko.service';
@@ -39,6 +39,24 @@ export class MarketController {
   @Get('categories')
   categories() {
     return this.stocks.source.getCategories();
+  }
+
+  // The stocks the product offers, from every place that lists them (see features/market/universe), for the web app's server
+  @Get('stocks')
+  stockList() {
+    return this.stocks.source.getStocks();
+  }
+
+  @Get('summary')
+  summary() {
+    return this.stocks.source.getMarketSummary();
+  }
+
+  @Get('stocks/:symbol')
+  async stock(@Param('symbol') symbol: string) {
+    const found = await this.stocks.source.getStockDetail(symbol);
+    if (!found) throw new NotFoundException('That stock is not on offer, or has no token to buy yet');
+    return found;
   }
 
   @Get('tokens')

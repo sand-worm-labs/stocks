@@ -41,6 +41,36 @@ vi.mock("@/lib/markets/tokens", async (importOriginal) => ({
   getBaseTokens: async () => [token("NVDAc", "NVIDIA", 1), token("AAPLc", "Apple", 2), token("SNDKc", "SanDisk", 3)],
 }))
 
+// What the Stocks API says about the stocks: a small market of its own, with research notes only on NVIDIA
+const STOCKS = [
+  { symbol: "NVDAc", name: "NVIDIA Corporation", price: 150, liquidity: 2_000_000, sector: "Technology", industry: "Semiconductors" },
+  { symbol: "AAPLc", name: "Apple Inc.", price: 355, liquidity: 570_000, sector: "Technology", industry: "Consumer Electronics" },
+  { symbol: "SNDKc", name: "Sandisk Corporation", price: 73, liquidity: 313_000, sector: "Technology", industry: "Computer Hardware" },
+]
+const SOURCE = { name: "base.org", url: "https://docs.base.org/sdks/tokenized-stocks/overview", title: "Base · tokenized stocks" }
+const NVIDIA_NOTES = {
+  knowledge: [
+    {
+      id: "robotics-revenue",
+      kind: "fact" as const,
+      text: "Automotive & robotics was $604M of $68.1B revenue in Q4 FY26.",
+      source: { name: "verdict.co.uk", url: "https://www.verdict.co.uk/nvidia-q4-fy26-results/", title: "NVIDIA Q4 FY26 results" },
+    },
+  ],
+  risk: { beta: 1.8, worstDrop: -0.37 },
+}
+
+vi.mock("@/lib/markets/source", () => ({
+  getStocks: async () => STOCKS,
+  getCategories: async () => [],
+  getMarketSummary: async () => ({ listed: 3, buyable: 3, asOf: "2026-11-26T00:00:00Z", source: SOURCE }),
+  getStockDetail: async (symbol: string) => {
+    const stock = STOCKS.find((found) => found.symbol === symbol)
+    const detail = { issuer: "Coinbase · B20", ownership: "Price exposure, no votes", tradingHours: "24/7", sources: [SOURCE], knowledge: [], ...(symbol === "NVDAc" ? NVIDIA_NOTES : {}) }
+    return stock ? { stock, detail } : undefined
+  },
+}))
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({ replace: vi.fn() }),

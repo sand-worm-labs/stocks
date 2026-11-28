@@ -43,3 +43,6 @@ export type HistoryWindow = 'day' | 'week' | 'month';
 
 // Daily closing prices, the same days for every ticker, oldest first
 export type DailyPrices = { dates: string[]; closes: Record<string, number[]> };
+
+// A company Yahoo's search found for a ticker
+export type SearchHit = { symbol: string; name: string; isEquity: boolean; exchange?: string; sector?: string; industry?: string };

@@ -47,6 +47,20 @@ export class StrategiesService {
     return this.assemble(rows);
   }
 
+  /// The symbols that strategies still alive hold or have traded, once each. The test network's relayer keeps the pools of these live first.
+  async heldSymbols(): Promise<string[]> {
+    const rows = await this.dataSource.manager
+      .createQueryBuilder(LedgerEntry, 'ledger')
+      .innerJoin(Strategy, 'strategy', 'strategy.id = ledger.strategyId')
+      .select('DISTINCT ledger.symbol', 'symbol')
+      .where('ledger.symbol IS NOT NULL')
+      .andWhere('strategy.deletedAt IS NULL')
+      .andWhere('strategy.closedAt IS NULL')
+      .orderBy('ledger.symbol')
+      .getRawMany<{ symbol: string }>();
+    return rows.map(({ symbol }) => symbol);
+  }
+
   /// The ids of what has been in the trash since before `cutoff`
   async removedBefore(cutoff: Date): Promise<{ id: string; ownerId: string }[]> {
     const rows = await this.dataSource.manager.find(Strategy, { where: { deletedAt: LessThan(cutoff) }, select: { id: true, ownerId: true } });

@@ -17,6 +17,12 @@ export class StrategyStoreController {
     return this.strategies.list(ownerId);
   }
 
+  // The tokens that strategies hold, for the relayer that keeps their pools live on the test network (with the service key)
+  @Get('held-symbols')
+  heldSymbols() {
+    return this.strategies.heldSymbols();
+  }
+
   @Get(':id')
   async get(@Param('id') id: string) {
     const record = await this.strategies.get(id);

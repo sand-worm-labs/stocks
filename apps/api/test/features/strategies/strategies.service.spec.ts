@@ -94,6 +94,24 @@ const url = process.env.TEST_DATABASE_URL;
     expect(read?.ledger?.map(({ kind }) => kind)).toEqual(['deposit', 'buy']);
   });
 
+  describe('heldSymbols', () => {
+    const holding = (symbol: string) => ({ symbol, units: 1, entryPrice: 100, cost: 100, value: 100 });
+
+    it('lists the symbols that strategies still alive hold, once each, and leaves out closed and deleted ones', async () => {
+      await strategies.save(live('a', { holdings: [holding('NVDAc'), holding('AAPLc')] }));
+      await strategies.save(live('b', { holdings: [holding('NVDAc')] }));
+      await strategies.save(live('closed', { status: 'closed', closedAt: '2026-11-25T09:00:00.000Z', holdings: [holding('TSLAc')] }));
+      await strategies.save(live('deleted', { deletedAt: '2026-11-26T09:00:00.000Z', holdings: [holding('METAc')] }));
+
+      expect(await strategies.heldSymbols()).toEqual(['AAPLc', 'NVDAc']);
+    });
+
+    it('lists nothing when no strategy holds anything', async () => {
+      await strategies.save(record('a'));
+      expect(await strategies.heldSymbols()).toEqual([]);
+    });
+  });
+
   it('adds to the ledger what a record has past what is kept, and holdings and cash follow', async () => {
     await strategies.save(live('a'));
     const kept = (await strategies.get('a'))!;

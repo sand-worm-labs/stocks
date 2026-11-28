@@ -1,0 +1,27 @@
+{
+  "name": "@sandworm/stocks-relayer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "description": "Copies the price state of Base mainnet pools onto Base Sepolia, because Reactive's Lasna testnet cannot read a mainnet. Testnet only.",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "provision": "tsx src/provision.ts",
+    "deployments": "tsx src/deployments.ts",
+    "scan-pools": "tsx src/scan-pools.ts",
+    "dev": "tsx watch src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "tsx": "^4.20.6",
+    "viem": "^2.38.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

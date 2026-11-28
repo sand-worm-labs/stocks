@@ -1,0 +1,27 @@
+{
+  "network": "base-sepolia",
+  "chainId": 84532,
+  "deployer": "0x7eB6F37C3665637E237d8221592EfC98F5A72ac3",
+  "contracts": {
+    "StockFaucet": {
+      "address": "0xB10277F2E8e0f5B7f33C3f2336d066c7f3fDd842",
+      "isTheCompiledContract": true
+    },
+    "MirrorBook": {
+      "address": "0xc94E63986B37e5592254c287863aE672aE02C568",
+      "isTheCompiledContract": true
+    },
+    "TestUSDC": {
+      "address": "0xf0c0df2210F349837823896debC20D7f38551DF6",
+      "isTheCompiledContract": true
+    },
+    "MirrorPoolFactory": {
+      "address": "0x783D7A94954f2Db73E9931fB0382953F8Bb55232",
+      "isTheCompiledContract": true
+    },
+    "MirrorRouter": {
+      "address": "0xB2d0556CF32c1a34a56D39d044Aec5d3D930ad3D",
+      "isTheCompiledContract": true
+    }
+  }
+}

@@ -1,0 +1,1 @@
+export const STOCKS_API_TIMEOUT_MS = 15_000

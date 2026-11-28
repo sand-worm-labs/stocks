@@ -1,6 +1,6 @@
 # Conventions for Sandworm Stocks
 
-Four apps in `apps/`: `apps/web` is the Next.js front end, `apps/api` is the NestJS API with the database, `apps/mcp` is the MCP server for agents, `apps/contracts` is the Foundry project for the onchain side (Reactive Network contracts). `docker compose up` (from here) runs the database and the API.
+Five apps in `apps/`: `apps/web` is the Next.js front end, `apps/api` is the NestJS API with the database, `apps/mcp` is the MCP server for agents, `apps/contracts` is the Foundry project for the onchain side (Reactive Network contracts), `apps/relayer` copies Base mainnet pool prices onto Base Sepolia for testing (Lasna cannot read a mainnet). `docker compose up` (from here) runs the database and the API.
 
 **The API is laid out as Sandworm's is** (`sandworm-web/apps/api`): `src/core` (guards, filters, decorators, pipes), `src/common`, `src/infrastructure` (the database and each outside system) and `src/features/<name>`, each feature holding its own controllers, services, types and constants. A test sits under `test/` at the same path as what it tests.
 

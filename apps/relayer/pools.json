@@ -1,0 +1,7 @@
+[
+  { "name": "WETH/USDC 0.05%", "address": "0xd0b53D9277642d899DF5C87A3966A349A798F224", "kind": "uniswap-v3" },
+  { "name": "WETH/USDC 0.3%", "address": "0x6c561B446416E1A00E8E93E221854d6eA4171372", "kind": "uniswap-v3" },
+  { "name": "WETH/cbBTC 0.05%", "address": "0x7AeA2E8A3843516afa07293a10Ac8E49906dabD1", "kind": "uniswap-v3" },
+  { "name": "WETH/cbBTC 0.3%", "address": "0x8c7080564B5A792A33Ef2FD473fbA6364d5495e5", "kind": "uniswap-v3" },
+  { "name": "cbBTC/USDC 0.05%", "address": "0xfBB6Eed8e7aa03B138556eeDaF5D271A5E1e43ef", "kind": "uniswap-v3" }
+]

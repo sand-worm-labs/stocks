@@ -1,0 +1,237 @@
+{
+  "tBEc": {
+    "stock": "0xfd8800a6Ca2D994306ed8bD7AB31F952844D51d2",
+    "pool": "0x6630C86553aC73cA33d0D8D838442e93B47DD52f",
+    "mainnetPool": "0xde2bfe5409ad9e825cdb3562a06edafb9d753dfc"
+  },
+  "tSANc": {
+    "stock": "0x16eD617E5B866d919Cd0C217d81C3c9b32C7300A",
+    "pool": "0x6FA4CBa9419c723c10FBd34C126d66C40099665E",
+    "mainnetPool": "0xe531069df73530bf59c954f3718945d5faa2e7df"
+  },
+  "tSKHYc": {
+    "stock": "0xfFAC319247687048Df4C7e00363927A2E527A540",
+    "pool": "0xa17a8858D23561B1b4274aa535997e205bC6e5D4",
+    "mainnetPool": "0xebc746a47ebb274de1dbdc9a465e6c5c2301c5da"
+  },
+  "tBRKBc": {
+    "stock": "0xc23b5f329089DCC9f3331850e0f1DEb11F1350ce",
+    "pool": "0x65F15CA8fcD795BA5e5F0dad911B1CED321e877d",
+    "mainnetPool": "0xbc5682de77d729397739982a577b7963ef2f6556"
+  },
+  "tARMc": {
+    "stock": "0x5bb117947cFaF5EB7f5Af1423Ed58b0fcF24f274",
+    "pool": "0x2eD67E4b340A797a6B0CD2F19222c46Db70b4505",
+    "mainnetPool": "0x9a0f4fd0766ccdb792ba58fe631aa7720097623c"
+  },
+  "tGOOGLc": {
+    "stock": "0x76Bd3C571263Bed106b2cB11Ee52F4E0bCb82E96",
+    "pool": "0x9066a47701cB59cd9619DeA15B09DcFe401616E5",
+    "mainnetPool": "0x16c70f04c3080a127486cdf5a4c33c066bbf47c3"
+  },
+  "tNIOc": {
+    "stock": "0x095Dd585e2b8eDB9b02f5A34b575FECDC2763e23",
+    "pool": "0x4A30Ed5f0b52e34Bf46CFBBa6AF3489844Fd1FA4",
+    "mainnetPool": "0x484cc2ca594ced3fe38362fe950c60ce66f53f6d"
+  },
+  "tSEc": {
+    "stock": "0x5d93cDA1da223Ea3D6c418A21943303520228794",
+    "pool": "0x3014eA5c8C7E664A72A2E81c622a35A7f673F87f",
+    "mainnetPool": "0x0274e5078033cb3fe788cf76bb97150fd9bc4547"
+  },
+  "tADBEc": {
+    "stock": "0x3237DB505465af92a1D2551D152827ebdD472775",
+    "pool": "0xC28C29C699B9e13A4BeC2028D8E1F062aF44f67b",
+    "mainnetPool": "0x80997e422e1d03f8d41fe831a306df674128050d"
+  },
+  "tORCLc": {
+    "stock": "0x0C8e7bc998D64EEbFCD9b4b15998fA85622fEBB6",
+    "pool": "0x6b2Ed2082509cFef696810e60cb87D590915De40",
+    "mainnetPool": "0x62b5452e80e50b047dcf6dd3fb6a1d266c678eb5"
+  },
+  "tSNDKc": {
+    "stock": "0x10b00D4Ae98c4DAA47B940DA88F287d3f12d3Ce3",
+    "pool": "0x6069bC678234b4C9c2ECfEf25c46691dD4385982",
+    "mainnetPool": "0x2836e062a3fe75943a7f4a552e2365b98e414e75"
+  },
+  "tHIMSc": {
+    "stock": "0x530Ee9A2dEa75CdB966F4b1B5ceD309628a8DF17",
+    "pool": "0xb86BD14E693566751f22DBF1B9109d049456F94C",
+    "mainnetPool": "0x41d7793faa4ca181b6f021423ff3f9015c00b2ff"
+  },
+  "tSNOWc": {
+    "stock": "0xE5a4d0C8b72aF9028D0C1BEbf8773Ef422E49D01",
+    "pool": "0x3f60D06F910E4B3E6516507A6B9DCA69D9303E9D",
+    "mainnetPool": "0x20812d6c78d972eea8df85319ec721db1e67b31f"
+  },
+  "tNOKc": {
+    "stock": "0xEff538224F6f2886405BA39913E7703cBa027305",
+    "pool": "0xa01Ed943e4554bA18a8116aafA43541c9F4a63Cd",
+    "mainnetPool": "0x37607d455d791470ab53bb48b929730a226e166f"
+  },
+  "tRBLXc": {
+    "stock": "0xE229d1b45FAbD4B859aF1dDf24fd69B0320e2DC5",
+    "pool": "0x9C80851b4CF0B9119c97fbAFD886144304e9C631",
+    "mainnetPool": "0x54dc3fdaed298ca9a945771ae994f558a8f61e83"
+  },
+  "tVALEc": {
+    "stock": "0x7115de1301Dac84911d4D2dBE6c824Fa6AfbcCF6",
+    "pool": "0x2A9Db8D9ab5988F2558bfeddf36320d9c9F12d44",
+    "mainnetPool": "0x0f48336b76ee52fa6bb19edf5af358529df57574"
+  },
+  "tHOODc": {
+    "stock": "0x985A825e9BFD8436a19e746D813F9A8374811842",
+    "pool": "0x58C60C7E2Bc36B4Ab0Ac2ff781cc5fB71919774E",
+    "mainnetPool": "0x100ada2b807efbb10dd3b28aa75689ed07f60d71"
+  },
+  "tGMEc": {
+    "stock": "0x350b26D9e14b202C696F04D39539dBDbb1E922D6",
+    "pool": "0xCB871e672736EcC57692EA886BE5f4944EBA4Bd8",
+    "mainnetPool": "0x427efedb9e25aa55ecde047917213bb15b8bcebf"
+  },
+  "tNVDAc": {
+    "stock": "0x02B8C07fF58AaB8554A225182f4b995CD1Cf6857",
+    "pool": "0x5704f415DFed62B881373ed57eadAA91833a6344",
+    "mainnetPool": "0xf668e21993f0acd7ab00bb1cfbaed0df28a3c8ec"
+  },
+  "tSPCXc": {
+    "stock": "0x1E819EC4839dc551432e5B7987e40d765d01372d",
+    "pool": "0x53934646A639a3c9E9233C6B99f64C8939Aef98D",
+    "mainnetPool": "0x880db7dda4407d99508574e680d067d1164b3cfe"
+  },
+  "tNOWc": {
+    "stock": "0x6aABED37cec052E47Cf1116A1d605bC328D710F2",
+    "pool": "0x8419ff32A615438cFC936e0c56cAe0eAF0A3d58f",
+    "mainnetPool": "0xe2935cd42271a31afdedaeebc1e491214202e6b0"
+  },
+  "tMETAc": {
+    "stock": "0xa9700Fa9b5051F22E62c16D982946bfAfFF79061",
+    "pool": "0x6c9d7bA4decE1888Fb2344f936e0E29a586d1a13",
+    "mainnetPool": "0xd072410fa13d242e1d53721bcf7af02e3455dc96"
+  },
+  "tNVOc": {
+    "stock": "0x044C1fA92885937535E43916aCF404AA49183322",
+    "pool": "0xfCA8C2dA9f89bE8E6A122376131f93d5C0930469",
+    "mainnetPool": "0xc1ba39d668f14eee2462ca5877402e4a7c4d1f34"
+  },
+  "tWDCc": {
+    "stock": "0x665Fa21696AbC514C40D2760d834E2D71A9e977a",
+    "pool": "0xf5499f904a9385971AcBFFc94eFF2B8121F0079F",
+    "mainnetPool": "0x8468bfd8a3c5bb04c44dabf3329d7902f340b12b"
+  },
+  "tSONYc": {
+    "stock": "0x856B80374cb785b119ff431F9C0B0fd8EDC1b6FA",
+    "pool": "0x2d2C4E3FDeBe94ec1A02460a2B122060DDd2339d",
+    "mainnetPool": "0x26dd2ac81ea9a212afc84848893edc21c5a76fdc"
+  },
+  "tMSFTc": {
+    "stock": "0x39C4D995C8A89078853eD5Eabf16dB6AEC1a60e4",
+    "pool": "0x593a0158009986Ce3da814379CcC480023E4af02",
+    "mainnetPool": "0x2740c0faab738f6e346e545fde02aef9b1a01ee7"
+  },
+  "tAAPLc": {
+    "stock": "0x19c66B23F89f4af8B27E33C0C5D7D63AEEAE037c",
+    "pool": "0x8315497D12d37D8d4f01393c7778bd85f7622eC4",
+    "mainnetPool": "0xf5fcb9cdafce67d50afef298f88e709d2b946ba6"
+  },
+  "tBUDc": {
+    "stock": "0x836D6572a34FDbb4a51e2a43C1E763d073b09399",
+    "pool": "0x4b9519E9c5ADC5ae9cEC7F506ae0c336E147FC23",
+    "mainnetPool": "0x5ee52963d3d33196a47fad722abb897e0fa395d9"
+  },
+  "tNVAXc": {
+    "stock": "0x70aa1D0B92A71F80E4aB6D858508A34593Ce152f",
+    "pool": "0x20eba37C1df28772B20779c5e12be3De7a39360B",
+    "mainnetPool": "0x000079989170b6a7ae92748950186dfe8d635099"
+  },
+  "tPDDc": {
+    "stock": "0x4c7980e2DbE86B01076dD7343a22979BB3530127",
+    "pool": "0x9d7FDeb039C716DA487891E08de0c4198775E8dD",
+    "mainnetPool": "0x69c9833bf35ebac96e87fec63f36542e06214be6"
+  },
+  "tBILIc": {
+    "stock": "0xf28cb631b0DFAe08a4E8E1660ba485e61f65f21E",
+    "pool": "0xB79CC592b6103CE69845b24E71Ca21348c8dfeF6",
+    "mainnetPool": "0x32a3ce6c3a8d6c24c4a51a5cf2869410cbf4d637"
+  },
+  "tUBERc": {
+    "stock": "0x29EE476Ec94c574B3073d10244FFaa6Fd0eEa0E1",
+    "pool": "0xcA527510FDab3377A8BFC19C42121C1b3ec05A8A",
+    "mainnetPool": "0x10658504d00d3d65610c0fd72a81b6926109117a"
+  },
+  "tAAOIc": {
+    "stock": "0x670BF329DD6Df42Fa516f0cffDeec7571b241E15",
+    "pool": "0x2AFdd9A7cB7615485A1923e00085891748fA0546",
+    "mainnetPool": "0xfb35d41801893197b5a4d477d0bf6737d2ad6106"
+  },
+  "tBIDUc": {
+    "stock": "0x222Ea456AF5C09F68Baf4fD4bB6f9820EB7d3475",
+    "pool": "0xa92712f4269A59c21dE37263D76fc6190fAb9A33",
+    "mainnetPool": "0xd47b8f13ffc3198148b138d3f07cc89c92042950"
+  },
+  "tMCDc": {
+    "stock": "0x39cF912c02A930a1036134F0e5f9f2BE572DbBaE",
+    "pool": "0x0640e4477dA4e073A25D7329a64A4e098c54B1Ec",
+    "mainnetPool": "0x743f16ee460ab7401321e7f35c3fd187eff7d711"
+  },
+  "tLIc": {
+    "stock": "0xDED37108aA7680F3eAAd0ef7528AE2fb645CcD65",
+    "pool": "0x35B8d3A933e6C9F66DcaaA9883e54d887d6e6b4C",
+    "mainnetPool": "0xd71b2d9cb3532477df77ae26e780963cce784a0c"
+  },
+  "tSAPc": {
+    "stock": "0xAEA64D7410DEea3391f54D084AC44126c32956F8",
+    "pool": "0xD83c4cb7621ae48DE58fD305C59bdBab668DDe60",
+    "mainnetPool": "0x21313a06b7f8ed38d8bc1fb8be2fbd847634a6ec"
+  },
+  "tMRNAc": {
+    "stock": "0x264AeF9692DE56BD0737C7e0270E3FB4F272a8A6",
+    "pool": "0x4D880EDCFF3e365146AD12260e17Dc489ECf347c",
+    "mainnetPool": "0x4ae3780242f43ef63c471fb8c2e9d30ec5fd5821"
+  },
+  "tWRDc": {
+    "stock": "0xb737a9C330183D6505ad3826A43E786057Fa8Cf5",
+    "pool": "0xf20faac13957809a35C36dc1B524E35690C44091",
+    "mainnetPool": "0xbc440aff9a79cced69d5b21c7b71e60bd0278efb"
+  },
+  "tMRVLc": {
+    "stock": "0x1C2cba163c643eB2A114EF415991860aB9C10A6a",
+    "pool": "0xd0678bDb6918202f30B3c11922526346Ba4BE314",
+    "mainnetPool": "0x611ab290422d534d9595b01e648911fefa963137"
+  },
+  "tLITEc": {
+    "stock": "0x18A143BE15039e4dA297b99680c0b0b67d83Fff5",
+    "pool": "0x5816F7fEe9560fb68Cbf24535bdEFfe21E8f052D",
+    "mainnetPool": "0x16b8228cd097865d8f5a534b95e42e17d84551b0"
+  },
+  "tCRWVc": {
+    "stock": "0x3769E878A36ABf26C80C9E5f2d43DE7124307DB4",
+    "pool": "0x8a2D5d26FB9e16215c32Ac339EfBba62dCAe9847",
+    "mainnetPool": "0x4d942b4239e0894e5a80ca2b3944e3467f4ee464"
+  },
+  "tLLYc": {
+    "stock": "0x2A9dA12F2F9894E059c540BA4FA628d9E0440B48",
+    "pool": "0x631eB0eC962c100721F489398A61617322020F4D",
+    "mainnetPool": "0x2b7ee4623ec6afbc1e587b2668c0ed8f3ff44949"
+  },
+  "tHSAIc": {
+    "stock": "0xA0f4B0E744BB035D3C3E3D2Df71Fc51a94254768",
+    "pool": "0xA4AB020Fa63E4fA565cCa0d70e57D46d14E1a162",
+    "mainnetPool": "0xdc8d2c31de17bf4df00c05e4e132bcea22f24c3b"
+  },
+  "tINFYc": {
+    "stock": "0x7c5DEeB6413388dC3904f346906da3B557ba516f",
+    "pool": "0x243069680fe6071b32EEAdccC4eef0f62F0dEaCC",
+    "mainnetPool": "0x356cc16fe38a6ad0eb25e655759dd963f8d674bf"
+  },
+  "tTTWOc": {
+    "stock": "0xbEa6c69a47FA50c20c8A502462c8A10b1b061d55",
+    "pool": "0x976F82540CDF3824Ae9d3c7F585c62B5048d8916",
+    "mainnetPool": "0x16029e9cbb52a971fad6ab7f6c0a939e9e5a5a09"
+  },
+  "tKOc": {
+    "stock": "0x47179139b5eaed4F57d097C340Db204CFc27CaB3",
+    "pool": "0x02DA81a9A772CE5fc87f2984BCe669b13d076F31",
+    "mainnetPool": "0x59c7a81e752fca11b89e29fa98e56a6f2ead5fb3"
+  }
+}

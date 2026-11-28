@@ -44,3 +44,14 @@ describe("the conversation as the screen holds it", () => {
     expect(hasWaitingStep([say("a"), proposal("b", "done")])).toBe(false)
   })
 })
+
+describe("Sandworm's agent at work", () => {
+  const run = (status: "running" | "done"): AgentMessage => ({ id: "run", from: "agent", blocks: [{ type: "sandworm-run", status, parts: [] }] })
+
+  it("is followed only while a run is going", async () => {
+    const { hasRunningWork } = await import("@/lib/agent/thread")
+    expect(hasRunningWork([say("a"), run("running")])).toBe(true)
+    expect(hasRunningWork([say("a"), run("done")])).toBe(false)
+    expect(hasRunningWork([])).toBe(false)
+  })
+})

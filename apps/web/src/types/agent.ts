@@ -11,6 +11,16 @@ export type AgentAction = {
   flow?: "confirm" | "skip"
 }
 
+// What Sandworm's agent does while it researches in the notebook, as the API keeps it for the strategy's chat
+export type RunPart =
+  | { type: "thinking"; text: string }
+  | { type: "action"; state: "making" | "made" | "ran"; title: string; blockType?: string }
+  | { type: "text"; text: string }
+  | { type: "asked"; text: string }
+  | { type: "error"; message: string }
+
+export type RunStatus = "running" | "done" | "failed"
+
 // What the agent can ask the person to confirm. Its status is the API's, and changes as the step is carried out.
 export type ProposalStatus = "pending" | "working" | "done" | "cancelled" | "failed"
 
@@ -27,6 +37,8 @@ export type AgentBlock =
   | { type: "chips"; label?: string; chips: string[] }
   | { type: "actions"; actions: AgentAction[] }
   // A step that moves money, which the agent has worked out and asks the person to confirm. `id` is the message it is in.
+  // Sandworm's agent at work in the notebook: its thinking, the cells it writes and runs, and what it says, as it goes
+  | { type: "sandworm-run"; status: RunStatus; notebookUrl?: string; runner?: "sandworm" | "agent"; parts: RunPart[] }
   | { type: "proposal"; id: string; title: string; rows: StrategyRow[]; status: ProposalStatus; confirmLabel: string }
 
 // `at` is when it was said, once the API has kept it

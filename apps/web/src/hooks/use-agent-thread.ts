@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { decideStep, loadThread, sendMessage } from "@/lib/agent/client"
-import { LOCAL_PREFIX, mergeThread, withMessage, withProposalStatus } from "@/lib/agent/thread"
+import { hasRunningWork, LOCAL_PREFIX, mergeThread, withMessage, withProposalStatus } from "@/lib/agent/thread"
 import { errorMessage } from "@/lib/strategies/client"
 import type { AgentMessage } from "@/types/agent"
 
 export type ThreadState = "loading" | "ready" | "failed"
+
+const FOLLOW_MS = 3000
 
 const said = (id: string, from: AgentMessage["from"], text: string): AgentMessage => ({
   id: `${LOCAL_PREFIX}${id}`,
@@ -49,6 +51,16 @@ export function useAgentThread(strategyId: string) {
     const thread = await loadThread(strategyId).catch(() => undefined)
     if (thread) setSuggestions(thread.suggestions)
   }, [strategyId])
+
+  // While Sandworm's agent is at work its steps are kept in the conversation as it goes, so it is looked at again every few seconds to follow it
+  const isAgentWorking = hasRunningWork(messages)
+  useEffect(() => {
+    if (!isAgentWorking) return
+    const timer = setInterval(() => {
+      if (!isBusy.current) void load()
+    }, FOLLOW_MS)
+    return () => clearInterval(timer)
+  }, [isAgentWorking, load])
 
   const send = useCallback(
     async (text: string) => {

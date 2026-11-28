@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { useAgentThread } from "@/hooks/use-agent-thread"
 import * as client from "@/lib/agent/client"
@@ -104,5 +104,42 @@ describe("the conversation about a strategy", () => {
     await act(() => result.current.decide("step", "confirm"))
     expect(result.current.messages[0]?.blocks[0]).toMatchObject({ status: "failed" })
     expect(result.current.messages.at(-1)).toMatchObject({ from: "agent", blocks: [{ text: "Offline" }] })
+  })
+
+  describe("while Sandworm's agent is at work", () => {
+    const run = (status: "running" | "done"): AgentMessage => ({
+      id: "run",
+      from: "agent",
+      blocks: [{ type: "sandworm-run", status, notebookUrl: "https://app.sandwormlab.xyz/n", parts: [{ type: "text", text: status === "done" ? "Finished" : "Working" }] }],
+    })
+
+    beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }))
+    afterEach(() => vi.useRealTimers())
+
+    it("looks at the conversation again every few seconds, so what the agent does shows as it happens, and stops when it is done", async () => {
+      api.loadThread.mockResolvedValue({ messages: [run("running")], suggestions: [] })
+      const { result } = renderHook(() => useAgentThread("strategy-1"))
+      await waitFor(() => expect(result.current.state).toBe("ready"))
+      const first = api.loadThread.mock.calls.length
+
+      api.loadThread.mockResolvedValue({ messages: [run("done")], suggestions: [] })
+      await act(async () => void (await vi.advanceTimersByTimeAsync(3100)))
+      expect(api.loadThread.mock.calls.length).toBeGreaterThan(first)
+      await waitFor(() => expect(result.current.messages[0]?.blocks[0]).toMatchObject({ status: "done", parts: [{ text: "Finished" }] }))
+
+      const settled = api.loadThread.mock.calls.length
+      await act(async () => void (await vi.advanceTimersByTimeAsync(10_000)))
+      expect(api.loadThread.mock.calls.length).toBe(settled)
+    })
+
+    it("does not look again when nothing is at work", async () => {
+      api.loadThread.mockResolvedValue({ messages: [run("done")], suggestions: [] })
+      const { result } = renderHook(() => useAgentThread("strategy-1"))
+      await waitFor(() => expect(result.current.state).toBe("ready"))
+      const calls = api.loadThread.mock.calls.length
+
+      await act(async () => void (await vi.advanceTimersByTimeAsync(10_000)))
+      expect(api.loadThread.mock.calls.length).toBe(calls)
+    })
   })
 })

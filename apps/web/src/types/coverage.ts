@@ -4,6 +4,8 @@ export type IdeaCoverage = {
   basis: "named" | "partly" | "fallback" | "open"
   // What the idea named that has nothing buyable on Base
   couldntMatch: string[]
+  // What the idea named that is listed on Base but has no pool to trade in yet
+  listedOnly?: string[]
   // What the strategy will actually consider
   tests: { symbol: string; name: string }[]
   // The share of the money that stays in cash because the cap on one stock leaves no room for more stocks

@@ -80,6 +80,13 @@ function AgentPanel({ script, conversation, intro = [], isScripted = false }: Ag
     if (thinking) scrollToBottom()
   }, [thinking, scrollToBottom])
 
+  // What the agent adds to a message that is being written (Sandworm's agent at work) stays in view, unless the person has scrolled up to read
+  const { messages: kept } = conversation
+  useEffect(() => {
+    const element = stream.current
+    if (element && atBottom) element.scrollTo({ top: element.scrollHeight })
+  }, [kept, atBottom])
+
   return (
     <AgentContext value={context}>
       <aside

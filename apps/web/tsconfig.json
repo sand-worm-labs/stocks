@@ -42,12 +42,12 @@
     "**/*.mjs",
     "**/*.ts",
     "**/*.tsx",
+    ".next-agent/types/**/*.ts",
     ".next-verify/types/**/*.ts",
     ".next/types/**/*.ts",
     "eslint.config.mjs",
     "next-env.d.ts",
     "vitest.config.ts",
-    ".next-agent/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

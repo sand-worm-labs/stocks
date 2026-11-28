@@ -60,6 +60,8 @@ export const researchResultSchema = z.object({
   notes: z.array(text(300)).max(8).default([]),
   // The one notebook all the research is in, with its summary at the top
   notebook: notebookLinkSchema,
+  // A name for the strategy chosen by whoever did the research; the API applies it and does not keep it here, so a page never reads it
+  name: z.string().trim().min(1).max(60).optional(),
   // The block of that notebook each part of the report is built from, by the part's id: what a link from that part of the report opens
   blocks: z.record(z.enum(SECTION_IDS), z.string().min(1).max(100)).optional(),
   // Where the numbers came from, and as of when

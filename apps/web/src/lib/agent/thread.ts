@@ -27,5 +27,9 @@ export function mergeThread(shown: AgentMessage[], kept: AgentMessage[]) {
 
 export const LOCAL_PREFIX = "local-"
 
+// Whether Sandworm's agent is at work, which is when the conversation is looked at again every few seconds to follow it
+export const hasRunningWork = (messages: AgentMessage[]) =>
+  messages.some(({ blocks }) => blocks.some((block) => block.type === "sandworm-run" && block.status === "running"))
+
 export const hasWaitingStep = (messages: AgentMessage[]) =>
   messages.some(({ blocks }) => blocks.some((block) => block.type === "proposal" && block.status === "pending"))

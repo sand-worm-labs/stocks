@@ -8,6 +8,7 @@ import { FactsBlock } from "./FactsBlock"
 import { NoteBlock } from "./NoteBlock"
 import { ProposalBlock } from "./ProposalBlock"
 import { RulesBlock } from "./RulesBlock"
+import { SandwormRunBlock } from "./SandwormRunBlock"
 import { StepsBlock } from "./StepsBlock"
 import { TextBlock } from "./TextBlock"
 
@@ -22,6 +23,7 @@ const RENDERERS: Renderers = {
   chips: ChipsBlock,
   actions: ActionsBlock,
   proposal: ProposalBlock,
+  "sandworm-run": SandwormRunBlock,
 }
 
 export function BlockView({ block }: { block: AgentBlock }) {

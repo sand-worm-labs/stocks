@@ -1,5 +1,6 @@
-import { isBuyable, underlyingTicker } from "@/features/market/stock"
-import { SECTOR_WORDS, NOT_A_COMPANY } from "./brief.constants"
+import { isBuyable } from "@/features/market/stock"
+import { findStocks } from "@/features/market/matching/find-stocks"
+import { SECTOR_WORDS, NOT_A_COMPANY, NOT_A_KIND } from "./brief.constants"
 import { parseBrief } from "./parse"
 import { formatPercent } from "@/common/utils/format"
 import { symbolsOf } from "@/features/strategies/language/evaluate"
@@ -15,6 +16,8 @@ export type IdeaCoverage = {
   basis: "named" | "partly" | "fallback" | "open"
   // What the idea named that has nothing buyable on Base
   couldntMatch: string[]
+  // What the idea named that is listed on Base but has no pool to trade in yet: it exists, it just can't be bought
+  listedOnly: string[]
   // What the strategy will actually consider
   tests: { symbol: string; name: string }[]
   // The share of the money that stays in cash because the cap on one stock leaves no room for more stocks
@@ -40,26 +43,34 @@ function namedExamples(text: string) {
 }
 
 function sectorWords(text: string) {
-  return Object.keys(SECTOR_WORDS).filter((word) => new RegExp(String.raw`\b${escape(word)}\b`, "i").test(text))
+  return SECTOR_WORDS.filter((word) => new RegExp(String.raw`\b${escape(word)}\b`, "i").test(text))
+}
+
+// A kind of company described in words: "food tech companies", "pet stocks". The words before the noun, without the ones that say how to invest.
+const KIND_PATTERN = /\b((?:[a-z][\w&-]*\s+){0,2}[a-z][\w&-]*)\s+(?:companies|stocks|shares|firms|startups|businesses)\b/gi
+
+export function kindsOf(text: string) {
+  return Array.from(text.matchAll(KIND_PATTERN), ([, phrase = ""]) => {
+    const words = phrase.split(/\s+/)
+    const start = words.findLastIndex((word) => NOT_A_KIND.includes(word.toLowerCase()) || /^\d/.test(word)) + 1
+    return words.slice(start).join(" ")
+  }).filter((kind) => kind.length >= 3)
 }
 
 // Everything the idea names that has to be found on Base: its themes, its kinds of company, and the companies it gives as examples
 export function namedBy(text: string) {
   const { include, avoid } = parseBrief(text)
   const avoided = new Set(avoid.items.map((item) => item.toLowerCase()))
-  const all = [...include.items, ...sectorWords(text), ...namedExamples(text)]
+  const all = [...include.items, ...sectorWords(text), ...namedExamples(text), ...kindsOf(text)]
   const unique = all.filter((item, i) => all.findIndex((other) => other.toLowerCase() === item.toLowerCase()) === i)
-  return unique.filter((item) => !avoided.has(item.toLowerCase()))
+  const isPartOfAnother = (item: string) =>
+    unique.some((other) => other !== item && other.length > item.length && new RegExp(String.raw`\b${escape(item)}\b`, "i").test(other))
+  return unique.filter((item) => !avoided.has(item.toLowerCase()) && !isPartOfAnother(item))
 }
 
-// Whether something named is on Base: a theme with a stock to buy in it, a ticker, or a company by its name as a whole word
-function isFound(item: string, { stocks, categories }: Market) {
-  const word = norm(item)
-  const theme = SECTOR_WORDS[item.toLowerCase()] ?? word
-  const inTheme = categories.some(({ id, label, symbols }) => symbols.length > 0 && (norm(id) === theme || norm(label).split(" ").includes(theme) || norm(label) === theme))
-  if (inTheme) return true
-  const byName = new RegExp(String.raw`\b${escape(word)}\b`, "i")
-  return stocks.some((stock) => isBuyable(stock) && (norm(underlyingTicker(stock.symbol)) === word || norm(stock.symbol) === word || byName.test(norm(stock.name))))
+// Whether something named can be bought on Base: some stock that is what it says, with a pool to trade in
+function isFound(item: string, market: Market) {
+  return findStocks(item, market).some(isBuyable)
 }
 
 type Input = { brief: string; symbols: string[]; market: Market; maxShare?: number }
@@ -67,6 +78,7 @@ type Input = { brief: string; symbols: string[]; market: Market; maxShare?: numb
 export function ideaCoverage({ brief, symbols, market, maxShare }: Input): IdeaCoverage {
   const named = namedBy(brief)
   const couldntMatch = named.filter((item) => !isFound(item, market))
+  const listedOnly = [...new Set(named.flatMap((item) => findStocks(item, market).filter((stock) => !isBuyable(stock)).map(({ symbol }) => symbol)))]
   const tests = symbols.map((symbol) => ({ symbol, name: market.stocks.find((stock) => stock.symbol === symbol)?.name ?? symbol }))
   const basis = !named.length ? "open" : couldntMatch.length === named.length ? "fallback" : couldntMatch.length ? "partly" : "named"
 
@@ -75,22 +87,27 @@ export function ideaCoverage({ brief, symbols, market, maxShare }: Input): IdeaC
   const fewStocks = cashLeft > 0.005 ? `At ${formatPercent(maxShare ?? 0)} a stock, ${tests.length} stock${tests.length === 1 ? "" : "s"} leave ${formatPercent(cashLeft)} of the money in cash.` : undefined
 
   const symbolList = list(tests.map(({ symbol }) => symbol))
+  const MOST_LISTED = 4
+  const listedText = listedOnly.length ? `${list(listedOnly.slice(0, MOST_LISTED))}${listedOnly.length > MOST_LISTED ? ` and ${listedOnly.length - MOST_LISTED} more` : ""} ${listedOnly.length === 1 ? "is" : "are"} listed on Base, but ${listedOnly.length === 1 ? "has" : "have"} no pool to trade in yet. ` : ""
   if (basis === "fallback") {
     return {
-      basis, couldntMatch, tests, cashLeft,
-      headline: `Nothing on Base matches ${list(couldntMatch)}`,
-      detail: `Those stocks can't be bought here yet, so this would test the ${tests.length} most liquid stocks instead: ${symbolList}. Go ahead with those, or start again with a different idea.${fewStocks ? ` ${fewStocks}` : ""}`,
+      basis, couldntMatch, listedOnly, tests, cashLeft,
+      headline: listedOnly.length ? `Can't be bought on Base yet: ${list(couldntMatch)}` : `Nothing on Base matches ${list(couldntMatch)}`,
+      detail: `${listedText || "Those stocks can't be bought here yet. "}This would test the ${tests.length} most liquid stocks instead: ${symbolList}. Go ahead with those, or start again with a different idea.${fewStocks ? ` ${fewStocks}` : ""}`,
     }
   }
   if (basis === "partly") {
     return {
-      basis, couldntMatch, tests, cashLeft,
+      basis, couldntMatch, listedOnly, tests, cashLeft,
       headline: `Not on Base yet: ${list(couldntMatch)}`,
-      detail: `The rest of your idea is covered. This tests ${symbolList}.${fewStocks ? ` ${fewStocks}` : ""}`,
+      detail: `${listedText}The rest of your idea is covered. This tests ${symbolList}.${fewStocks ? ` ${fewStocks}` : ""}`,
     }
   }
-  if (fewStocks) return { basis, couldntMatch, tests, cashLeft, headline: "Part of the money stays in cash", detail: fewStocks }
-  return { basis, couldntMatch, tests, cashLeft }
+  if (listedOnly.length) {
+    return { basis, couldntMatch, listedOnly, tests, cashLeft, headline: "Some of what you named can't be bought yet", detail: `${listedText}This tests ${symbolList}.${fewStocks ? ` ${fewStocks}` : ""}` }
+  }
+  if (fewStocks) return { basis, couldntMatch, listedOnly, tests, cashLeft, headline: "Part of the money stays in cash", detail: fewStocks }
+  return { basis, couldntMatch, listedOnly, tests, cashLeft }
 }
 
 /// The coverage of a strategy that is made: what its idea named against what is on Base now, and what its rules will actually test

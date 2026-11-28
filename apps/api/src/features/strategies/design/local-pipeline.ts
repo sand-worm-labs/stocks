@@ -1,6 +1,9 @@
 import { analyzeBrief } from "@/features/strategies/brief/analyze"
-import { ideaCoverage } from "@/features/strategies/brief/idea-coverage"
+import { ideaCoverage, namedBy } from "@/features/strategies/brief/idea-coverage"
 import { isBuyable } from "@/features/market/stock"
+import { spreadAcrossSectors } from "@/features/market/matching/market-pack"
+import { findStocks } from "@/features/market/matching/find-stocks"
+import { generatedName } from "./strategy-name"
 import type { RuleSpec } from "@/features/strategies/rules/spec"
 import type { Stock } from "@/features/market/types/market.types"
 import type { Design, Market, Pipeline, Research } from "./pipeline.types"
@@ -14,48 +17,26 @@ const DEFAULT_LIQUIDITY = 100_000
 const MOST_STOCKS = 6
 const STOP_PAUSE_DAYS = 63
 
-const norm = (text: string) =>
-  text
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-// A name cut after four words can end on a word that leads nowhere ("Grow 1,000 USDC in")
-const TRAILING_FILLER = /(?:[\s,.;:]+(?:in|on|into|with|to|for|of|at|by|and|or|the|a|an))+[.,;:]*$|[.,;:]+$/i
-const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
-
-function named(items: string[], { stocks, categories }: Market) {
-  return items.flatMap((item) => {
-    const wanted = norm(item)
-    const theme = categories.find(({ id, label }) => norm(label) === wanted || norm(id) === wanted)
-    if (theme) return theme.symbols
-    return stocks
-      .filter(({ symbol, name }) => norm(symbol.replace(/c$/, "")) === wanted || norm(name).includes(wanted))
-      .map(({ symbol }) => symbol)
-  })
+function named(items: string[], market: Market) {
+  return items.flatMap((item) => findStocks(item, market).map(({ symbol }) => symbol))
 }
 
-export function pickStocks(include: string[], avoid: string[], market: Market, maxShare: number) {
-  const buyable = market.stocks.filter(isBuyable)
+// Only stocks whose pool holds at least `minLiquidity` are taken: the strategy has a rule that it won't trade thinner ones, so picking one would
+// make a strategy that breaks its own rule on the first day
+export function pickStocks(include: string[], avoid: string[], market: Market, maxShare: number, minLiquidity = 0) {
+  const buyable = market.stocks.filter((stock) => isBuyable(stock) && (stock.liquidity ?? 0) >= minLiquidity)
   const byLiquidity = (a: Stock, b: Stock) => (b.liquidity ?? 0) - (a.liquidity ?? 0)
   const out = new Set(named(avoid, market))
   const asked = [...new Set(named(include, market))].filter((symbol) => !out.has(symbol))
-  const pool = asked.length
-    ? buyable.filter(({ symbol }) => asked.includes(symbol))
-    : buyable.filter(({ symbol }) => !out.has(symbol))
   const want = Math.min(MOST_STOCKS, Math.max(2, Math.ceil(1 / maxShare)))
-  return pool.toSorted(byLiquidity).slice(0, want)
+  const wanted = buyable.filter(({ symbol }) => asked.includes(symbol))
+  if (wanted.length) return wanted.toSorted(byLiquidity).slice(0, want)
+  // Nothing the idea names can be bought on Base: a spread of the market, not its three most traded names every time
+  return spreadAcrossSectors(buyable.filter(({ symbol }) => !out.has(symbol)), want)
 }
 
 export function shares(count: number, maxShare: number) {
   return Array.from({ length: count }, () => Math.min(1 / count, maxShare))
-}
-
-function nameFor(brief: string, theme: string | undefined, maxShare: number | undefined) {
-  const base = theme
-    ? sentence(theme)
-    : sentence(brief.trim().split(/\s+/).slice(0, 4).join(" ")).replace(TRAILING_FILLER, "")
-  return `${base}${maxShare ? `, capped at ${Math.round(maxShare * 100)}%` : ""}`.slice(0, 60)
 }
 
 function designStrategy(name: string, symbols: string[]): Strategy {
@@ -88,6 +69,8 @@ function includeText(items: string[], { basis, couldntMatch }: { basis: string; 
 const percent = (fraction: number) => `${Math.round(fraction * 100)}%`
 const usdc = (amount: number) => amount.toLocaleString("en-US", { maximumFractionDigits: 0 })
 
+export { generatedName } from "./strategy-name"
+
 export function createLocalPipeline(template: Report): Pipeline {
   return {
     async design(brief, market) {
@@ -95,8 +78,9 @@ export function createLocalPipeline(template: Report): Pipeline {
       const budget = fields.budget?.value ?? DEFAULT_BUDGET
       const maxShare = fields.maxPerStock ? fields.maxPerStock.value / 100 : DEFAULT_MAX_SHARE
       const loss = fields.loss?.value ?? DEFAULT_LOSS_LIMIT
-      const picked = pickStocks(fields.include.items, fields.avoid.items, market, maxShare)
-      const name = nameFor(brief, fields.include.items[0], fields.maxPerStock && maxShare)
+      // What the idea is about is read the same way for the picks and for the coverage notice, so they agree on it
+      const picked = pickStocks(namedBy(brief), fields.avoid.items, market, maxShare, fields.minLiquidity ?? DEFAULT_LIQUIDITY)
+      const name = generatedName(brief)
 
       const rules: RuleSpec[] = [
         { type: "budget", amount: budget },

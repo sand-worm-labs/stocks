@@ -1,4 +1,4 @@
-import { ideaCoverage, namedBy } from '@/features/strategies/brief/idea-coverage';
+import { ideaCoverage, kindsOf, namedBy } from '@/features/strategies/brief/idea-coverage';
 import type { Market } from '@/features/strategies/design/pipeline.types';
 
 const stock = (symbol: string, name: string, liquidity?: number) => ({ symbol, name, liquidity, price: liquidity ? 100 : undefined });
@@ -29,9 +29,18 @@ describe('what an idea names, against what can be bought on Base', () => {
     expect(coverage.basis).toBe('fallback');
     expect(coverage.couldntMatch).toEqual(expect.arrayContaining(['oil', 'Exxon', 'Chevron', 'Shell']));
     expect(coverage.couldntMatch).not.toContain('similar');
-    expect(coverage.headline).toMatch(/^Nothing on Base matches oil/);
-    expect(coverage.detail).toMatch(/most liquid stocks instead: NVDAc, GOOGLc and AAPLc/);
+    // Exxon is on the list of stocks on Base, but has no pool to trade in yet: that is said, not "nothing on Base"
+    expect(coverage.listedOnly).toEqual(['XOMc']);
+    expect(coverage.headline).toMatch(/^Can't be bought on Base yet: oil/);
+    expect(coverage.detail).toMatch(/^XOMc is listed on Base, but has no pool to trade in yet\. This would test the 3 most liquid stocks instead: NVDAc, GOOGLc and AAPLc/);
     expect(coverage.tests.map(({ symbol }) => symbol)).toEqual(symbols);
+  });
+
+  it('says nothing on Base matches what is not listed at all', () => {
+    const coverage = cover('Grow 500 USDC in gold stocks');
+    expect(coverage.listedOnly).toEqual([]);
+    expect(coverage.headline).toBe('Nothing on Base matches gold');
+    expect(coverage.detail).toMatch(/^Those stocks can't be bought here yet\. This would test/);
   });
 
   it('has nothing to say when everything named is there', () => {
@@ -76,5 +85,36 @@ describe('what an idea names, against what can be bought on Base', () => {
   it('adds the cash to what it says when part of an idea is missing too', () => {
     const coverage = cover('Grow 500 USDC in oil, max 20% in one stock', 0.2);
     expect(coverage.detail).toMatch(/leave 40% of the money in cash\.$/);
+  });
+});
+
+describe('a kind of company described in words', () => {
+  it('is what comes before "companies" or "stocks", without the words that say how to invest', () => {
+    expect(kindsOf('Food tech companies: plant-based food, delivery apps')).toEqual(['Food tech']);
+    expect(kindsOf('Random stocks that can give 20% a year')).toEqual([]);
+    expect(kindsOf('Only stocks with $100K+ liquidity, and good dividend stocks')).toEqual([]);
+    expect(kindsOf('Pet care companies and EV charging stocks')).toEqual(['Pet care', 'EV charging']);
+  });
+});
+
+describe('what is named and listed but cannot be traded', () => {
+  it('is said even when what was named can be bought in part: the social stocks, of which only Meta has a pool', () => {
+    const social: Market = {
+      stocks: [
+        { symbol: 'METAc', name: 'Meta Platforms Inc.', liquidity: 700_000, price: 600 },
+        { symbol: 'SNAPc', name: 'Snap Inc.' },
+        { symbol: 'PINSc', name: 'Pinterest, Inc.' },
+      ],
+      categories: [],
+    };
+    const coverage = ideaCoverage({ brief: 'Invest in social media stocks', symbols: ['METAc'], market: social, maxShare: 0.35 });
+    expect(coverage.basis).toBe('named');
+    expect(coverage.listedOnly).toEqual(['SNAPc', 'PINSc']);
+    expect(coverage.headline).toBe("Some of what you named can't be bought yet");
+    expect(coverage.detail).toMatch(/^SNAPc and PINSc are listed on Base, but have no pool to trade in yet\. This tests METAc\./);
+  });
+
+  it('keeps a word that is part of a longer one named from being named twice', () => {
+    expect(namedBy('Social media stocks and social stocks')).toEqual(['social media']);
   });
 });

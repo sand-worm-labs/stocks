@@ -117,6 +117,10 @@ export function resultOf(lines: Printed[], record: StrategyRecord, found: Found,
   if (!backtest || !risk || !growth || !drawdown) throw new SandwormError("The notebook didn't print its results")
 
   const { inputs, panic, maxShare, asOf, skipped, stocks } = found
+  // A name for the strategy, when whoever researched it chose one: the notebook's agent prints it as a line of its own
+  const nameLine = lines.findLast(({ kind }) => kind === "name")
+  const name = typeof nameLine?.name === "string" ? nameLine.name.trim().slice(0, 60) : ""
+
   const result = toResult(
     { backtest, risk, growth, drawdown },
     {
@@ -132,7 +136,7 @@ export function resultOf(lines: Printed[], record: StrategyRecord, found: Found,
     }
   )
   // Which block of the notebook each part of the report is built from, so a part of the report can link to its own block
-  return blocks && Object.keys(blocks).length ? { ...result, blocks } : result
+  return { ...result, ...(blocks && Object.keys(blocks).length ? { blocks } : {}), ...(name ? { name } : {}) }
 }
 
 // What the notebook says about the strategy besides its prices: the person's words and rules, and what the design left out or assumed

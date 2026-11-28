@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { kpisFor, prioritiesOf, reportInstructions } from "@/features/research/report-spec"
+import { type MarketPack, packMarkdown } from "@/features/market/matching/market-pack"
 import { describeRule } from "@/features/strategies/rules/spec"
 import type { StrategyRecord } from "@/features/strategies/types/strategy-record"
 
@@ -23,12 +24,14 @@ Print one line for each of these, each starting with \`${RESULT_MARKER}\` follow
    How far below its highest value each was, in percent (never above 0), on the same weeks as the growth line.
 4. \`{"kind":"risk","maxDrawdown":-0.24,"benchMaxDrawdown":-0.19,"worstMonth":{"label":"2026-11","value":-0.11},"stops":0,"risk":[{"symbol":"NVDAc","weight":0.25,"riskShare":0.4}],"alone":[{"symbol":"NVDAc","cagr":0.35,"maxDrawdown":-0.37}]}\`
    The worst fall from a peak for each (${fraction}), the worst month, and for each stock its weight, its share of the portfolio's risk (these add up to 1) and how it did on its own.
+5. \`{"kind":"name","name":"Four growth stocks aiming for 20%"}\`
+   A short, specific name for the strategy that fits the person's idea: under 60 characters, plain words, no quotes, and not the words "strategy" or "portfolio".
 `
 
 // The test to run, in the terms the Prices and plan cell holds it. This is the plan, not the answer: what comes out is the agent's work.
 const METHOD = `Test the plan on the real prices in \`DATA\`: hold \`DATA["weights"]\` (what is left is cash), look at the portfolio again every 21 trading days, pay \`DATA["cost"]\` on every trade, and sell everything if the portfolio falls \`DATA["stop"]\` from its high, staying in cash for \`DATA["pause"]\` trading days. \`DATA["benchmark"]\` is the S&P 500 (SPY), the comparison. Use only these prices and say so if a stock has none.`
 
-export function briefMarkdown(record: StrategyRecord, inputs: ResearchInputs) {
+export function briefMarkdown(record: StrategyRecord, inputs: ResearchInputs, pack?: MarketPack) {
   const priorities = prioritiesOf(record.brief, record.rules)
   const kpis = kpisFor(priorities)
   const rules = record.rules.map((rule) => `- ${describeRule(rule)}`).join("\n")
@@ -37,6 +40,7 @@ export function briefMarkdown(record: StrategyRecord, inputs: ResearchInputs) {
     `# Brief: ${inputs.name}`,
     `**The person's idea, in their words:** ${record.brief}`,
     `**The rules it was turned into:**\n${rules}`,
+    ...(pack ? [`## What the market on Base holds for this idea\nFound by what each stock is (its sector and industry), as of ${pack.asOf.slice(0, 10)}. The plan below was drawn from these. Say in the report which of them you looked at and which you left out, and why.\n\n${packMarkdown(pack)}`] : []),
     `## How the report should come out\n${reportInstructions(priorities, kpis)}`,
     `## The test\n${METHOD}`,
     `## What to print\n${CONTRACT}`,

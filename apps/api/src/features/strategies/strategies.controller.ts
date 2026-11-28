@@ -12,6 +12,9 @@ import { activityOf } from '@/features/activity/strategy-activity';
 import { coverageOf } from '@/features/strategies/brief/idea-coverage';
 import { appOrigin } from '@/features/auth/core/request';
 import { signReportShare } from '@/features/auth/core/token';
+import { packForIdea } from '@/features/research/idea-pack';
+import { isSandwormLink } from '@/features/research/sandworm-link';
+import { MOST_TEXT, MOST_THINKING } from '@/features/research/types/research-chat.types';
 import { rulesSchema } from '@/features/strategies/rules/spec';
 import { rulesView } from '@/features/strategies/rules/rules-view';
 import { BRIEF_MAX_LENGTH, StrategyError } from '@/features/strategies/lifecycle/strategy-lifecycle';
@@ -19,6 +22,7 @@ import { brief, isInResearch, listed, report, trashed } from '@/features/strateg
 import { changeFunds, fundsSchema, sellSchema, sellStocks } from '@/features/strategies/trading/money';
 import { startTrading, Trade, tradeSchema } from '@/features/strategies/trading/start';
 
+import { ResearchChatLogService } from './research-chat-log.service';
 import { StrategyEngine } from './strategy-engine.service';
 
 const createSchema = z.object({ brief: z.string().min(1).max(BRIEF_MAX_LENGTH) });
@@ -27,6 +31,19 @@ const editSchema = z.object({ rules: rulesSchema });
 const purgeSchema = z.object({ confirmName: z.string().min(1).max(200) });
 // `result` is checked in full by the strategy steps, which say what is wrong with it; here it is only required to be there
 const handBackSchema = z.object({ result: z.unknown() });
+
+// What an agent tells of its work as it goes: each thing is bounded, as some of it is written by a model
+const partSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('thinking'), text: z.string().trim().min(1).max(MOST_THINKING) }),
+  z.object({ type: z.literal('action'), state: z.enum(['making', 'made', 'ran']), title: z.string().trim().min(1).max(120), blockType: z.string().max(30).optional() }),
+  z.object({ type: z.literal('text'), text: z.string().trim().min(1).max(MOST_TEXT) }),
+  z.object({ type: z.literal('error'), message: z.string().trim().min(1).max(300) }),
+]);
+const logSchema = z.object({
+  parts: z.array(partSchema).max(20),
+  status: z.enum(['running', 'failed']).optional(),
+  notebookUrl: z.string().url().max(500).optional(),
+});
 
 // Everything a person, or their agent, does with their strategies. Each step checks that the strategy is theirs and is at the point the step
 // belongs to.
@@ -38,6 +55,7 @@ export class StrategiesController {
     private readonly engine: StrategyEngine,
     private readonly stocks: StocksService,
     private readonly sandworm: SandwormSession,
+    private readonly chatLog: ResearchChatLogService,
   ) {}
 
   // Everything this person has made, newest first
@@ -80,6 +98,13 @@ export class StrategiesController {
   @Get(':id')
   async one(@Asking() { ownerId }: Caller, @Param('id') id: string) {
     return report(await this.engine.steps.owned(ownerId, id));
+  }
+
+  // What the market on Base holds for the strategy's idea, found by what each stock is: for whoever researches it
+  @Get(':id/market')
+  async market(@Asking() { ownerId }: Caller, @Param('id') id: string) {
+    const record = await this.engine.steps.owned(ownerId, id);
+    return packForIdea(record.brief, await this.stocks.market());
   }
 
   @Patch(':id')
@@ -172,8 +197,23 @@ export class StrategiesController {
   @Post(':id/research')
   @HttpCode(200)
   async handBack(@Asking() { ownerId }: Caller, @Param('id') id: string, @Body(new ZodPipe(handBackSchema)) body: z.infer<typeof handBackSchema>) {
-    const { stage } = await this.engine.steps.completeResearch(ownerId, id, body.result);
+    const { stage, research } = await this.engine.steps.completeResearch(ownerId, id, body.result);
+    // What the agent told of its work is settled with the research: it is finished
+    if (research) await this.chatLog.finish(id, research.startedAt, 'done');
     return { ok: true, stage };
+  }
+
+  // What an agent from outside is doing while it researches, told as it goes so the person can follow it from the strategy's own chat, as they
+  // can in Sandworm. Added to the run's log; only while the strategy is waiting for research.
+  @Post(':id/research/log')
+  @HttpCode(200)
+  async tellResearch(@Asking() { ownerId }: Caller, @Param('id') id: string, @Body(new ZodPipe(logSchema)) body: z.infer<typeof logSchema>) {
+    const { research } = await this.engine.steps.owned(ownerId, id);
+    if (research?.mode !== 'waiting' || research.result) throw new StrategyError("It isn't waiting for research", 409);
+    if (body.notebookUrl && !isSandwormLink(body.notebookUrl)) throw new StrategyError('The notebook link has to lead to Sandworm', 422);
+
+    await this.chatLog.append(ownerId, id, research.startedAt, { ...body, runner: research.runner });
+    return { ok: true };
   }
 
   // A link anyone can open to read this strategy's report. Only for a strategy that has one, and only its owner can make it.

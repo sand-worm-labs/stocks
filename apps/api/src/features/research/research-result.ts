@@ -63,6 +63,9 @@ export const researchResultSchema = z.object({
   // The block of that notebook each part of the report is built from, by the part's id (see report-outline.ts): what a link from that part of the
   // report opens. Optional, and any part may be missing; a part with no block opens the notebook at the top.
   blocks: z.record(z.enum(SECTION_IDS), z.string().min(1).max(100)).optional(),
+  // A short, specific name for the strategy that fits the idea, chosen by whoever did the research. Used only while the strategy still has the
+  // name it was given when it was made: one the person chose is never replaced.
+  name: text(60).optional(),
   // Where the numbers came from, and as of when
   dataNote: text(200).optional(),
   // True when the numbers are made up for a test, so the page can say so

@@ -1,4 +1,5 @@
 import { MIN_BUY_AMOUNT, SWAP_FEE_RATE } from "@/features/strategies/trading/trade.constants"
+import { generatedName } from "@/features/strategies/design/local-pipeline"
 import { analyzeBrief } from "@/features/strategies/brief/analyze"
 import { splitDeposit } from "@/features/strategies/trading/deposit"
 import { ResearchFailure } from "@/features/research/research-failure"
@@ -9,6 +10,7 @@ import { StoreConflict } from "./store-conflict"
 import { withFee } from "@/features/strategies/trading/fee"
 import { depositLines, LedgerError, ledgerOf, positionsOf, saleLines, withdrawLine, withLines } from "@/features/strategies/trading/ledger"
 import type { AgentStep } from "@/features/research/types/agent-step.types"
+import type { ResearchChatLog } from "@/features/research/types/research-chat.types"
 import type { Market, Pipeline } from "@/features/strategies/design/pipeline.types"
 import type { Holding } from "@/features/strategies/types/holding.types"
 import type { Funding, StrategyEvent, StrategyRecord, StrategyStore } from "@/features/strategies/types/strategy-record"
@@ -92,6 +94,8 @@ export type ProduceContext = {
   submittedByAgent?: boolean
   // Told by the producer as it goes, so the person can watch the run and open each notebook when it exists
   progress?: (steps: AgentStep[]) => Promise<void>
+  // Told as Sandworm's agent works, so the person can follow what it does from the strategy's own chat. A run with no chat has nothing to tell.
+  chatLog?: (log: ResearchChatLog) => Promise<void>
 }
 
 // Whoever does the research. With a producer the run is "waiting": it ends when a result comes in. A producer that can `run` does the work
@@ -201,7 +205,12 @@ export function createStrategyService({
     return afresh(async () => {
       const record = await owned(ownerId, id)
       if (!isResearching(record) || record.research?.mode !== "waiting") throw new StrategyError("It isn't waiting for research", 409)
-      return finish({ ...record, research: { ...record.research, result: parsed.data, error: undefined } })
+      // Whoever did the research may have found a better name for it than the one made from the idea alone. A name the person chose stays.
+      const suggested = parsed.data.name ? cleanName(parsed.data.name) : ""
+      const isStillMade = record.name === generatedName(record.brief)
+      const name = suggested && isStillMade ? suggested : record.name
+      const { name: _suggested, ...result } = parsed.data
+      return finish({ ...record, name, strategy: { ...record.strategy, name }, research: { ...record.research, result, error: undefined } })
     })
   }
 

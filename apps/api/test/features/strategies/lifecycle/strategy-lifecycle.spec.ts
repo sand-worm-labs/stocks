@@ -272,6 +272,41 @@ describe("research that is waited on", () => {
     expect(done.research?.result?.blocks).toEqual({ answer: "blk-1", risk: "blk-6" })
   })
 
+  describe("a name from whoever did the research", () => {
+    const named = (name?: string) => ({ ...result, ...(name !== undefined && { name }) })
+    const researching = async () => {
+      const agent = waiting()
+      const draft = await agent.create("u1", BRIEF)
+      await agent.confirmRules("u1", draft.id, { submittedByAgent: true })
+      return { agent, draft }
+    }
+
+    it("replaces the name made from the idea, for the strategy and its design, and is not kept on the result", async () => {
+      const { agent, draft } = await researching()
+      const done = await agent.completeResearch("u1", draft.id, named("  Four growth stocks aiming for 20%  "))
+
+      expect(done.name).toBe("Four growth stocks aiming for 20%")
+      expect(done.strategy.name).toBe("Four growth stocks aiming for 20%")
+      expect(done.research?.result).not.toHaveProperty("name")
+    })
+
+    it("never replaces a name the person chose", async () => {
+      const { agent, draft } = await researching()
+      await agent.rename("u1", draft.id, "My own name")
+      const done = await agent.completeResearch("u1", draft.id, named("A better name"))
+      expect(done.name).toBe("My own name")
+    })
+
+    it("keeps the made-up name when there is no suggestion, and cuts one that is too long to what a name can be", async () => {
+      const { agent, draft } = await researching()
+      const before = draft.name
+      expect((await agent.completeResearch("u1", draft.id, named())).name).toBe(before)
+
+      const other = await researching()
+      await expect(other.agent.completeResearch("u1", other.draft.id, named("x".repeat(80)))).rejects.toThrow(/missing something or has something wrong/)
+    })
+  })
+
   it("refuses a block for a part the report doesn't have", async () => {
     const agent = waiting()
     const draft = await agent.create("u1", BRIEF)

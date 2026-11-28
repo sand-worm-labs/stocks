@@ -4,6 +4,7 @@ import type { ChatEvent } from "@/infrastructure/sandworm/sandworm-chat"
 import { type ChatClient, createSandwormChatProducer } from "@/features/research/sandworm/chat-producer"
 import { RESULT_MARKER } from "@/features/research/sandworm/notebooks"
 import type { AgentStep } from "@/features/research/types/agent-step.types"
+import type { ResearchChatLog } from "@/features/research/types/research-chat.types"
 import type { StrategyRecord } from "@/features/strategies/types/strategy-record"
 
 const days = (count: number) => Array.from({ length: count }, (_, i) => new Date(Date.UTC(2024, 0, 1 + i)).toISOString().slice(0, 10))
@@ -92,6 +93,84 @@ describe("the Sandworm chat producer", () => {
     // One message, which points at the brief cell
     expect(calls.messages).toHaveLength(1)
     expect(calls.focused[0]).toEqual([{ id: "c1", title: "Brief", type: "markdown" }])
+  })
+
+  describe("what the person can follow in the strategy's chat", () => {
+    const withLog = { ...record, research: { startedAt: "2026-11-26T10:00:00.000Z", mode: "waiting" } } as unknown as StrategyRecord
+    const streams: ChatEvent[][] = [
+      [
+        { type: "message_start" },
+        { type: "thinking", text: "Plan the backtest first." },
+        { type: "text", text: "Testing the plan." },
+        { type: "action", state: "making", title: "Backtest", blockType: "python" },
+        { type: "action", state: "ran", title: "Backtest", blockType: "python" },
+      ],
+    ]
+    const run = async (printedAfter: string[], more: ChatEvent[][] = streams) => {
+      const { client } = fakeChat(printedAfter, more)
+      const logs: ResearchChatLog[] = []
+      const chatLog = async (log: ResearchChatLog) => void logs.push(structuredClone(log))
+      const producer = createSandwormChatProducer({ baseUrl: "https://x/api", getPrices, client: () => client, mostFixes: 1 })
+      return { logs, outcome: await producer.run!(withLog, { sandwormToken: "t", chatLog }).then(() => "done", (error: Error) => error.message) }
+    }
+
+    it("tells it what the agent does as it goes, in order, with the notebook it is working in, and that it is done", async () => {
+      const { logs, outcome } = await run([everything])
+      expect(outcome).toBe("done")
+
+      expect(new Set(logs.map(({ runStartedAt }) => runStartedAt))).toEqual(new Set(["2026-11-26T10:00:00.000Z"]))
+      expect(logs[0]).toMatchObject({ status: "running", parts: [], notebookUrl: expect.stringContaining("/notebook/edit") })
+      const last = logs.at(-1)!
+      expect(last.status).toBe("done")
+      expect(last.parts).toEqual([
+        { type: "thinking", text: "Plan the backtest first." },
+        { type: "text", text: "Testing the plan." },
+        { type: "action", state: "ran", title: "Backtest", blockType: "python" },
+      ])
+      // It was told while the agent was still working, not only at the end
+      expect(logs.filter(({ status }) => status === "running").length).toBeGreaterThan(2)
+    })
+
+    it("keeps what it asked the agent to put right, so the person sees why it went on", async () => {
+      const { logs } = await run([line(backtest), everything], [[{ type: "text", text: "First go." }], [{ type: "text", text: "Fixed it." }]])
+      const last = logs.at(-1)!
+      expect(last.status).toBe("done")
+      expect(last.parts.map(({ type }) => type)).toEqual(["text", "asked", "text"])
+      expect(last.parts[1]).toMatchObject({ type: "asked", text: expect.stringContaining("The notebook isn't done") })
+    })
+
+    it("says the run failed when it does, and keeps what the agent did until then", async () => {
+      const { logs, outcome } = await run([line(backtest)], [[{ type: "text", text: "Trying." }]])
+      expect(outcome).toMatch(/didn't finish/)
+      expect(logs.at(-1)).toMatchObject({ status: "failed", parts: [{ type: "text", text: "Trying." }, { type: "asked" }, { type: "text", text: "Trying." }] })
+    })
+
+    it("says so when the agent itself stops with an error", async () => {
+      const { logs, outcome } = await run([everything], [[{ type: "text", text: "Starting." }, { type: "error", message: "Out of credit" }]])
+      expect(outcome).toMatch(/Out of credit/)
+      expect(logs.at(-1)).toMatchObject({ status: "failed", parts: [{ type: "text" }, { type: "error", message: "Out of credit" }] })
+    })
+
+    it("takes the name the agent chose for the strategy, when it prints one, and asks for it in the brief", async () => {
+      const named = everything + line({ kind: "name", name: "  Steady robotics, two names  " })
+      const { client, calls } = fakeChat([named])
+      const result = await createSandwormChatProducer({ baseUrl: "https://x/api", getPrices, client: () => client }).run!(withLog, { sandwormToken: "t" })
+      expect(result.name).toBe("Steady robotics, two names")
+      expect(calls.cells[1]?.content).toContain('"kind":"name"')
+      expect(researchResultSchema.safeParse(result).success).toBe(true)
+    })
+
+    it("has no name when the agent printed none, and the research is not held up for it", async () => {
+      const { client } = fakeChat([everything])
+      const result = await createSandwormChatProducer({ baseUrl: "https://x/api", getPrices, client: () => client }).run!(withLog, { sandwormToken: "t" })
+      expect(result.name).toBeUndefined()
+    })
+
+    it("is not needed: a run with nowhere to tell works as before", async () => {
+      const { client } = fakeChat([everything])
+      const result = await createSandwormChatProducer({ baseUrl: "https://x/api", getPrices, client: () => client }).run!(withLog, { sandwormToken: "t" })
+      expect(result.notebook.title).toBe("Robotics · Research")
+    })
   })
 
   it("shows what the agent is doing on the step that is going", async () => {

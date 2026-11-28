@@ -70,6 +70,8 @@ export function reportInstructions(priorities: Priority[], kpis: KpiId[]) {
     "One notebook for this strategy, and only one: if it already has a notebook, add to it, never make a second. The notebook is the report with its working shown, so lay it out as the report is.",
     `Start with a cell titled "Start here": the person's idea, their rules, what is tested and what couldn't be (see \`coverage\`). Then the parts below, in this order. Each part is a markdown cell whose title is exactly the one given and whose text says what it shows, followed by the cells for it. Say in words, in a printed line, what each cell found.\n${outline()}`,
     "Have the notebook print lines of `STOCKS_RESULT {json}` for what it found, each under 3,000 characters, next to the words a person reads. The report is made from those lines.",
+    "Give the strategy a name. Read the person's idea and choose a short, specific name that says what the strategy is, in plain words, such as \"Steady dividend payers\" or \"Four growth stocks aiming for 20%\": under 60 characters, no quotes, no \"strategy\" or \"portfolio\" in it. Pass it as `name` when you submit. A name the person already chose is never replaced.",
+    "Tell the person what you are doing as you work, with `log_research`: each cell you write or run, and a line on what you found. They follow it from the strategy's own chat, as they can in Sandworm.",
     "When you submit the research, pass `blocks`: for each part, the id of its heading cell, so the report can link to it. Leave a part out if you don't have its block id.",
     "Say plainly when a stock has no price history. Never promise a return; give what history shows and how wide the spread was.",
   ].join("\n")

@@ -2,6 +2,7 @@ import { MAX_PLANNABLE_ANNUAL_RETURN, MIN_LOSS_LIMIT } from "./brief.constants"
 
 import type { BriefAnalysis, BriefFields, BriefIssue, MissingField } from "./brief.types"
 import { parseBrief } from "./parse"
+import { kindsOf } from "./idea-coverage"
 
 const YEARS = { day: 1 / 365, week: 1 / 52, month: 1 / 12, year: 1 } as const
 const HORIZON_YEARS = { "Under 1 year": 0.5, "1–3 years": 2, "3+ years": 5 } as const
@@ -98,7 +99,8 @@ export function analyzeBrief(text: string): BriefAnalysis {
     !!fields.maxPerStock ||
     fields.minLiquidity !== undefined ||
     !!fields.include.items.length ||
-    !!fields.avoid.items.length
+    !!fields.avoid.items.length ||
+    kindsOf(text).length > 0
 
   if (!understood && !issues.length) return { status: "unreadable", fields, issues, missing }
   if (issues.length) return { status: "unrealistic", fields, issues, missing }

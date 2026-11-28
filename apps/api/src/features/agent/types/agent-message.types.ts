@@ -1,3 +1,4 @@
+import type { RunPart, RunStatus } from '@/features/research/types/research-chat.types';
 import type { Tone } from '@/features/research/types/tone.types';
 
 // Where a link in a message leads, by the name of the page. The web app knows the addresses.
@@ -17,6 +18,8 @@ export type AgentBlock =
   | { type: 'note'; label: string; text: string; tone?: Tone }
   | { type: 'chips'; label?: string; chips: string[] }
   | { type: 'actions'; actions: AgentAction[] }
+  // What Sandworm's agent does while it researches in the notebook, kept as it goes: its thinking, the cells it writes and runs, and what it says
+  | { type: 'sandworm-run'; status: RunStatus; notebookUrl?: string; runner?: 'sandworm' | 'agent'; parts: RunPart[] }
   // A money step the agent asks the person to confirm. Stored without its `status` and `id`, which are the message's own.
   | { type: 'proposal'; id: string; title: string; rows: Fact[]; status: ProposalStatus; confirmLabel: string };
 

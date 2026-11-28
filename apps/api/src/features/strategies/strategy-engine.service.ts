@@ -6,12 +6,14 @@ import { YahooService } from '@/infrastructure/datasource/yahoo/yahoo.service';
 import { createLocalPipeline } from '@/features/strategies/design/local-pipeline';
 import { ResearchFailure } from '@/features/research/research-failure';
 import type { GetDailyPrices } from '@/features/research/prices';
+import { createPackFor } from '@/features/research/idea-pack';
 import { getProducer } from '@/features/research/producer.factory';
 import { completeRecord } from '@/features/strategies/lifecycle/complete-record';
 import { StoreConflict } from '@/features/strategies/lifecycle/store-conflict';
 import { createStrategyService, ProduceContext, StrategyService } from '@/features/strategies/lifecycle/strategy-lifecycle';
 import type { StrategyRecord, StrategyStore } from '@/features/strategies/types/strategy-record';
 
+import { ResearchChatLogService } from './research-chat-log.service';
 import { StrategiesService } from './strategies.service';
 import type { StrategyRecord as KeptRecord } from '@/features/strategies/types/kept-record';
 
@@ -71,6 +73,7 @@ export class StrategyEngine implements OnApplicationBootstrap, OnApplicationShut
 
   constructor(
     private readonly strategies: StrategiesService,
+    private readonly chatLog: ResearchChatLogService,
     stocks: StocksService,
     yahoo: YahooService,
   ) {
@@ -79,7 +82,7 @@ export class StrategyEngine implements OnApplicationBootstrap, OnApplicationShut
       store: this.store,
       // The local stand-in until Sandworm's agent designs strategies too
       pipeline: createLocalPipeline(reportMockData[1]!),
-      producer: getProducer({ market: () => stocks.source.getStocks(), getPrices: pricesFrom(yahoo) }),
+      producer: getProducer({ market: () => stocks.source.getStocks(), getPrices: pricesFrom(yahoo), packFor: createPackFor(() => stocks.market()) }),
       prices: () => stocks.prices(),
       market: () => stocks.market(),
     });
@@ -102,6 +105,8 @@ export class StrategyEngine implements OnApplicationBootstrap, OnApplicationShut
     });
     for (const { id, ownerId } of left) {
       await this.steps.interruptRun(ownerId, id).catch((error: unknown) => this.logger.error(error));
+      // What the run was showing in the chat stops too, instead of looking as if the agent is still at work
+      await this.chatLog.stop(id).catch((error: unknown) => this.logger.error(error));
     }
     if (left.length) this.logger.warn(`${left.length} research run(s) were interrupted by the restart`);
   }
@@ -118,6 +123,6 @@ export class StrategyEngine implements OnApplicationBootstrap, OnApplicationShut
 
   /// Starts a waiting run's work and returns at once: it takes minutes, and what goes wrong is kept on the run for the person to see
   startResearch(ownerId: string, id: string, context: ProduceContext) {
-    this.steps.produce(ownerId, id, context).catch((error: unknown) => this.logger.error(error));
+    this.steps.produce(ownerId, id, { ...context, chatLog: (log) => this.chatLog.keep(ownerId, id, log) }).catch((error: unknown) => this.logger.error(error));
   }
 }

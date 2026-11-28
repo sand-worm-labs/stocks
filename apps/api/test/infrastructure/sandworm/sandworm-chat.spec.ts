@@ -25,12 +25,17 @@ describe("an event of the chat", () => {
   it("is a cell being made, and then run", () => {
     const making = { type: "content_block_start", index: 1, content_block: { type: "block_action", action: "generating", block_id: "b", block_type: "python", block_title: "Backtest" } }
     const ran = { type: "content_block_delta", index: 1, delta: { type: "block_action_delta", action: "ran", block_id: "b", block_type: "python", block_title: "Backtest" } }
-    expect(readEvent(JSON.stringify(making))).toEqual({ type: "action", state: "making", title: "Backtest" })
-    expect(readEvent(JSON.stringify(ran))).toEqual({ type: "action", state: "ran", title: "Backtest" })
+    expect(readEvent(JSON.stringify(making))).toEqual({ type: "action", state: "making", title: "Backtest", blockType: "python" })
+    expect(readEvent(JSON.stringify(ran))).toEqual({ type: "action", state: "ran", title: "Backtest", blockType: "python" })
   })
 
   it("is a failure when the agent stops with one", () => {
     expect(readEvent(JSON.stringify({ type: "error", error: { type: "x", message: "Out of credit" } }))).toEqual({ type: "error", message: "Out of credit" })
+  })
+
+  it("is the agent's thinking, as it arrives", () => {
+    expect(readEvent(JSON.stringify({ type: "content_block_start", index: 0, content_block: { type: "thinking", thinking: "I'll start with " } }))).toEqual({ type: "thinking", text: "I'll start with " })
+    expect(readEvent(JSON.stringify({ type: "content_block_delta", index: 0, delta: { type: "thinking_delta", thinking: "the prices." } }))).toEqual({ type: "thinking", text: "the prices." })
   })
 
   it("is nothing for what Stocks has no use for", () => {
@@ -91,13 +96,45 @@ describe("what the agent has said and done", () => {
     expect(answer.actions).toEqual([{ title: "Backtest", state: "ran" }])
   })
 
+  it("keeps what it did in order, as the parts of a chat: words in pieces are one part, and a cell is one line that moves on", () => {
+    const events: ChatEvent[] = [
+      { type: "thinking", text: "I'll start " },
+      { type: "thinking", text: "with the prices." },
+      { type: "text", text: "Reading " },
+      { type: "text", text: "the brief." },
+      { type: "action", state: "making", title: "Backtest", blockType: "python" },
+      { type: "action", state: "making", title: "Risk", blockType: "python" },
+      { type: "action", state: "ran", title: "Backtest", blockType: "python" },
+      { type: "text", text: "Done." },
+    ]
+    const answer = events.reduce(addToAnswer, emptyAnswer())
+    expect(answer.parts).toEqual([
+      { type: "thinking", text: "I'll start with the prices." },
+      { type: "text", text: "Reading the brief." },
+      { type: "action", state: "ran", title: "Backtest", blockType: "python" },
+      { type: "action", state: "making", title: "Risk", blockType: "python" },
+      { type: "text", text: "Done." },
+    ])
+  })
+
+  it("never keeps more than one message can carry", () => {
+    const long = addToAnswer(emptyAnswer(), { type: "thinking", text: "x".repeat(5000) })
+    expect((long.parts[0] as { text: string }).text.length).toBeLessThanOrEqual(1200)
+
+    let many = emptyAnswer()
+    for (let i = 0; i < 400; i++) many = addToAnswer(many, { type: "action", state: "ran", title: `Cell ${i}` })
+    expect(many.parts.length).toBe(150)
+  })
+
   it("keeps a failure", () => {
-    expect(addToAnswer(emptyAnswer(), { type: "error", message: "boom" }).error).toBe("boom")
+    const failed = addToAnswer(emptyAnswer(), { type: "error", message: "boom" })
+    expect(failed.error).toBe("boom")
+    expect(failed.parts).toEqual([{ type: "error", message: "boom" }])
   })
 
   it("says the last line of what it said, shortened", () => {
-    expect(latestSaid({ text: "First.\n\nSecond line\n", actions: [] })).toBe("Second line")
-    expect(latestSaid({ text: "x".repeat(300), actions: [] }, 20)).toHaveLength(20)
+    expect(latestSaid({ text: "First.\n\nSecond line\n", actions: [], parts: [] })).toBe("Second line")
+    expect(latestSaid({ text: "x".repeat(300), actions: [], parts: [] }, 20)).toHaveLength(20)
     expect(latestSaid(emptyAnswer())).toBe("")
   })
 })

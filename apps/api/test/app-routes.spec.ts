@@ -4,13 +4,14 @@ import { createHash } from 'node:crypto';
 
 import { stubEnv, unstubAllEnvs } from './support/env';
 import { ownDatabase } from './support/own-database';
+import { marketFetch } from './support/market-fixture';
 
 const ME = '11111111-1111-4111-8111-111111111111';
 const THEM = '22222222-2222-4222-8222-222222222222';
 const SITE = { host: 'localhost:4000', 'x-forwarded-host': 'stocks.test', origin: 'http://stocks.test' };
 const IDEA = 'Grow 500 USDC with robotics over 3+ years. Max 20% in any one stock.';
 
-// The routes the browser and agents call, on the real app with a real database; only the market's providers are made to be down.
+// The routes the browser and agents call, on the real app with a real database; the market's providers are stood in for by test/support/market-fixture.ts.
 // Set TEST_DATABASE_URL to run it.
 const url = process.env.TEST_DATABASE_URL;
 (url ? describe : describe.skip)('the routes people and agents call', () => {
@@ -46,7 +47,7 @@ const url = process.env.TEST_DATABASE_URL;
 
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(MARKET_FETCH)
-      .useValue(async () => new Response('down', { status: 503 }))
+      .useValue(marketFetch())
       .compile();
     app = module.createNestApplication<NestFastifyApplication>(createAdapter(), { logger: false });
     await setUp(app);
@@ -187,6 +188,17 @@ const url = process.env.TEST_DATABASE_URL;
       // A body that says it is JSON and isn't is still refused, in words
       const broken = await call('POST', '/strategies', { session: mine, headers: json, body: '{not json' });
       expect(broken.statusCode).toBe(400);
+    });
+
+    it("takes what an agent says of its work only while the strategy is waiting for research, and checks it", async () => {
+      const id = await create();
+      const part = { type: 'text', text: 'Reading the brief' };
+      // Not confirmed yet, so nothing is being researched
+      expect((await call('POST', `/strategies/${id}/research/log`, { session: mine, body: { parts: [part] } })).statusCode).toBe(409);
+
+      expect((await call('POST', `/strategies/${id}/research/log`, { session: mine, body: { parts: [{ type: 'shout', text: 'x' }] } })).statusCode).toBe(400);
+      expect((await call('POST', `/strategies/${id}/research/log`, { session: mine, body: { parts: Array(21).fill(part) } })).statusCode).toBe(400);
+      expect((await call('POST', `/strategies/${id}/research/log`, { session: theirs, body: { parts: [part] } })).statusCode).toBe(404);
     });
 
     it('says what is wrong with a request', async () => {

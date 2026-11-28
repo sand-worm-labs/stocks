@@ -12,6 +12,8 @@ const KEPT_MS = 10_000;
 const pairsSchema = z.array(
   z.object({
     pairAddress: z.string(),
+    dexId: z.string(),
+    labels: z.array(z.string()).optional(),
     baseToken: z.object({ address: z.string() }),
     quoteToken: z.object({ address: z.string() }),
     priceUsd: z.string().optional(),
@@ -55,6 +57,8 @@ export class DexScreenerService {
     return Array.from(deepest, ([address, pair]) => ({
       address,
       pair: pair.pairAddress.toLowerCase(),
+      dex: pair.dexId,
+      version: pair.labels?.[0],
       quote: pair.quoteToken.address.toLowerCase(),
       price: Number(pair.priceUsd),
       change5m: pair.priceChange?.m5,

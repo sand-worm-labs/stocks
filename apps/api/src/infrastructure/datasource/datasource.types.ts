@@ -23,7 +23,10 @@ export type BaseToken = {
 export type PoolQuote = {
   // The token's contract, lowercase
   address: string;
+  // The pool's own address, and the exchange it is on (DexScreener's id, such as "uniswap"), with its version when the feed labels one ("v3")
   pair: string;
+  dex: string;
+  version?: string;
   quote: string;
   price: number;
   change5m?: number;

@@ -46,6 +46,7 @@ function stockFrom(listing: Listing, pool: PoolQuote | undefined, profile: Compa
     sources: [listing.source],
     price: hasPool ? pool.price : listing.navPrice,
     liquidity: hasPool ? pool.liquidity : undefined,
+    pool: hasPool ? { address: pool.pair, dex: pool.dex, version: pool.version, quote: pool.quote } : undefined,
     // The feed gives percent; the app keeps fractions
     dayChange: hasPool && pool.change24h !== undefined ? pool.change24h / 100 : undefined,
     sector: profile?.sector,

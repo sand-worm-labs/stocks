@@ -24,6 +24,8 @@ const listing = ({ symbol, name }: Token) => ({ contract_address: addressOf(symb
 
 const pair = ({ symbol, pool, price }: Token) => ({
   pairAddress: `0xpair${symbol}`,
+  dexId: 'uniswap',
+  labels: ['v3'],
   baseToken: { address: addressOf(symbol) },
   quoteToken: { address: '0xusdc' },
   priceUsd: String(price),

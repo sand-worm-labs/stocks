@@ -1,9 +1,19 @@
+export type Pool = {
+  address: string
+  dex: string
+  version?: string
+  // The other token in the pool, by contract
+  quote: string
+}
+
 export type Stock = {
   symbol: string
   name: string
   // A stock with no price or liquidity is listed, but has no token to buy yet.
   price?: number
   liquidity?: number
+  // The deepest pool it trades in on Base; missing when it has none
+  pool?: Pool
   series?: number[]
   // Not listed on an exchange yet, so there is no share price to test against
   preIpo?: boolean

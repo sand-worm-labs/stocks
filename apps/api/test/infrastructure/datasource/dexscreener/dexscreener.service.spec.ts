@@ -4,6 +4,8 @@ import { fakeFetch, json } from '../../../support/fake-fetch';
 
 const pair = (token: string, id: string, liquidity: number, price = '100') => ({
   pairAddress: `0xPAIR${id}`,
+  dexId: 'aerodrome',
+  labels: ['v3'],
   baseToken: { address: token },
   quoteToken: { address: '0xUSDC' },
   priceUsd: price,
@@ -18,7 +20,7 @@ describe('DexScreener pools', () => {
     const quotes = await new DexScreenerService(send).quotes(['0xAbc', '0xdef']);
 
     expect(quotes).toHaveLength(2);
-    expect(quotes.find(({ address }) => address === '0xabc')).toMatchObject({ pair: '0xpair2', quote: '0xusdc', price: 100, liquidity: 5_000, change24h: 0.3 });
+    expect(quotes.find(({ address }) => address === '0xabc')).toMatchObject({ pair: '0xpair2', dex: 'aerodrome', version: 'v3', quote: '0xusdc', price: 100, liquidity: 5_000, change24h: 0.3 });
   });
 
   it('skips a pool with no price', async () => {

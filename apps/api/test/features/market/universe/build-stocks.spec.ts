@@ -2,7 +2,7 @@ import { buildStocks } from '@/features/market/universe/build-stocks';
 import type { Listing } from '@/features/market/universe/universe.types';
 
 const listing = (symbol: string, extra: Partial<Listing> = {}): Listing => ({ source: 'coinbase', symbol, name: `${symbol} Inc.`, address: `0x${symbol.toLowerCase()}`, ...extra });
-const pool = (address: string, liquidity: number, price = 10, change24h = 2) => ({ address, pair: '0xp', quote: '0xq', price, liquidity, change24h });
+const pool = (address: string, liquidity: number, price = 10, change24h = 2) => ({ address, pair: '0xp', dex: 'uniswap', quote: '0xq', price, liquidity, change24h });
 
 describe('the stocks on offer', () => {
   it('can be bought when its token has a pool, with the pool’s price and depth', () => {

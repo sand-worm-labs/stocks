@@ -6,6 +6,10 @@ pragma solidity ^0.8.20;
 contract TestStock {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
+    error NotMinter();
+    error AllowanceTooLow();
+    error BalanceTooLow();
+
 
     string public name;
     string public symbol;
@@ -23,7 +27,7 @@ contract TestStock {
     }
 
     function mint(address to, uint256 amount) external {
-        require(msg.sender == minter, "Minter only");
+        if (msg.sender != minter) revert NotMinter();
         totalSupply += amount;
         balanceOf[to] += amount;
         emit Transfer(address(0), to, amount);
@@ -43,7 +47,7 @@ contract TestStock {
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
         uint256 allowed = allowance[from][msg.sender];
         if (allowed != type(uint256).max) {
-            require(allowed >= amount, "Allowance too low");
+            if (allowed < amount) revert AllowanceTooLow();
             allowance[from][msg.sender] = allowed - amount;
         }
         _move(from, to, amount);
@@ -51,7 +55,7 @@ contract TestStock {
     }
 
     function _move(address from, address to, uint256 amount) private {
-        require(balanceOf[from] >= amount, "Balance too low");
+        if (balanceOf[from] < amount) revert BalanceTooLow();
         balanceOf[from] -= amount;
         balanceOf[to] += amount;
         emit Transfer(from, to, amount);

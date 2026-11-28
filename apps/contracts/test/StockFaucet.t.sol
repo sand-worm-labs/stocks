@@ -11,125 +11,234 @@ contract StockFaucetTest is Test {
     uint256 private constant BASE_SEPOLIA = 84532;
 
     address private person = makeAddr("person");
+    address private other = makeAddr("other");
     StockFaucet private faucet;
 
     function setUp() public {
         vm.chainId(BASE_SEPOLIA);
         vm.warp(1_000_000);
-        faucet = new StockFaucet(names(), symbols(), AMOUNT);
+        faucet = new StockFaucet(AMOUNT);
     }
 
-    function names() private pure returns (string[] memory list) {
-        list = new string[](2);
-        list[0] = "Test NVIDIA";
-        list[1] = "Test Apple";
+    function make(string memory name, string memory symbol, address maker) private returns (TestStock) {
+        vm.prank(maker);
+        return faucet.createStock(name, symbol);
     }
 
-    function symbols() private pure returns (string[] memory list) {
-        list = new string[](2);
-        list[0] = "tNVDAc";
-        list[1] = "tAAPLc";
+    // ---------------------------------------------------------------------------------------------------------- it starts with nothing
+    function test_startsWithNoStocksAtAll() public view {
+        assertEq(faucet.tokenCount(), 0);
     }
 
-    function test_makesATokenForEachNameWithTheRealDecimals() public view {
-        assertEq(faucet.tokenCount(), 2);
-        assertEq(faucet.tokens(0).symbol(), "tNVDAc");
-        assertEq(faucet.tokens(1).symbol(), "tAAPLc");
-        assertEq(faucet.tokens(0).decimals(), 8);
+    // ---------------------------------------------------------------------------------------------------------- a stock with a name of your own
+    function test_makesAStockWithTheNameAndSymbolGiven_andTheRealDecimals() public {
+        TestStock token = make("Test Acme Foods", "tACMEc", person);
+
+        assertEq(token.name(), "Test Acme Foods");
+        assertEq(token.symbol(), "tACMEc");
+        assertEq(token.decimals(), 8);
+        assertEq(faucet.tokenCount(), 1);
+        assertEq(address(faucet.tokens(0)), address(token));
+        assertTrue(faucet.isStock(address(token)));
+        assertEq(faucet.stockBySymbol(keccak256("tACMEc")), address(token));
     }
 
-    function test_aClaimGivesAnAmountOfEveryToken() public {
+    function test_theMakerGetsTheFirstClaim_andThenWaitsADay() public {
+        TestStock token = make("Test Acme Foods", "tACMEc", person);
+        assertEq(token.balanceOf(person), AMOUNT);
+
         vm.prank(person);
-        faucet.claim();
-
-        assertEq(faucet.tokens(0).balanceOf(person), AMOUNT);
-        assertEq(faucet.tokens(1).balanceOf(person), AMOUNT);
-        assertEq(faucet.tokens(0).totalSupply(), AMOUNT);
+        vm.expectRevert(abi.encodeWithSelector(StockFaucet.ComeBackLater.selector, block.timestamp + 1 days));
+        faucet.claim(token);
     }
 
-    function test_oneClaimADayPerAccount() public {
-        vm.startPrank(person);
-        faucet.claim();
+    function test_announcesTheStock() public {
+        vm.expectEmit(false, true, false, true);
+        emit StockFaucet.StockCreated(address(0), person, "Test Acme Foods", "tACMEc");
+        make("Test Acme Foods", "tACMEc", person);
+    }
 
-        vm.expectRevert("Come back tomorrow");
-        faucet.claim();
+    function test_refusesABadNameOrSymbol() public {
+        vm.startPrank(person);
+        vm.expectRevert(StockFaucet.BadName.selector);
+        faucet.createStock("", "tACMEc");
+        vm.expectRevert(StockFaucet.BadName.selector);
+        faucet.createStock("A name that is far too long to be the name of any one test stock", "tACMEc");
+
+        vm.expectRevert(StockFaucet.BadSymbol.selector);
+        faucet.createStock("Test Acme", "ab");
+        vm.expectRevert(StockFaucet.BadSymbol.selector);
+        faucet.createStock("Test Acme", "has space");
+        vm.expectRevert(StockFaucet.BadSymbol.selector);
+        faucet.createStock("Test Acme", "waytoolongasymbol");
+        vm.expectRevert(StockFaucet.BadSymbol.selector);
+        faucet.createStock("Test Acme", "t$ymbol");
+        vm.stopPrank();
+    }
+
+    function test_aSymbolIsUsedOnce() public {
+        make("Test Acme Foods", "tACMEc", person);
+        vm.prank(other);
+        vm.expectRevert(abi.encodeWithSelector(StockFaucet.SymbolTaken.selector, "tACMEc"));
+        faucet.createStock("Another Acme", "tACMEc");
+    }
+
+    function test_therAreAtMostSoManyStocks() public {
+        for (uint256 i = 0; i < faucet.MOST_STOCKS(); i++) {
+            make("Test Stock", string.concat("tS", vm.toString(i)), person);
+        }
+        vm.prank(person);
+        vm.expectRevert(StockFaucet.TooManyStocks.selector);
+        faucet.createStock("One more", "tMORE");
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- a random stock
+    function test_makesARandomStockWithANameAndASymbol() public {
+        vm.prank(person);
+        TestStock token = faucet.createRandomStock();
+
+        bytes memory name = bytes(token.name());
+        bytes memory symbol = bytes(token.symbol());
+        assertEq(string(abi.encodePacked(name[0], name[1], name[2], name[3], name[4])), "Test ");
+        assertEq(symbol.length, 6); // t + four letters + c
+        assertEq(symbol[0], bytes1("t"));
+        assertEq(symbol[5], bytes1("c"));
+        assertTrue(faucet.isStock(address(token)));
+        assertEq(token.balanceOf(person), AMOUNT);
+    }
+
+    function test_randomStocksAreDifferentFromEachOther() public {
+        for (uint256 i = 0; i < 30; i++) {
+            vm.prevrandao(bytes32(uint256(keccak256(abi.encode("round", i)))));
+            vm.prank(person);
+            faucet.createRandomStock();
+        }
+        assertEq(faucet.tokenCount(), 30);
+        // No two share a symbol: the faucet would have refused it
+        for (uint256 i = 0; i < 30; i++) {
+            for (uint256 j = i + 1; j < 30; j++) {
+                assertNotEq(faucet.tokens(i).symbol(), faucet.tokens(j).symbol());
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- claiming
+    function test_aClaimGivesAnAmountOfThatStock() public {
+        TestStock token = make("Test Acme Foods", "tACMEc", other);
+        vm.prank(person);
+        faucet.claim(token);
+        assertEq(token.balanceOf(person), AMOUNT);
+        assertEq(faucet.lastClaim(person, address(token)), block.timestamp);
+    }
+
+    function test_oneClaimADayPerAccountPerStock() public {
+        TestStock token = make("Test Acme Foods", "tACMEc", other);
+        vm.startPrank(person);
+        faucet.claim(token);
+        vm.expectRevert(abi.encodeWithSelector(StockFaucet.ComeBackLater.selector, block.timestamp + 1 days));
+        faucet.claim(token);
 
         vm.warp(block.timestamp + 1 days - 1);
-        vm.expectRevert("Come back tomorrow");
-        faucet.claim();
+        vm.expectRevert();
+        faucet.claim(token);
 
         vm.warp(block.timestamp + 1);
-        faucet.claim();
+        faucet.claim(token);
+        assertEq(token.balanceOf(person), 2 * AMOUNT);
         vm.stopPrank();
-
-        assertEq(faucet.tokens(0).balanceOf(person), 2 * AMOUNT);
     }
 
-    function test_eachAccountHasItsOwnCooldown() public {
+    function test_eachStockAndEachAccountHasItsOwnCooldown() public {
+        TestStock acme = make("Test Acme Foods", "tACMEc", other);
+        TestStock bolt = make("Test Bolt Motors", "tBOLTc", other);
+
         vm.prank(person);
-        faucet.claim();
+        faucet.claim(acme);
+        // Another stock is not held up by the first
+        vm.prank(person);
+        faucet.claim(bolt);
+        // Nor is another account
+        address third = makeAddr("third");
+        vm.prank(third);
+        faucet.claim(acme);
 
-        address other = makeAddr("other");
-        vm.prank(other);
-        faucet.claim();
+        assertEq(acme.balanceOf(person), AMOUNT);
+        assertEq(bolt.balanceOf(person), AMOUNT);
+        assertEq(acme.balanceOf(third), AMOUNT);
+    }
 
-        assertEq(faucet.tokens(0).balanceOf(other), AMOUNT);
+    function test_claimManyTakesSeveralAtOnce() public {
+        TestStock acme = make("Test Acme Foods", "tACMEc", other);
+        TestStock bolt = make("Test Bolt Motors", "tBOLTc", other);
+        TestStock[] memory list = new TestStock[](2);
+        list[0] = acme;
+        list[1] = bolt;
+
+        vm.prank(person);
+        faucet.claimMany(list);
+        assertEq(acme.balanceOf(person), AMOUNT);
+        assertEq(bolt.balanceOf(person), AMOUNT);
     }
 
     function test_nextClaimSaysWhenAnAccountMayClaimAgain() public {
-        assertEq(faucet.nextClaim(person), block.timestamp);
+        TestStock token = make("Test Acme Foods", "tACMEc", other);
+        assertEq(faucet.nextClaim(person, address(token)), block.timestamp);
 
         vm.prank(person);
-        faucet.claim();
-        assertEq(faucet.nextClaim(person), block.timestamp + 1 days);
+        faucet.claim(token);
+        assertEq(faucet.nextClaim(person, address(token)), block.timestamp + 1 days);
+
+        vm.warp(block.timestamp + 2 days);
+        assertEq(faucet.nextClaim(person, address(token)), block.timestamp);
     }
 
-    function test_onlyTheFaucetCanMint() public {
-        TestStock token = faucet.tokens(0);
+    function test_aTokenThatIsNotOursCannotBeClaimed() public {
+        TestStock stranger = new TestStock("Stranger", "tSTRG");
         vm.prank(person);
-        vm.expectRevert("Minter only");
+        vm.expectRevert(abi.encodeWithSelector(StockFaucet.NotOurStock.selector, address(stranger)));
+        faucet.claim(stranger);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- the rest
+    function test_onlyTheFaucetCanMint() public {
+        TestStock token = make("Test Acme Foods", "tACMEc", person);
+        vm.prank(person);
+        vm.expectRevert(TestStock.NotMinter.selector);
         token.mint(person, 1);
     }
 
     function test_ownerCanChangeTheAmountAndNobodyElse() public {
-        faucet.setAmountPerToken(5e8);
-        assertEq(faucet.amountPerToken(), 5e8);
-
         vm.prank(person);
-        vm.expectRevert("Owner only");
+        vm.expectRevert(StockFaucet.OwnerOnly.selector);
         faucet.setAmountPerToken(1);
+
+        faucet.setAmountPerToken(5e8);
+        TestStock token = make("Test Acme Foods", "tACMEc", person);
+        assertEq(token.balanceOf(person), 5e8);
     }
 
     function test_refusesToExistOnBaseMainnetOrEthereum() public {
         vm.chainId(8453);
-        vm.expectRevert("Test networks only");
-        new StockFaucet(names(), symbols(), AMOUNT);
+        vm.expectRevert(StockFaucet.TestNetworksOnly.selector);
+        new StockFaucet(AMOUNT);
 
         vm.chainId(1);
-        vm.expectRevert("Test networks only");
-        new StockFaucet(names(), symbols(), AMOUNT);
+        vm.expectRevert(StockFaucet.TestNetworksOnly.selector);
+        new StockFaucet(AMOUNT);
     }
 
     function test_tokensMoveLikeAnyErc20() public {
-        vm.prank(person);
-        faucet.claim();
-
-        TestStock token = faucet.tokens(0);
-        address friend = makeAddr("friend");
+        TestStock token = make("Test Acme Foods", "tACMEc", person);
 
         vm.prank(person);
-        assertTrue(token.transfer(friend, 10e8));
-        assertEq(token.balanceOf(friend), 10e8);
+        token.transfer(other, 100e8);
+        assertEq(token.balanceOf(other), 100e8);
 
+        vm.prank(other);
+        token.approve(person, 40e8);
         vm.prank(person);
-        assertTrue(token.approve(friend, 5e8));
-        vm.prank(friend);
-        assertTrue(token.transferFrom(person, friend, 5e8));
-        assertEq(token.balanceOf(friend), 15e8);
-
-        vm.prank(friend);
-        vm.expectRevert("Allowance too low");
-        // forge-lint: disable-next-line(erc20-unchecked-transfer)
-        token.transferFrom(person, friend, 1);
+        token.transferFrom(other, person, 40e8);
+        assertEq(token.balanceOf(other), 60e8);
+        assertEq(token.balanceOf(person), AMOUNT - 100e8 + 40e8);
     }
 }

@@ -2,8 +2,10 @@
 
 Foundry project for the onchain side of Sandworm Stocks, built on [Reactive Network](https://dev.reactive.network) reactive contracts: a reactive contract watches events on one chain and, when one matches, asks the Reactive Network to call a contract on another chain.
 
+The design, and the reason for every decision in it, is in [ARCHITECTURE.md](ARCHITECTURE.md), and drawn in [docs/architecture.html](docs/architecture.html) (open it in a browser).
+
 ```
-src/    the contracts (ExampleReactive and ExampleCallback are a placeholder for the pattern: replace them)
+src/    the contracts: aerodrome/ (stop-loss), vault/ (a strategy's money and rules), signals/ (what the app tells the vault), blocks/ (a strategy as a tree of contracts), erc7579/ + account/ (the plugin host), guards/ + executors/ (its modules), registry/, pricing/, rules/, factory/, testnet/
 test/   forge tests
 script/ deploy scripts, when there are some
 lib/    forge-std and reactive-lib, as git submodules
@@ -25,14 +27,18 @@ forge test
 forge fmt
 ```
 
+## Debugging off-chain
+
+`tools/reactive.sh` does everything the [debugging page](https://dev.reactive.network/debugging) does with `cast`: `callbacks <reactive tx>` (did the callback arrive, and why not), `status`/`debt`/`reserves` for a reactive or callback contract, `fund` (`depositTo`), `cover-debt` and `nonce`. What only reads runs at once; what spends funds needs `--yes`. `tools/reactive.sh --help` lists them.
+
 ## How a reactive contract works
 
 There are always two contracts:
 
 | | Lives on | Does |
 |---|---|---|
-| **Reactive contract** (`ExampleReactive`) | The Reactive Network (Lasna for testing) | Subscribes to an event on an origin chain. For each match its `react` runs and emits a `Callback`. |
-| **Callback contract** (`ExampleCallback`) | The destination chain, such as Base | Receives the call the Network makes for that `Callback`, and does the work. |
+| **Reactive contract** (`AerodromeStopLossReactive`) | The Reactive Network (Lasna for testing) | Subscribes to an event on an origin chain. For each match its `react` runs and emits a `Callback`. |
+| **Callback contract** (`AerodromeStopLossCallback`, or `StrategyVault`) | The destination chain, such as Base | Receives the call the Network makes for that `Callback`, and does the work. |
 
 Things that are easy to get wrong:
 
@@ -67,13 +73,24 @@ What it does not cover, on purpose:
 
 ## Test stocks and their faucet (test networks only)
 
-Base has no tokenized stocks on its test networks, so `src/testnet/` makes stand-ins: seven `TestStock` tokens (tAAPLc, tNVDAc, tAMZNc, tGOOGLc, tMSFTc, tTSLAc, tMETAc, with the real tokens' **8 decimals**) and a `StockFaucet` that gives out 1,000 of each, once a day per account. The faucet refuses to deploy on Base mainnet or Ethereum.
+Base has no tokenized stocks on its test networks, so `src/testnet/` makes stand-ins. The `StockFaucet` starts with none: anyone makes a stock, with a name of their own or a random one, and then claims it. Each is a `TestStock` with the real tokens' **8 decimals**, and only the faucet can mint it. The faucet refuses to deploy on Base mainnet or Ethereum.
+
+| Call | Does |
+|---|---|
+| `createStock(name, symbol)` | makes a stock with that name and symbol (3 to 12 letters and digits, used once), and gives the maker the first claim |
+| `createRandomStock()` | makes one with a name and symbol made up from two words, such as "Test Nova Dynamics" and `tNODYc` |
+| `claim(token)` / `claimMany(tokens)` | gives 1,000 of a stock, once a day for each stock and account |
 
 ```bash
+# the faucet, with nothing in it (RANDOM_STOCKS=5 makes five random ones as it deploys)
 forge script script/DeployStockFaucet.s.sol --rpc-url base_sepolia --private-key $PRIVATE_KEY --broadcast
+
+# a stock of your own, or a random one when the name and symbol are left out
+FAUCET=0x... STOCK_NAME="Test Acme Foods" STOCK_SYMBOL=tACMEc forge script script/CreateStock.s.sol --rpc-url base_sepolia --private-key $PRIVATE_KEY --broadcast
+FAUCET=0x... forge script script/CreateStock.s.sol --rpc-url base_sepolia --private-key $PRIVATE_KEY --broadcast
 ```
 
-It prints the faucet and each token's address. Anyone then calls `claim()` on the faucet (a block explorer's "Write contract" tab works) to get the test stocks. Test USDC comes from Circle's or Coinbase's faucet, not from here. These tokens have no pools yet: a mock pool and router come next, for testing the stop-loss end to end.
+At most 200 stocks are made, so a list of them stays readable. The randomness is the chain's own, fine for a test token and for nothing else. These tokens have no pools yet: a mock pool and router come next, for testing the strategies end to end on a test network.
 
 ## Deploying
 
@@ -81,14 +98,16 @@ Fill in `.env` first. The commands below are the shape of it, not a tested recip
 
 ```bash
 # 1. The callback contract, on the destination chain
-forge create src/ExampleCallback.sol:ExampleCallback --rpc-url base_sepolia --private-key $PRIVATE_KEY \
-  --constructor-args <callback proxy on that chain>
+forge create src/aerodrome/AerodromeStopLossCallback.sol:AerodromeStopLossCallback --rpc-url base_sepolia --private-key $PRIVATE_KEY \
+  --constructor-args <callback proxy on that chain> <router> <pool factory> <stock token> <quote token> <stock decimals> <quote decimals> <max slippage bps>
 
 # 2. The reactive contract, on the Reactive Network, pointing at the first
-forge create src/ExampleReactive.sol:ExampleReactive --rpc-url lasna --private-key $PRIVATE_KEY --value 0.1ether \
-  --constructor-args <origin chain id> <origin contract> <destination chain id> <callback contract from step 1>
+forge create src/aerodrome/AerodromeStopLossReactive.sol:AerodromeStopLossReactive --rpc-url lasna --private-key $PRIVATE_KEY --value 0.1ether \
+  --constructor-args <chain id> <pool> <callback contract from step 1> <stock is token0> <stock decimals> <quote decimals> <stop price>
 ```
 
-## Writing the real contracts
+When something does not arrive, `tools/reactive.sh` (above) shows why.
+
+## Adding contracts
 
 Stocks' rules (a portfolio stop, a stop-loss, ask-before-buying) are described in `apps/web/src/lib/rules/spec.ts`. Contracts that enforce them onchain should keep the same meaning: a limit is a fraction, and a stop sells everything and then waits `pause` trading days.

@@ -106,7 +106,7 @@ contract AerodromeStopLossReactiveTest is Test {
     }
 
     function test_refusesAStopPriceOfZero() public {
-        vm.expectRevert("Stop price is zero");
+        vm.expectRevert(AerodromeStopLossReactive.StopPriceIsZero.selector);
         new AerodromeStopLossReactive(BASE, pool, callback, true, 18, 6, 0);
     }
 }
@@ -244,7 +244,7 @@ contract AerodromeStopLossCallbackTest is Test {
     }
 
     function test_refusesSlippageOfOneHundredPercentOrMore() public {
-        vm.expectRevert("Slippage is over 100%");
+        vm.expectRevert(AerodromeStopLossCallback.SlippageOver100.selector);
         new AerodromeStopLossCallback(
             callbackProxy, address(router), factory, address(stock), address(usdc), 18, 6, 10_000
         );

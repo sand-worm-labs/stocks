@@ -17,6 +17,8 @@ contract AerodromeStopLossCallback is AbstractCallback {
 
     event Sold(address indexed owner, uint256 stockSold, uint256 observedPrice);
     event NothingToSell(address indexed owner);
+    error SlippageOver100();
+
 
     uint256 private constant BPS = 10_000;
     uint256 private constant PRICE_UNIT = 1e18;
@@ -43,7 +45,7 @@ contract AerodromeStopLossCallback is AbstractCallback {
         uint8 quoteDecimals,
         uint256 maxSlippageBps_
     ) payable AbstractCallback(callbackSender) {
-        require(maxSlippageBps_ < BPS, "Slippage is over 100%");
+        if (maxSlippageBps_ >= BPS) revert SlippageOver100();
         owner = msg.sender;
         router = IAerodromeRouter(router_);
         poolFactory = poolFactory_;

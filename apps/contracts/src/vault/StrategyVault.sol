@@ -75,6 +75,7 @@ contract StrategyVault is AbstractCallback {
     event ExecutorChanged(address indexed executor);
 
     error NotOwner();
+    error UseTheWithdrawals();
     error NotOwnerOrExecutor();
     error NotExecutor();
     error Reentered();
@@ -90,8 +91,16 @@ contract StrategyVault is AbstractCallback {
     error PriceOutOfLine(address stock);
     error ConditionNotMet();
     error NothingToSell();
-    error BadRules(string why);
-    error BadStock(address token, string why);
+    error StockCountOutOfRange(uint256 count, uint256 most);
+    error BudgetOutOfRange(uint256 budget, uint256 ceiling);
+    error MaxWeightOutOfRange(uint256 weightBps);
+    error SlippageOverCeiling(uint256 slippageBps, uint256 ceiling);
+    error StopNeverFires(uint256 stopBps);
+    error PauseTooLong(uint256 pause, uint256 most);
+    error ListedTwice(address token);
+    error PoolIsNotThisStock(address token);
+    error RouterIsNotForThisPool(address token);
+    error WrongTickSpacing(address token, int24 given, int24 actual);
 
     IERC20Minimal public immutable usdc;
     address public immutable owner;
@@ -125,7 +134,7 @@ contract StrategyVault is AbstractCallback {
         _checkRules(rules_);
         rules = rules_;
 
-        if (setups.length == 0 || setups.length > MAX_STOCKS) revert BadRules("Between 1 and 6 stocks");
+        if (setups.length == 0 || setups.length > MAX_STOCKS) revert StockCountOutOfRange(setups.length, MAX_STOCKS);
         for (uint256 i = 0; i < setups.length; i++) {
             _listStock(setups[i]);
         }
@@ -133,31 +142,32 @@ contract StrategyVault is AbstractCallback {
     }
 
     function _checkRules(Rules memory r) private pure {
-        if (r.budget == 0 || r.budget > DEPOSIT_CEILING) revert BadRules("Budget is zero or over the ceiling");
-        if (r.maxWeightBps == 0 || r.maxWeightBps > BPS) revert BadRules("Max weight is 0 to 100%");
+        if (r.budget == 0 || r.budget > DEPOSIT_CEILING) revert BudgetOutOfRange(r.budget, DEPOSIT_CEILING);
+        if (r.maxWeightBps == 0 || r.maxWeightBps > BPS) revert MaxWeightOutOfRange(r.maxWeightBps);
         if (r.maxSlippageBps == 0 || r.maxSlippageBps > MAX_SLIPPAGE_CEILING_BPS) {
-            revert BadRules("Slippage is over the ceiling");
+            revert SlippageOverCeiling(r.maxSlippageBps, MAX_SLIPPAGE_CEILING_BPS);
         }
-        if (r.stopLossBps >= BPS || r.portfolioStopBps >= BPS) revert BadRules("A stop of 100% or more never fires");
-        if (r.pauseSeconds > MAX_PAUSE) revert BadRules("Pause is over a year");
+        if (r.stopLossBps >= BPS) revert StopNeverFires(r.stopLossBps);
+        if (r.portfolioStopBps >= BPS) revert StopNeverFires(r.portfolioStopBps);
+        if (r.pauseSeconds > MAX_PAUSE) revert PauseTooLong(r.pauseSeconds, MAX_PAUSE);
     }
 
     /// @dev A stock is listed only if everything the vault will rely on about its pool checks out now: the pool is of this token and USDC, the router
     /// is the one that trades that pool's factory, and the pool has enough history for the average price
     function _listStock(StockSetup memory setup) private {
-        if (stocks[setup.token].isListed) revert BadStock(setup.token, "Listed twice");
+        if (stocks[setup.token].isListed) revert ListedTwice(setup.token);
 
         ICLPool pool = ICLPool(setup.pool);
         address token0 = pool.token0();
         address token1 = pool.token1();
         bool usdcIsToken0 = token0 == address(usdc);
         if (!(usdcIsToken0 && token1 == setup.token) && !(token1 == address(usdc) && token0 == setup.token)) {
-            revert BadStock(setup.token, "Pool is not this stock against USDC");
+            revert PoolIsNotThisStock(setup.token);
         }
         if (ISlipstreamRouter(setup.router).factory() != pool.factory()) {
-            revert BadStock(setup.token, "Router is not for this pool's factory");
+            revert RouterIsNotForThisPool(setup.token);
         }
-        if (pool.tickSpacing() != setup.tickSpacing) revert BadStock(setup.token, "Wrong tick spacing");
+        if (pool.tickSpacing() != setup.tickSpacing) revert WrongTickSpacing(setup.token, setup.tickSpacing, pool.tickSpacing());
 
         stocks[setup.token] = Stock({
             token: IERC20Minimal(setup.token),
@@ -227,7 +237,7 @@ contract StrategyVault is AbstractCallback {
 
     /// @notice Gets back any other token sent here by mistake. USDC and the listed stocks go through the withdrawals above.
     function rescue(address token, uint256 amount) external onlyOwner nonReentrant {
-        require(token != address(usdc) && !stocks[token].isListed, "Use the withdrawals");
+        if (token == address(usdc) || stocks[token].isListed) revert UseTheWithdrawals();
         IERC20Minimal(token).safeTransfer(owner, amount);
     }
 

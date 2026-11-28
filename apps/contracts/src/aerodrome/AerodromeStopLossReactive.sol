@@ -12,6 +12,8 @@ import {AbstractReactive} from "reactive-lib/abstract-base/AbstractReactive.sol"
 /// The price is the pool's spot price, which a large trade can move for a moment, so the callback also guards what it will accept.
 contract AerodromeStopLossReactive is IReactive, AbstractReactive {
     event StopLossTriggered(uint256 price);
+    error StopPriceIsZero();
+
 
     uint256 private constant SYNC_TOPIC_0 = uint256(keccak256("Sync(uint256,uint256)"));
     uint64 private constant CALLBACK_GAS_LIMIT = 1_000_000;
@@ -41,7 +43,7 @@ contract AerodromeStopLossReactive is IReactive, AbstractReactive {
         uint8 quoteDecimals,
         uint256 stopPrice_
     ) payable {
-        require(stopPrice_ > 0, "Stop price is zero");
+        if (stopPrice_ == 0) revert StopPriceIsZero();
         chainId = chainId_;
         pool = pool_;
         callback = callback_;

@@ -116,27 +116,27 @@ contract StrategyVaultSetupTest is VaultFixture {
     function test_refusesRulesPastTheCeilings() public {
         StrategyVault.Rules memory rules = baseRules();
         rules.budget = 1_001e6;
-        vm.expectRevert(abi.encodeWithSelector(StrategyVault.BadRules.selector, "Budget is zero or over the ceiling"));
+        vm.expectPartialRevert(StrategyVault.BudgetOutOfRange.selector);
         _deploy(rules);
 
         rules = baseRules();
         rules.maxSlippageBps = 201;
-        vm.expectRevert(abi.encodeWithSelector(StrategyVault.BadRules.selector, "Slippage is over the ceiling"));
+        vm.expectPartialRevert(StrategyVault.SlippageOverCeiling.selector);
         _deploy(rules);
 
         rules = baseRules();
         rules.maxWeightBps = 0;
-        vm.expectRevert(abi.encodeWithSelector(StrategyVault.BadRules.selector, "Max weight is 0 to 100%"));
+        vm.expectPartialRevert(StrategyVault.MaxWeightOutOfRange.selector);
         _deploy(rules);
 
         rules = baseRules();
         rules.portfolioStopBps = 10_000;
-        vm.expectRevert(abi.encodeWithSelector(StrategyVault.BadRules.selector, "A stop of 100% or more never fires"));
+        vm.expectPartialRevert(StrategyVault.StopNeverFires.selector);
         _deploy(rules);
 
         rules = baseRules();
         rules.pauseSeconds = 366 days;
-        vm.expectRevert(abi.encodeWithSelector(StrategyVault.BadRules.selector, "Pause is over a year"));
+        vm.expectPartialRevert(StrategyVault.PauseTooLong.selector);
         _deploy(rules);
     }
 
@@ -144,11 +144,7 @@ contract StrategyVaultSetupTest is VaultFixture {
         MockToken other = new MockToken(8);
         StrategyVault.StockSetup[] memory setups = new StrategyVault.StockSetup[](1);
         setups[0] = StrategyVault.StockSetup(address(other), address(nvdaPool), address(router), 10);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                StrategyVault.BadStock.selector, address(other), "Pool is not this stock against USDC"
-            )
-        );
+        vm.expectPartialRevert(StrategyVault.PoolIsNotThisStock.selector);
         new StrategyVault(callbackProxy, address(usdc), executor, baseRules(), setups);
     }
 
@@ -156,18 +152,14 @@ contract StrategyVaultSetupTest is VaultFixture {
         MockCLRouter wrong = new MockCLRouter(makeAddr("otherFactory"));
         StrategyVault.StockSetup[] memory setups = new StrategyVault.StockSetup[](1);
         setups[0] = StrategyVault.StockSetup(address(nvda), address(nvdaPool), address(wrong), 10);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                StrategyVault.BadStock.selector, address(nvda), "Router is not for this pool's factory"
-            )
-        );
+        vm.expectPartialRevert(StrategyVault.RouterIsNotForThisPool.selector);
         new StrategyVault(callbackProxy, address(usdc), executor, baseRules(), setups);
     }
 
     function test_refusesTheWrongTickSpacing() public {
         StrategyVault.StockSetup[] memory setups = new StrategyVault.StockSetup[](1);
         setups[0] = StrategyVault.StockSetup(address(nvda), address(nvdaPool), address(router), 100);
-        vm.expectRevert(abi.encodeWithSelector(StrategyVault.BadStock.selector, address(nvda), "Wrong tick spacing"));
+        vm.expectPartialRevert(StrategyVault.WrongTickSpacing.selector);
         new StrategyVault(callbackProxy, address(usdc), executor, baseRules(), setups);
     }
 
@@ -181,11 +173,11 @@ contract StrategyVaultSetupTest is VaultFixture {
         StrategyVault.StockSetup[] memory twice = new StrategyVault.StockSetup[](2);
         twice[0] = StrategyVault.StockSetup(address(nvda), address(nvdaPool), address(router), 10);
         twice[1] = twice[0];
-        vm.expectRevert(abi.encodeWithSelector(StrategyVault.BadStock.selector, address(nvda), "Listed twice"));
+        vm.expectPartialRevert(StrategyVault.ListedTwice.selector);
         new StrategyVault(callbackProxy, address(usdc), executor, baseRules(), twice);
 
         StrategyVault.StockSetup[] memory none = new StrategyVault.StockSetup[](0);
-        vm.expectRevert(abi.encodeWithSelector(StrategyVault.BadRules.selector, "Between 1 and 6 stocks"));
+        vm.expectPartialRevert(StrategyVault.StockCountOutOfRange.selector);
         new StrategyVault(callbackProxy, address(usdc), executor, baseRules(), none);
     }
 }
@@ -254,9 +246,9 @@ contract StrategyVaultMoneyTest is VaultFixture {
         vault.rescue(address(stray), 5e18);
         assertEq(stray.balanceOf(owner), 5e18);
 
-        vm.expectRevert(bytes("Use the withdrawals"));
+        vm.expectRevert(StrategyVault.UseTheWithdrawals.selector);
         vault.rescue(address(usdc), 1);
-        vm.expectRevert(bytes("Use the withdrawals"));
+        vm.expectRevert(StrategyVault.UseTheWithdrawals.selector);
         vault.rescue(address(nvda), 1);
     }
 }

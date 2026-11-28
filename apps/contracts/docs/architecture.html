@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sandworm Stocks · contracts architecture</title>
+<style>
+  :root {
+    --ink: #1b1f2a; --muted: #5d6578; --rule: #e2e5ee; --paper: #ffffff; --shade: #f5f6fa;
+    --chain: #2f5bea; --chain-bg: #e8eefe;
+    --off: #b8620a; --off-bg: #fdf0e0;
+    --both: #1c8a5c; --both-bg: #e2f5ec;
+    --bad: #c23a3a; --bad-bg: #fbe9e9;
+    --plug: #7a3fc4; --plug-bg: #f1e9fb;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--paper); }
+  header { padding: 56px 24px 32px; max-width: 980px; margin: 0 auto; }
+  header h1 { font-size: 2.2rem; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.02em; }
+  header p { color: var(--muted); max-width: 720px; margin: 0 0 8px; }
+  nav { position: sticky; top: 0; background: rgba(255,255,255,.94); backdrop-filter: blur(6px); border-bottom: 1px solid var(--rule); z-index: 5; }
+  nav div { max-width: 980px; margin: 0 auto; padding: 10px 24px; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .86rem; }
+  nav a { color: var(--muted); text-decoration: none; } nav a:hover { color: var(--ink); }
+  main { max-width: 980px; margin: 0 auto; padding: 0 24px 80px; }
+  section { padding: 44px 0 8px; border-top: 1px solid var(--rule); margin-top: 28px; }
+  section:first-of-type { border-top: 0; margin-top: 0; }
+  h2 { font-size: 1.45rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  h3 { font-size: 1.05rem; margin: 26px 0 6px; }
+  .lead { color: var(--muted); margin: 0 0 20px; max-width: 760px; }
+  .fig { background: var(--shade); border: 1px solid var(--rule); border-radius: 14px; padding: 18px; margin: 18px 0; overflow-x: auto; }
+  .fig svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .cap { color: var(--muted); font-size: .86rem; margin-top: 10px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card { border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; background: var(--paper); }
+  .card h4 { margin: 0 0 4px; font-size: .98rem; }
+  .card p { margin: 0; color: var(--muted); font-size: .92rem; }
+  .tag { display: inline-block; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; margin-right: 4px; vertical-align: 1px; }
+  .on { background: var(--chain-bg); color: var(--chain); } .offc { background: var(--off-bg); color: var(--off); }
+  .bo { background: var(--both-bg); color: var(--both); } .pl { background: var(--plug-bg); color: var(--plug); } .no { background: var(--bad-bg); color: var(--bad); }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+  code { font: .86em/1.4 ui-monospace, "SF Mono", Menlo, monospace; background: var(--shade); padding: 1px 5px; border-radius: 4px; }
+  .callout { border-left: 4px solid var(--chain); background: var(--chain-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--off); background: var(--off-bg); }
+  .callout.good { border-color: var(--both); background: var(--both-bg); }
+  .why { color: var(--muted); font-size: .92rem; }
+  .why b { color: var(--ink); }
+  ol.steps { padding-left: 22px; } ol.steps li { margin: 6px 0; }
+  .matrix { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 10px 0; }
+  .matrix div { font-size: .72rem; text-align: center; padding: 6px 2px; border-radius: 6px; background: var(--both-bg); color: var(--both); border: 1px solid #bfe6d2; }
+  .matrix div.h { background: none; border: 0; color: var(--muted); font-weight: 600; }
+  footer { max-width: 980px; margin: 0 auto; padding: 24px; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--rule); }
+  svg text { font-family: inherit; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>A strategy that holds stocks for you, and cannot be made to do what you did not allow</h1>
+  <p>This is the onchain side of Sandworm Stocks, in one page: what each contract is, why it is a separate piece, and where each rule is kept. Everything below is built and tested on simulated stocks (mock tokens, pools and a router). Nothing has run against real Base contracts, and nothing here has been audited.</p>
+  <p><span class="tag on">on-chain</span> the chain refuses what breaks it &nbsp; <span class="tag offc">off-chain</span> the app keeps it &nbsp; <span class="tag bo">both</span> the chain catches the app &nbsp; <span class="tag pl">plugin</span> added without touching the core</p>
+</header>
+
+<nav><div>
+  <a href="#big">The big idea</a><a href="#layers">Layers</a><a href="#account">The account</a><a href="#rules">Rules</a><a href="#offchain">Off-chain rules</a><a href="#blocks">Strategy blocks</a>
+  <a href="#flow">One rebalance</a><a href="#guard">What the guard refuses</a><a href="#flows">100 flows</a><a href="#plugins">Plugins</a><a href="#gas">Gas</a><a href="#why">Decisions</a><a href="#status">Status</a>
+</div></nav>
+
+<main>
+
+<!-- ============================================================ -->
+<section id="big">
+  <h2>The big idea</h2>
+  <p class="lead">A vault is deployed with a set of rules. Each rule is placed on its own: some are kept by the chain, some by the app, some by both. The app is clever and can be wrong; the chain is strict and cannot be talked into anything.</p>
+
+  <div class="fig">
+  <svg viewBox="0 0 900 270" role="img" aria-label="The app proposes, the chain disposes">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5d6578"/></marker></defs>
+    <rect x="20" y="30" width="250" height="210" rx="14" fill="#fdf0e0" stroke="#b8620a"/>
+    <text x="145" y="58" text-anchor="middle" font-weight="700" fill="#b8620a">The app  (off-chain)</text>
+    <text x="145" y="86" text-anchor="middle" font-size="13" fill="#1b1f2a">researches an idea</text>
+    <text x="145" y="108" text-anchor="middle" font-size="13" fill="#1b1f2a">picks stocks, works out indicators</text>
+    <text x="145" y="130" text-anchor="middle" font-size="13" fill="#1b1f2a">keeps its own rules</text>
+    <text x="145" y="168" text-anchor="middle" font-size="13" fill="#5d6578">can be wrong, hacked, or offline</text>
+    <text x="145" y="214" text-anchor="middle" font-size="12" fill="#b8620a">a promise</text>
+
+    <line x1="270" y1="100" x2="395" y2="100" stroke="#5d6578" stroke-width="2" marker-end="url(#a)"/>
+    <text x="332" y="90" text-anchor="middle" font-size="12" fill="#5d6578">proposes</text>
+    <line x1="395" y1="175" x2="270" y2="175" stroke="#c23a3a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+    <text x="332" y="198" text-anchor="middle" font-size="12" fill="#c23a3a">or says no</text>
+
+    <rect x="395" y="30" width="485" height="210" rx="14" fill="#e8eefe" stroke="#2f5bea"/>
+    <text x="637" y="58" text-anchor="middle" font-weight="700" fill="#2f5bea">The vault  (on-chain)</text>
+    <text x="637" y="86" text-anchor="middle" font-size="13" fill="#1b1f2a">checks every call: which address, which function, which values</text>
+    <text x="637" y="108" text-anchor="middle" font-size="13" fill="#1b1f2a">refuses a bad price, a thin pool, an oversized stock</text>
+    <text x="637" y="130" text-anchor="middle" font-size="13" fill="#1b1f2a">leaves no permission open afterwards</text>
+    <text x="637" y="168" text-anchor="middle" font-size="13" fill="#5d6578">holds the money; the owner can always take it out</text>
+    <text x="637" y="214" text-anchor="middle" font-size="12" fill="#2f5bea">a guarantee</text>
+  </svg>
+  <div class="cap">The pattern is Zyfai's: the agent proposes and an onchain gateway decides. A compromised app can lose, at most, what the chain's limits let one trade lose.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="layers">
+  <h2>The layers</h2>
+  <p class="lead">Each layer is a separate set of contracts, so any one can be audited alone and replaced without the others changing.</p>
+
+  <div class="fig">
+  <svg viewBox="0 0 900 470" role="img" aria-label="The layers of the suite">
+    <g font-size="13">
+      <rect x="20" y="10" width="860" height="52" rx="10" fill="#fdf0e0" stroke="#b8620a"/>
+      <text x="40" y="33" font-weight="700" fill="#b8620a">Off-chain · the app</text>
+      <text x="40" y="52" fill="#1b1f2a">research · Yahoo history · indicators · picking stocks · rule keeping · the keeper key</text>
+
+      <rect x="20" y="76" width="860" height="52" rx="10" fill="#e2f5ec" stroke="#1c8a5c"/>
+      <text x="40" y="99" font-weight="700" fill="#1c8a5c">Signals · SignalBoard, FreshReadings</text>
+      <text x="40" y="118" fill="#1b1f2a">keeps what the app posted · refuses numbers that are old, out of order, from the future, or too far from the last</text>
+
+      <rect x="20" y="142" width="860" height="66" rx="10" fill="#f1e9fb" stroke="#7a3fc4"/>
+      <text x="40" y="165" font-weight="700" fill="#7a3fc4">Strategy · 12 block contracts  (a plugin each)</text>
+      <text x="40" y="184" fill="#1b1f2a">asset · cash · equal / specified / inverse-volatility group · if · filter · rebalance · comparison / all / any condition</text>
+      <text x="40" y="201" fill="#5d6578">they only read: they say what to hold, and never touch funds</text>
+
+      <rect x="20" y="222" width="425" height="86" rx="10" fill="#f1e9fb" stroke="#7a3fc4"/>
+      <text x="40" y="246" font-weight="700" fill="#7a3fc4">Executor module · StrategyExecutor</text>
+      <text x="40" y="266" fill="#1b1f2a">turns the blocks' answer into trades</text>
+      <text x="40" y="284" fill="#1b1f2a">sized to the limits · keeper key, scoped, expiring</text>
+
+      <rect x="455" y="222" width="425" height="86" rx="10" fill="#f1e9fb" stroke="#7a3fc4"/>
+      <text x="475" y="246" font-weight="700" fill="#7a3fc4">Hook module · TradeGuard</text>
+      <text x="475" y="266" fill="#1b1f2a">checks every call an executor makes, before and after</text>
+      <text x="475" y="284" fill="#1b1f2a">can only say no · the owner is never limited</text>
+
+      <rect x="20" y="322" width="860" height="66" rx="10" fill="#e8eefe" stroke="#2f5bea" stroke-width="2"/>
+      <text x="40" y="345" font-weight="700" fill="#2f5bea">Core · StrategyAccount  (an ERC-7579 account)</text>
+      <text x="40" y="364" fill="#1b1f2a">holds USDC and stocks · runs what the owner or an installed executor asks · calls the hook around every execution</text>
+      <text x="40" y="381" fill="#1b1f2a">emergencyWithdraw and forceUninstall: no module can lock the owner out</text>
+
+      <rect x="20" y="402" width="270" height="58" rx="10" fill="#e8eefe" stroke="#2f5bea"/>
+      <text x="36" y="425" font-weight="700" fill="#2f5bea">Registry · StockRegistry</text>
+      <text x="36" y="444" fill="#1b1f2a">which tokens, pools, routers</text>
+      <rect x="305" y="402" width="270" height="58" rx="10" fill="#e8eefe" stroke="#2f5bea"/>
+      <text x="321" y="425" font-weight="700" fill="#2f5bea">Pricing · PoolPricing</text>
+      <text x="321" y="444" fill="#1b1f2a">price only if close to its average</text>
+      <rect x="590" y="402" width="290" height="58" rx="10" fill="#e8eefe" stroke="#2f5bea"/>
+      <text x="606" y="425" font-weight="700" fill="#2f5bea">Venue · Aerodrome Slipstream</text>
+      <text x="606" y="444" fill="#1b1f2a">the swap itself, one trade at a time</text>
+    </g>
+  </svg>
+  <div class="cap">Triggers (Reactive contracts that start an exit from a pool event) sit beside these. The stop-loss pair exists for classic Aerodrome pools; the vault's own triggers are designed, not built.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="account">
+  <h2>The account: a host with typed plugin slots</h2>
+  <p class="lead">The vault is an <b>ERC-7579</b> account. Modules are installed and removed by the owner, and each has a type. That is the plugin system: nothing else needs to change when one is added.</p>
+
+  <div class="fig">
+  <svg viewBox="0 0 900 360" role="img" aria-label="The account and its modules">
+    <rect x="260" y="20" width="380" height="320" rx="16" fill="#e8eefe" stroke="#2f5bea" stroke-width="2"/>
+    <text x="450" y="48" text-anchor="middle" font-weight="700" fill="#2f5bea">StrategyAccount</text>
+    <text x="450" y="68" text-anchor="middle" font-size="12" fill="#5d6578">holds the money · owner = the person</text>
+
+    <rect x="285" y="86" width="330" height="56" rx="10" fill="#fff" stroke="#7a3fc4"/>
+    <text x="450" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#7a3fc4">executor slot(s)   type 2</text>
+    <text x="450" y="128" text-anchor="middle" font-size="12" fill="#1b1f2a">StrategyExecutor · any more you install</text>
+
+    <rect x="285" y="154" width="330" height="56" rx="10" fill="#fff" stroke="#7a3fc4"/>
+    <text x="450" y="176" text-anchor="middle" font-size="13" font-weight="700" fill="#7a3fc4">hook slot   type 4</text>
+    <text x="450" y="196" text-anchor="middle" font-size="12" fill="#1b1f2a">TradeGuard · sees every execution first</text>
+
+    <rect x="285" y="222" width="330" height="40" rx="10" fill="#f5f6fa" stroke="#c9cedb" stroke-dasharray="4 3"/>
+    <text x="450" y="247" text-anchor="middle" font-size="12" fill="#5d6578">validator (1) and fallback (3): not yet</text>
+
+    <rect x="285" y="276" width="330" height="48" rx="10" fill="#fbe9e9" stroke="#c23a3a"/>
+    <text x="450" y="297" text-anchor="middle" font-size="12" font-weight="700" fill="#c23a3a">the owner's way out · no module can touch it</text>
+    <text x="450" y="314" text-anchor="middle" font-size="12" fill="#1b1f2a">emergencyWithdraw · forceUninstall</text>
+
+    <rect x="20" y="40" width="190" height="56" rx="10" fill="#fdf0e0" stroke="#b8620a"/>
+    <text x="115" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#b8620a">Owner</text>
+    <text x="115" y="82" text-anchor="middle" font-size="12" fill="#1b1f2a">install · remove · withdraw</text>
+    <line x1="210" y1="68" x2="285" y2="68" stroke="#5d6578" stroke-width="1.5"/>
+
+    <rect x="20" y="130" width="190" height="56" rx="10" fill="#fdf0e0" stroke="#b8620a"/>
+    <text x="115" y="154" text-anchor="middle" font-size="13" font-weight="700" fill="#b8620a">Keeper (the app)</text>
+    <text x="115" y="172" text-anchor="middle" font-size="12" fill="#1b1f2a">may only ask for a rebalance</text>
+
+    <rect x="690" y="86" width="190" height="56" rx="10" fill="#fff" stroke="#c9cedb"/>
+    <text x="785" y="110" text-anchor="middle" font-size="13" font-weight="700">Router</text>
+    <text x="785" y="128" text-anchor="middle" font-size="12" fill="#5d6578">swaps, one trade at a time</text>
+    <line x1="615" y1="114" x2="690" y2="114" stroke="#5d6578" stroke-width="1.5"/>
+
+    <rect x="20" y="220" width="190" height="56" rx="10" fill="#fff" stroke="#c9cedb"/>
+    <text x="115" y="244" text-anchor="middle" font-size="13" font-weight="700">Anyone else</text>
+    <text x="115" y="262" text-anchor="middle" font-size="12" fill="#c23a3a">refused: NotOwner / NotExecutor</text>
+  </svg>
+  <div class="cap">The keeper does not call the account. It asks the executor module, and the module asks the account, so the keeper key can do one thing only.</div>
+  </div>
+
+  <div class="callout warn"><b>Honest limits of the reference account.</b> It is for simulated stocks and testnets and is not audited. It has no ERC-4337 yet (the owner calls it directly), no validators, one hook slot. Production should use an audited ERC-7579 account (Safe with Safe7579, as Zyfai does, or Nexus). Every module here is written to the standard's interfaces, so it moves with no change.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="rules">
+  <h2>Rules: every rule is a module, deployed with the vault, each placed on its own</h2>
+  <p class="lead">A rule is an id, a placement and a value. The placement is chosen per rule, and that includes the limits. <b>A rule is on-chain exactly when its module is attached to the vault</b>: there is no list of rules inside the guard. Add a kind of rule by writing one small contract; the core never changes.</p>
+
+  <div class="grid">
+    <div class="card"><h4><span class="tag on">on-chain</span> a guarantee</h4><p>Its module is attached to the vault. It refuses what breaks it, whoever asks, the app included.</p></div>
+    <div class="card"><h4><span class="tag offc">off-chain</span> a promise</h4><p>The app keeps it. It is written into the vault's record (with the hash of its function, if it has one) so it can be checked, but nothing onchain stops a breach.</p></div>
+    <div class="card"><h4><span class="tag bo">both</span> belt and braces</h4><p>The module is attached and the app keeps it too. The app can stop short of the chain's limit; the chain catches the app if it ever does not.</p></div>
+  </div>
+
+  <h3>How a rule gets onto a vault</h3>
+  <div class="fig">
+  <svg viewBox="0 0 900 250" role="img" aria-label="The factory attaches rule modules to the guard">
+    <defs><marker id="r1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5d6578"/></marker></defs>
+    <g font-size="13">
+      <rect x="20" y="20" width="190" height="64" rx="10" fill="#f5f6fa" stroke="#c9cedb"/><text x="115" y="46" text-anchor="middle" font-weight="700">The vault's rules</text><text x="115" y="66" text-anchor="middle" font-size="12" fill="#5d6578">kind · placement · value · data</text>
+      <rect x="20" y="110" width="190" height="64" rx="10" fill="#fff" stroke="#2f5bea" stroke-width="2"/><text x="115" y="136" text-anchor="middle" font-weight="700" fill="#2f5bea">StrategyVaultFactory</text><text x="115" y="156" text-anchor="middle" font-size="12" fill="#5d6578">on-chain or both: attach</text>
+      <path d="M115 84 V110" stroke="#5d6578" marker-end="url(#r1)" fill="none"/>
+      <rect x="280" y="110" width="190" height="64" rx="10" fill="#fff" stroke="#2f5bea" stroke-width="2"/><text x="375" y="136" text-anchor="middle" font-weight="700" fill="#2f5bea">TradeGuard (hook)</text><text x="375" y="156" text-anchor="middle" font-size="12" fill="#5d6578">asks each attached module</text>
+      <path d="M210 142 H280" stroke="#5d6578" marker-end="url(#r1)" fill="none"/>
+      <rect x="540" y="14" width="170" height="40" rx="8" fill="#f1e9fb" stroke="#7a3fc4"/><text x="625" y="39" text-anchor="middle">MaxWeightRule</text>
+      <rect x="540" y="62" width="170" height="40" rx="8" fill="#f1e9fb" stroke="#7a3fc4"/><text x="625" y="87" text-anchor="middle">SlippageRule · default on</text>
+      <rect x="540" y="110" width="170" height="40" rx="8" fill="#f1e9fb" stroke="#7a3fc4"/><text x="625" y="135" text-anchor="middle">AllOf( A , B , Not C )</text>
+      <rect x="540" y="158" width="170" height="40" rx="8" fill="#fdf0e0" stroke="#b8620a"/><text x="625" y="183" text-anchor="middle">OffChain · market-open</text>
+      <rect x="540" y="206" width="170" height="34" rx="8" fill="#f1e9fb" stroke="#7a3fc4" stroke-dasharray="4 3"/><text x="625" y="228" text-anchor="middle" fill="#5d6578">your own kind…</text>
+      <path d="M470 135 C 505 135, 505 34, 540 34" stroke="#7a3fc4" fill="none"/><path d="M470 137 C 505 137, 505 82, 540 82" stroke="#7a3fc4" fill="none"/><path d="M470 142 H540" stroke="#7a3fc4" fill="none"/><path d="M470 148 C 505 148, 505 178, 540 178" stroke="#b8620a" fill="none"/><path d="M470 152 C 505 152, 505 223, 540 223" stroke="#7a3fc4" fill="none" stroke-dasharray="4 3"/>
+      <rect x="745" y="60" width="140" height="120" rx="10" fill="#fff" stroke="#c9cedb"/><text x="815" y="86" text-anchor="middle" font-weight="700">Each module</text>
+      <text x="815" y="108" text-anchor="middle" font-size="12" fill="#5d6578">keeps one value per</text><text x="815" y="124" text-anchor="middle" font-size="12" fill="#5d6578">caller and account,</text><text x="815" y="140" text-anchor="middle" font-size="12" fill="#5d6578">judges a swap or the</text><text x="815" y="156" text-anchor="middle" font-size="12" fill="#5d6578">portfolio, and can</text><text x="815" y="172" text-anchor="middle" font-size="12" fill="#5d6578">only refuse</text>
+      <path d="M710 120 H745" stroke="#5d6578" marker-end="url(#r1)" fill="none"/>
+    </g>
+  </svg>
+  </div>
+
+  <h3>Rules that chain</h3>
+  <p class="lead">A composite rule is itself a module that holds other modules, so rules combine to any depth. Each module keeps its value per caller, so a composite attaching a child cannot change what the guard gave it.</p>
+  <table>
+    <tr><th>Composite</th><th>Holds when</th><th>Example</th></tr>
+    <tr><td><code>AllOfRule</code> (AND)</td><td>every rule inside holds</td><td>market open <b>and</b> VIX under 30</td></tr>
+    <tr><td><code>AnyOfRule</code> (OR)</td><td>at least one holds</td><td>no earnings within 3 days <b>or</b> the position is under 5%</td></tr>
+    <tr><td><code>NotRule</code></td><td>the rule inside would refuse</td><td>refuse while a halt flag is on</td></tr>
+    <tr><td><code>WhenRule</code></td><td>the inside holds, but only while a condition is true (the same conditions strategy blocks use)</td><td>max 20% in a stock, but only while the market is down</td></tr>
+  </table>
+
+  <h3>Where each rule can go today</h3>
+  <table>
+    <tr><th>Rule</th><th>Can be on-chain?</th><th>Enforced by</th></tr>
+    <tr><td>Budget</td><td><span class="tag on">yes</span></td><td>the executor (it never invests more)</td></tr>
+    <tr><td>Max weight of one stock</td><td><span class="tag on">yes</span></td><td><code>MaxWeightRule</code>, checked after every executor action</td></tr>
+    <tr><td>Min pool depth</td><td><span class="tag on">yes</span></td><td><code>MinLiquidityRule</code></td></tr>
+    <tr><td>Slippage</td><td><span class="tag on">yes</span></td><td><code>SlippageRule</code>: on by default at 2%, a vault may tighten it; never looser than a 2% ceiling</td></tr>
+    <tr><td>Trade size vs pool depth</td><td><span class="tag on">yes</span></td><td><code>TradeSizeRule</code>: on by default at 1%, a vault may raise it to 10%</td></tr>
+    <tr><td>Anything worked out off-chain (ten built)</td><td><span class="tag bo">yes</span></td><td><code>OffChainRule</code>: see the next section</td></tr>
+    <tr><td>Stop-loss · take-profit · portfolio stop</td><td><span class="tag no">not yet</span></td><td>needs a trigger (a Reactive contract). Until then: off-chain only.</td></tr>
+    <tr><td>Ask before trading</td><td><span class="tag no">not yet</span></td><td>needs the owner's OK on each trade. Off-chain only.</td></tr>
+    <tr><td>Any new kind</td><td><span class="tag pl">any</span></td><td>write a module, hand it to the factory (<code>extraRulePlugins</code>)</td></tr>
+  </table>
+  <p class="why"><b>Why modules and not a list in the guard:</b> a list inside the guard means every new kind of rule changes the part that holds the money, and the guard has to name what it enforces (which is what a hard-coded list of ids was, and it was removed). Now a vault enforces what its attached modules enforce, and nothing else claims it.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="offchain">
+  <h2>Off-chain rules: a function, a hash, and a number the chain reads back</h2>
+  <p class="lead">Some rules need data no chain has: a sector, an earnings date, a market's hours, a correlation. They are still enforceable. Each is <b>one function with its full text</b>. The hash of the text is committed to on-chain. The app runs the function and posts the result; the module reads it and refuses a trade that breaks the vault's limit. It reads both ways: the app reads the rules from the chain, and the chain reads the app's results back.</p>
+
+  <div class="fig">
+  <svg viewBox="0 0 900 190" role="img" aria-label="How an off-chain rule works">
+    <defs><marker id="o1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5d6578"/></marker></defs>
+    <g font-size="13">
+      <rect x="10" y="20" width="150" height="70" rx="10" fill="#fdf0e0" stroke="#b8620a"/><text x="85" y="46" text-anchor="middle" font-weight="700" fill="#b8620a">1 · The spec</text><text x="85" y="66" text-anchor="middle" font-size="12" fill="#5d6578">the full text of the</text><text x="85" y="80" text-anchor="middle" font-size="12" fill="#5d6578">function, with units</text>
+      <rect x="190" y="20" width="150" height="70" rx="10" fill="#e8eefe" stroke="#2f5bea"/><text x="265" y="46" text-anchor="middle" font-weight="700" fill="#2f5bea">2 · The hash</text><text x="265" y="66" text-anchor="middle" font-size="12" fill="#5d6578">keccak256(spec) is the</text><text x="265" y="80" text-anchor="middle" font-size="12" fill="#5d6578">rule's kind and channel</text>
+      <rect x="370" y="20" width="150" height="70" rx="10" fill="#fdf0e0" stroke="#b8620a"/><text x="445" y="46" text-anchor="middle" font-weight="700" fill="#b8620a">3 · The app</text><text x="445" y="66" text-anchor="middle" font-size="12" fill="#5d6578">computes it from real</text><text x="445" y="80" text-anchor="middle" font-size="12" fill="#5d6578">data, posts the result</text>
+      <rect x="550" y="20" width="150" height="70" rx="10" fill="#e8eefe" stroke="#2f5bea"/><text x="625" y="46" text-anchor="middle" font-weight="700" fill="#2f5bea">4 · The board</text><text x="625" y="66" text-anchor="middle" font-size="12" fill="#5d6578">fresh, ordered, within</text><text x="625" y="80" text-anchor="middle" font-size="12" fill="#5d6578">limits; keeps evidence</text>
+      <rect x="730" y="20" width="160" height="70" rx="10" fill="#f1e9fb" stroke="#7a3fc4"/><text x="810" y="46" text-anchor="middle" font-weight="700" fill="#7a3fc4">5 · The module</text><text x="810" y="66" text-anchor="middle" font-size="12" fill="#5d6578">result vs the vault's</text><text x="810" y="80" text-anchor="middle" font-size="12" fill="#5d6578">limit: refuse or pass</text>
+      <path d="M160 55 H190" stroke="#5d6578" marker-end="url(#o1)" fill="none"/><path d="M340 55 H370" stroke="#5d6578" marker-end="url(#o1)" fill="none"/><path d="M520 55 H550" stroke="#5d6578" marker-end="url(#o1)" fill="none"/><path d="M700 55 H730" stroke="#5d6578" marker-end="url(#o1)" fill="none"/>
+      <rect x="10" y="118" width="880" height="56" rx="10" fill="#f5f6fa" stroke="#c9cedb"/>
+      <text x="26" y="142" font-weight="700">Fails closed.</text><text x="120" y="142" fill="#5d6578">No result, or a stale one, refuses the trade. No trade passes on a number that is not there.</text>
+      <text x="26" y="162" font-weight="700">What it cannot know.</text><text x="170" y="162" fill="#5d6578">That the number is right. The hash and the evidence let anyone recompute it.</text>
+    </g>
+  </svg>
+  </div>
+
+  <h3>The ten</h3>
+  <p class="why">Hover a hash for the whole of it. The full text of each function, and its channel, is in <code>docs/offchain-rules.md</code>, generated from the contract.</p>
+  <table>
+    <tr><th>Function</th><th>What it is</th><th>Judges</th><th>Result is about</th><th>Holds when</th><th>Hash</th></tr>
+    <tr><td><code>sector-cap</code></td><td>The largest share of the vault&#x27;s value held in one sector, in bps</td><td>the portfolio after every rebalance</td><td>one vault</td><td><code>&lt;=</code> limit</td><td><code title="0xbcfd1babee51bde2f100094129dc872a827b27f10b6ae4dd37c0d331fd06ff7f">0xbcfd1bab…ff7f</code></td></tr>
+    <tr><td><code>earnings-blackout</code></td><td>Whole days until the stock&#x27;s underlying next reports earnings</td><td>each buy</td><td>one stock, for every vault</td><td><code>&gt;=</code> limit</td><td><code title="0x25579517b8a5ee654a203c404ec960dc896caac47d609fc5368a4e51c1ab0b9a">0x25579517…0b9a</code></td></tr>
+    <tr><td><code>market-open</code></td><td>1 when the stock&#x27;s underlying market is open now, otherwise 0</td><td>each buy</td><td>one stock, for every vault</td><td><code>&gt;=</code> limit</td><td><code title="0x70bebb5ceba779fa5c737a52bb1785b94fb7cf12e9dfd965ee5362723512aa0f">0x70bebb5c…aa0f</code></td></tr>
+    <tr><td><code>portfolio-beta</code></td><td>The vault&#x27;s beta against the S&amp;P 500, 1e6</td><td>the portfolio after every rebalance</td><td>one vault</td><td><code>&lt;=</code> limit</td><td><code title="0x9f91e72a78fde150375e174a316e847131edec2dd38ec6fbb9f5792a211f9d63">0x9f91e72a…9d63</code></td></tr>
+    <tr><td><code>volatility-regime</code></td><td>The level of the VIX, 1e6</td><td>each buy</td><td>the whole market</td><td><code>&lt;=</code> limit</td><td><code title="0x8eefd4781944d93e162c843daaaf54037b3cab60c8ecd7900a9a2a6e9672eac9">0x8eefd478…eac9</code></td></tr>
+    <tr><td><code>correlation-cap</code></td><td>The highest correlation between any two stocks the vault holds, 1e6</td><td>the portfolio after every rebalance</td><td>one vault</td><td><code>&lt;=</code> limit</td><td><code title="0xe6f654fa1fa47064e5ea681186d1af718f46d85bf89dca6b29ae61e807478e68">0xe6f654fa…8e68</code></td></tr>
+    <tr><td><code>real-drawdown</code></td><td>How far the vault&#x27;s value is below its high, in bps, at the underlying market&#x27;s prices and not the pools&#x27;</td><td>the portfolio after every rebalance</td><td>one vault</td><td><code>&lt;=</code> limit</td><td><code title="0x5e6d8b7c6953952d6ae980929a1840b87dcc86ea23efd82ee4f9907648a40f96">0x5e6d8b7c…0f96</code></td></tr>
+    <tr><td><code>trading-halt</code></td><td>1 when trading in the stock&#x27;s underlying is halted, otherwise 0</td><td>each buy</td><td>one stock, for every vault</td><td><code>&lt;=</code> limit</td><td><code title="0x71e6c694e91f0fe806d0cc6ef4d9fc19d322c0f8516b52158f97ad687c3646dd">0x71e6c694…46dd</code></td></tr>
+    <tr><td><code>holding-period</code></td><td>Whole days since the vault last bought the stock</td><td>each sell</td><td>one stock in one vault</td><td><code>&gt;=</code> limit</td><td><code title="0x95149047b37bed86ce256d56f2599bf0acbfd002eb4e3be34ee576ed71bf5904">0x95149047…5904</code></td></tr>
+    <tr><td><code>compliance</code></td><td>1 when the vault&#x27;s owner may hold the stock, otherwise 0</td><td>each buy</td><td>one stock in one vault</td><td><code>&gt;=</code> limit</td><td><code title="0xcb9174e000c7afb8bff780860cc0d723a6c4009917becbaab9b0aed5fcf9f13a">0xcb9174e0…f13a</code></td></tr>
+  </table>
+
+  <div class="grid">
+    <div class="card"><h4>Change one word, change everything</h4><p>The hash, the rule's kind and the channel it reads all come from the text. A vault that names a hash cannot be attached to a module with a different one: it refuses.</p></div>
+    <div class="card"><h4>One number, many vaults</h4><p>A result about the market or one stock is posted once and judged by every vault that has the rule. A result about a vault, or its stock, is posted for that vault.</p></div>
+    <div class="card"><h4>Chains with the rest</h4><p>An off-chain rule is a module like any other, so it sits inside AND, OR, NOT and WHEN. "Buy only while the market is open and the VIX is under 30" is two of them in an <code>AllOfRule</code>.</p></div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="blocks">
+  <h2>Strategy blocks: one contract for each kind</h2>
+  <p class="lead">A strategy is a tree of contract addresses. Every block answers one question: given the numbers now, what should be held? A block only reads, so it can do no harm whatever it contains.</p>
+
+  <div class="fig">
+  <svg viewBox="0 0 900 380" role="img" aria-label="A strategy tree of blocks">
+    <g font-size="12">
+      <rect x="330" y="10" width="240" height="46" rx="10" fill="#f1e9fb" stroke="#7a3fc4"/><text x="450" y="30" text-anchor="middle" font-weight="700" fill="#7a3fc4">RebalanceBlock</text><text x="450" y="46" text-anchor="middle" fill="#5d6578">weekly · drift 5%  (a policy)</text>
+      <line x1="450" y1="56" x2="450" y2="82" stroke="#5d6578"/>
+      <rect x="330" y="82" width="240" height="46" rx="10" fill="#f1e9fb" stroke="#7a3fc4"/><text x="450" y="102" text-anchor="middle" font-weight="700" fill="#7a3fc4">IfBlock</text><text x="450" y="118" text-anchor="middle" fill="#5d6578">price above its 200-day average?</text>
+      <line x1="390" y1="128" x2="230" y2="170" stroke="#5d6578"/><line x1="510" y1="128" x2="680" y2="170" stroke="#5d6578"/>
+      <text x="290" y="146" fill="#1c8a5c">true</text><text x="620" y="146" fill="#c23a3a">false</text>
+      <rect x="40" y="170" width="380" height="46" rx="10" fill="#f1e9fb" stroke="#7a3fc4"/><text x="230" y="190" text-anchor="middle" font-weight="700" fill="#7a3fc4">FilterBlock</text><text x="230" y="206" text-anchor="middle" fill="#5d6578">top 2 of 4 by 126-day return · steadier ones get more</text>
+      <rect x="600" y="170" width="160" height="46" rx="10" fill="#f1e9fb" stroke="#7a3fc4"/><text x="680" y="190" text-anchor="middle" font-weight="700" fill="#7a3fc4">CashBlock</text><text x="680" y="206" text-anchor="middle" fill="#5d6578">hold nothing</text>
+
+            <rect x="40" y="260" width="380" height="50" rx="10" fill="#f5f6fa" stroke="#c9cedb"/>
+      <text x="230" y="280" text-anchor="middle" font-weight="700">Readings it asks for</text>
+      <text x="230" y="298" text-anchor="middle" fill="#5d6578">return(126d) · volatility(60d) of each candidate</text>
+      <line x1="230" y1="216" x2="230" y2="260" stroke="#c9cedb" stroke-dasharray="4 3"/>
+
+      <rect x="470" y="260" width="390" height="50" rx="10" fill="#e2f5ec" stroke="#1c8a5c"/>
+      <text x="665" y="280" text-anchor="middle" font-weight="700" fill="#1c8a5c">SignalBoard  (via FreshReadings)</text>
+      <text x="665" y="298" text-anchor="middle" fill="#5d6578">the app's numbers · a stale one stops the whole run</text>
+      <line x1="420" y1="285" x2="470" y2="285" stroke="#1c8a5c"/>
+
+      <text x="450" y="352" text-anchor="middle" font-size="13" fill="#1b1f2a">the answer: a list of (stock, share in basis points). What is left over is cash.</text>
+    </g>
+  </svg>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h4>Leaves</h4><p><code>AssetBlock</code> holds one stock whole. <code>CashBlock</code> holds nothing.</p></div>
+    <div class="card"><h4>Groups</h4><p><code>EqualGroup</code>, <code>SpecifiedGroup</code> (shares given), <code>InverseVolatilityGroup</code> (the steadier child gets more). A stock in two children has its shares added.</p></div>
+    <div class="card"><h4>Logic</h4><p><code>IfBlock</code> (one branch or the other), <code>FilterBlock</code> (top or bottom N by an indicator), <code>RebalanceBlock</code> (adds a policy: how often, and how far a stock may drift).</p></div>
+    <div class="card"><h4>Conditions</h4><p><code>ComparisonCondition</code> (a reading against another or a number), <code>AllCondition</code>, <code>AnyCondition</code>.</p></div>
+  </div>
+  <p class="why"><b>Why a contract each:</b> a block is a plugin. It is audited alone, reused by any strategy that points at it, and added later without touching the vault. A tree of addresses can be read, forked and checked by anyone: the same readings give the same answer for everyone. <b>Turned down:</b> one interpreter contract reading an encoded tree (one big thing to audit, changed by every new block type), and working it out in the app (then nothing onchain says why).</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="flow">
+  <h2>One rebalance, step by step</h2>
+  <p class="lead">This is flow 27 from the traced run: "top 2 weighted by steadiness", every rule on-chain, after NVDA doubled. It is the real call order from the test's trace.</p>
+
+  <div class="fig">
+  <svg viewBox="0 0 900 640" role="img" aria-label="Sequence of one rebalance">
+    <g font-size="12">
+      <g font-weight="700" text-anchor="middle">
+        <rect x="10" y="8" width="110" height="30" rx="8" fill="#fdf0e0" stroke="#b8620a"/><text x="65" y="28" fill="#b8620a">Keeper (app)</text>
+        <rect x="170" y="8" width="120" height="30" rx="8" fill="#f1e9fb" stroke="#7a3fc4"/><text x="230" y="28" fill="#7a3fc4">Executor</text>
+        <rect x="340" y="8" width="120" height="30" rx="8" fill="#f1e9fb" stroke="#7a3fc4"/><text x="400" y="28" fill="#7a3fc4">Blocks</text>
+        <rect x="510" y="8" width="120" height="30" rx="8" fill="#e8eefe" stroke="#2f5bea"/><text x="570" y="28" fill="#2f5bea">Account</text>
+        <rect x="680" y="8" width="100" height="30" rx="8" fill="#f1e9fb" stroke="#7a3fc4"/><text x="730" y="28" fill="#7a3fc4">Guard</text>
+        <rect x="790" y="8" width="100" height="30" rx="8" fill="#fff" stroke="#c9cedb"/><text x="840" y="28">Router</text>
+      </g>
+      <g stroke="#c9cedb" stroke-dasharray="3 4"><line x1="65" y1="38" x2="65" y2="620"/><line x1="230" y1="38" x2="230" y2="620"/><line x1="400" y1="38" x2="400" y2="620"/><line x1="570" y1="38" x2="570" y2="620"/><line x1="730" y1="38" x2="730" y2="620"/><line x1="840" y1="38" x2="840" y2="620"/></g>
+      <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1b1f2a"/></marker></defs>
+      <g stroke="#1b1f2a" fill="none" marker-end="url(#b)">
+        <line x1="65" y1="66" x2="228" y2="66"/>
+        <line x1="230" y1="104" x2="230" y2="104"/>
+        <line x1="230" y1="140" x2="398" y2="140"/>
+        <line x1="230" y1="214" x2="228" y2="214"/>
+        <line x1="230" y1="260" x2="568" y2="260"/>
+        <line x1="570" y1="296" x2="728" y2="296"/>
+        <line x1="570" y1="408" x2="838" y2="408"/>
+        <line x1="570" y1="468" x2="838" y2="468"/>
+        <line x1="570" y1="540" x2="728" y2="540"/>
+      </g>
+      <g fill="#1b1f2a">
+        <text x="72" y="58">1  rebalance(account)</text>
+        <text x="236" y="98">2  who asks? the owner, or the keeper while its key is live</text>
+        <text x="236" y="134">3  balances + registry + pool price (only if near its average)</text>
+        <text x="236" y="158">4  evaluate(readings)  →  ask each block</text>
+        <text x="406" y="176">filter reads return(126d), volatility(60d) from the board</text>
+        <text x="406" y="194">← [stock A 3333, stock B 6666]</text>
+        <text x="236" y="236">5  policy due?   targets clamped to max weight, budget, a slippage's width</text>
+        <text x="236" y="254">6  build the trades: sells first, then buys, each sized to the pool</text>
+        <text x="236" y="276">7  executeFromExecutor(batch)</text>
+        <text x="576" y="290">8  preCheck: every call</text>
+        <text x="736" y="316">address? function? recipient = account?</text>
+        <text x="736" y="334">stock allowed? fair price floor?</text>
+        <text x="736" y="352">pool deep enough? buy ≤ 1% of depth?</text>
+        <text x="736" y="370" fill="#c23a3a">any no: nothing runs</text>
+        <text x="576" y="402">9  approve router → swap → approve 0</text>
+        <text x="576" y="462">9  …for each trade</text>
+        <text x="576" y="498" fill="#5d6578">sold stock → USDC funds the buys</text>
+        <text x="576" y="534">10  postCheck</text>
+        <text x="736" y="560">no permission left with a router</text>
+        <text x="736" y="578">no stock over its share of the vault</text>
+        <text x="736" y="596" fill="#c23a3a">either fails: it all undoes</text>
+      </g>
+    </g>
+  </svg>
+  <div class="cap">Step 8 happens before anything runs; step 10 after. Both are the guard's. The executor and the guard compute the same things independently: the 100 flows check that they never disagree.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="guard">
+  <h2>What the guard refuses</h2>
+  <p class="lead">An executor, even a bad one, was given the account's full executor power in these tests (the owner installed an "evil" executor that does whatever it is told). The guard stopped each of these. Each is a test.</p>
+
+  <table>
+    <tr><th>What the executor tried</th><th>Result</th></tr>
+    <tr><td>Transfer the USDC to itself</td><td><span class="tag no">refused</span> only an approval or a swap is allowed</td></tr>
+    <tr><td>A fair swap, paid to someone else</td><td><span class="tag no">refused</span> a swap paid to someone else</td></tr>
+    <tr><td>Approve the attacker to spend USDC</td><td><span class="tag no">refused</span> an approval to something other than the stock's router</td></tr>
+    <tr><td>Approve the router, then swap nothing</td><td><span class="tag no">undone</span> a permission was left open</td></tr>
+    <tr><td>A swap that accepts any price (minimum out 0)</td><td><span class="tag no">refused</span> slippage too loose: at least 98 USDC's worth must come back (the 2% default)</td></tr>
+    <tr><td>A $20K buy in a $1M pool</td><td><span class="tag no">refused</span> a buy is at most 1% of the pool's depth</td></tr>
+    <tr><td>A token that is not on the vault's list</td><td><span class="tag no">refused</span> a stock this account may not trade</td></tr>
+    <tr><td>A single call, or a "try" batch that hides failures</td><td><span class="tag no">refused</span> only a batch that reverts on failure</td></tr>
+    <tr><td>Native value attached</td><td><span class="tag no">refused</span> no native value</td></tr>
+    <tr><td>A fair swap that puts 75% of the vault in one stock (rule: 55%)</td><td><span class="tag no">undone</span> over its share</td></tr>
+    <tr><td>A fair, ordinary trade</td><td><span class="tag bo">let through</span></td></tr>
+  </table>
+
+  <div class="callout good"><b>The owner is never limited.</b> A call that came from the owner passes, so the owner can always take their money out. And if a module goes wrong, <code>emergencyWithdraw</code> and <code>forceUninstall</code> work without calling it. Only the owner can use either.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="flows">
+  <h2>A hundred flows, run for real</h2>
+  <p class="lead">Five strategies × five placements of the rules × four markets, each deployed and run on simulated stocks, each logged. All 100 pass. Run <code>forge test --match-contract FlowTraces -vv</code> to read them, and <code>-vvvv</code> on <code>test_traceOneFlow</code> for every call.</p>
+
+  <div class="grid">
+    <div class="card"><h4>5 strategies</h4><p>equal NVDA+AAPL · top-1 by return · top-2 weighted by steadiness · NVDA if RSI&gt;70 else cash · 60/40 in a weekly-drift rebalance</p></div>
+    <div class="card"><h4>5 rule placements</h4><p>all on-chain · all off-chain · mixed limits · tight, on both · a custom kind from another module + an off-chain stop</p></div>
+    <div class="card"><h4>4 markets</h4><p>flat · NVDA doubles · NVDA halves · a price spike out of line with its average</p></div>
+  </div>
+
+  <p class="cap">Every one of the 100 flows passed these checks:</p>
+  <ol class="steps">
+    <li>The executor never builds a trade the guard refuses.</li>
+    <li>After any rebalance, no router holds a permission to take anything.</li>
+    <li>A limit placed on-chain, or on both, holds: no stock is over its share.</li>
+    <li>Only fees are lost: after a rebalance the vault is worth at least 98% of what it was just before.</li>
+    <li>The owner can always take everything out.</li>
+    <li>A pool whose price is out of line with its average is not traded in.</li>
+  </ol>
+
+  <h3>What the flows show about the placement</h3>
+  <table>
+    <tr><th>Flow</th><th>Rules</th><th>Result</th></tr>
+    <tr><td>004 · 60/40 rebalance</td><td><span class="tag on">on-chain</span> max weight 55%</td><td>NVDA 54%, AAPL 39%, cash 5%: the 60% asked for was held to the cap</td></tr>
+    <tr><td>009 · 60/40 rebalance</td><td><span class="tag offc">off-chain</span> max weight 30%</td><td>NVDA 60%, AAPL 40%: the chain does not hold the app to its promise</td></tr>
+    <tr><td>006 · top-1</td><td><span class="tag offc">all off-chain</span></td><td>97% in one stock. This is the price of an off-chain limit, and why a limit that matters should be on-chain or both.</td></tr>
+    <tr><td>015–019 · tight</td><td><span class="tag bo">both</span> 40% cap, $300 budget</td><td>no stock over 39%, the rest cash: inside the chain's 40% cap</td></tr>
+    <tr><td>003 · cash strategy</td><td><span class="tag on">on-chain</span></td><td>"nothing to do" every time: nothing wanted, nothing held, no price needed</td></tr>
+    <tr><td>075–099 · price spike</td><td>any</td><td>"price refused" (or "nothing to do" when only cash is wanted): nothing was bought at an untrusted price</td></tr>
+  </table>
+  <p class="why">Tally of the 100: 45 ran two rebalances; 23 refused on a price spike; 17 rebalanced once and had nothing more to do; 5 were not yet due; 10 held cash throughout.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="plugins">
+  <h2>Everything is a plugin</h2>
+  <p class="lead">The core stays small. What is added is a typed plugin, and a plugin can only do what its kind allows.</p>
+  <table>
+    <tr><th>Kind</th><th>Interface</th><th>Can</th><th>Cannot</th><th>Built</th></tr>
+    <tr><td>Strategy block</td><td><code>IBlock.evaluate</code></td><td>say what to hold</td><td>touch funds</td><td><span class="tag bo">12</span></td></tr>
+    <tr><td>Condition</td><td><code>ICondition.holds</code></td><td>answer a question</td><td>touch funds</td><td><span class="tag bo">9</span></td></tr>
+    <tr><td>Reading</td><td><code>IReadings.read</code></td><td>give a number, or revert</td><td>give a stale one</td><td><span class="tag bo">board + fresh</span></td></tr>
+    <tr><td>Executor module</td><td>ERC-7579 type 2</td><td>ask the account to run calls</td><td>get past the hook</td><td><span class="tag bo">1</span></td></tr>
+    <tr><td>Hook module (guard)</td><td>ERC-7579 type 4</td><td>veto a call</td><td>approve what is vetoed elsewhere</td><td><span class="tag bo">1</span></td></tr>
+    <tr><td>Rule module</td><td><code>IRulePlugin</code></td><td>refuse a swap or a portfolio; chain with AND / OR / NOT / WHEN</td><td>move or hold anything</td><td><span class="tag bo">4 + 4 composites + 10 off-chain</span></td></tr>
+    <tr><td>Registry</td><td><code>StockRegistry</code></td><td>narrow what is tradable</td><td>add anything on its own</td><td><span class="tag bo">1</span></td></tr>
+    <tr><td>Trigger</td><td>a Reactive contract</td><td>ask for an exit</td><td>make the vault sell off its own condition</td><td><span class="tag no">designed</span></td></tr>
+    <tr><td>Venue</td><td>an adapter per DEX</td><td>execute one swap</td><td>keep an allowance</td><td><span class="tag no">in the executor today</span></td></tr>
+    <tr><td>Fee</td><td>a module</td><td>charge on profit</td><td>touch principal</td><td><span class="tag no">designed</span></td></tr>
+  </table>
+  <div class="callout"><b>Not rigid:</b> every rule is a module and rule kinds are open ids; the factory takes extra rule modules and extra ERC-7579 modules; the number of stocks, a trade's size and a slippage are per-vault; blocks are addresses you can point at. What is fixed is only the safety: the owner can always withdraw, and a trade must pass the guard.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="gas">
+  <h2>What it costs</h2>
+  <p class="lead">Gas is measured by running the real contracts in tests, against mock pools and a mock router. A real Slipstream swap costs more than the mock's, so the rebalance numbers are the vault's own overhead and a floor, not a total. Change the two prices below: they are assumptions, not a quote, and Base also charges a data fee to post each transaction to Ethereum that is not in gas.</p>
+
+  <div class="fig" style="padding:16px 20px">
+    <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:end">
+      <label style="font-size:.85rem;color:var(--muted)">Gas price (gwei)<br><input id="gwei" type="number" step="0.001" value="0.01" style="font:inherit;padding:6px 8px;width:120px;border:1px solid var(--rule);border-radius:8px"></label>
+      <label style="font-size:.85rem;color:var(--muted)">ETH price (USD)<br><input id="eth" type="number" step="50" value="3000" style="font:inherit;padding:6px 8px;width:120px;border:1px solid var(--rule);border-radius:8px"></label>
+      <label style="font-size:.85rem;color:var(--muted)">Rebalances a month<br><input id="runs" type="number" step="1" value="4" style="font:inherit;padding:6px 8px;width:120px;border:1px solid var(--rule);border-radius:8px"></label>
+      <div style="font-size:.95rem">A month of rebalancing: <b id="month">—</b></div>
+    </div>
+  </div>
+
+  <h3>Steps, measured</h3>
+  <table id="steps">
+    <tr><th>Step</th><th>Gas</th><th>Cost</th><th>Who pays</th></tr>
+    <tr><td>Make a vault, default rules only</td><td data-g="2124603"></td><td class="usd"></td><td>the owner, once</td></tr>
+    <tr><td>Make a vault, 4 rules on-chain</td><td data-g="2268760"></td><td class="usd"></td><td>the owner, once</td></tr>
+    <tr><td>Rebalance, 2 buys, default rules only</td><td data-g="577438"></td><td class="usd"></td><td>the keeper (or the Reactive callback)</td></tr>
+    <tr><td>Rebalance, 2 buys, 4 rules on-chain</td><td data-g="592383"></td><td class="usd"></td><td>the keeper</td></tr>
+    <tr><td>Rebalance, 2 buys, with one off-chain rule</td><td data-g="588904"></td><td class="usd"></td><td>the keeper</td></tr>
+    <tr><td>Owner takes the funds out (<code>emergencyWithdraw</code>)</td><td data-g="28503"></td><td class="usd"></td><td>the owner</td></tr>
+    <tr><td>The app posts one result to the board</td><td data-g="72743"></td><td class="usd"></td><td>the publisher</td></tr>
+  </table>
+  <p class="why">The first result for a channel writes new storage and costs about 73,000; later ones overwrite it and cost about half. An off-chain rule about the whole market is posted once for every vault, which is why a rule's "result is about" matters to the bill.</p>
+
+  <h3>What each rule adds to a trade</h3>
+  <table id="rulecost">
+    <tr><th>Rule</th><th>Check, typical gas</th><th>Cost</th><th>Why that much</th></tr>
+    <tr><td><code>MaxWeightRule</code></td><td data-g="4326"></td><td class="usd"></td><td>reads every held stock's value once, after the batch</td></tr>
+    <tr><td><code>MinLiquidityRule</code></td><td data-g="906"></td><td class="usd"></td><td>compares a depth the guard already worked out</td></tr>
+    <tr><td><code>SlippageRule</code></td><td data-g="3114"></td><td class="usd"></td><td>one comparison per swap, plus reading its value</td></tr>
+    <tr><td><code>TradeSizeRule</code></td><td data-g="3131"></td><td class="usd"></td><td>one comparison per buy</td></tr>
+    <tr><td><code>OffChainRule</code></td><td data-g="15075"></td><td class="usd"></td><td>an external call into the board, and a read of its storage</td></tr>
+    <tr><td><code>AllOfRule</code> of two rules</td><td data-g="40592"></td><td class="usd"></td><td>its own list, then each child's call</td></tr>
+  </table>
+  <p class="why">Attaching a rule when the vault is made costs about 72,000 each for the simple ones (two storage writes and a call) and about 67,000 for an off-chain rule. Contracts are deployed once, and any number of vaults use them.</p>
+
+  <h3>Deploying the suite, once</h3>
+  <table id="deploy">
+    <tr><th>Contract</th><th>Gas</th><th>Cost</th><th>Size (limit 24,576 bytes)</th></tr>
+    <tr><td><code>StrategyVaultFactory</code></td><td data-g="3842891"></td><td class="usd"></td><td>17,960</td></tr>
+    <tr><td><code>StrategyExecutor</code></td><td data-g="3071398"></td><td class="usd"></td><td>14,541</td></tr>
+    <tr><td><code>TradeGuard</code></td><td data-g="2658237"></td><td class="usd"></td><td>12,577</td></tr>
+    <tr><td><code>StrategyAccount</code> (each vault's own copy, inside "make a vault")</td><td data-g="1599654"></td><td class="usd"></td><td>10,728</td></tr>
+    <tr><td><code>SignalBoard</code></td><td data-g="1288511"></td><td class="usd"></td><td>5,892</td></tr>
+    <tr><td><code>StockRegistry</code></td><td data-g="1206488"></td><td class="usd"></td><td>5,633</td></tr>
+    <tr><td><code>OffChainRule</code> (each of the ten)</td><td data-g="1177326"></td><td class="usd"></td><td>6,220</td></tr>
+    <tr><td><code>AllOfRule</code> · <code>AnyOfRule</code></td><td data-g="900347"></td><td class="usd"></td><td>4,059 · 4,073</td></tr>
+    <tr><td><code>MaxWeightRule</code> · <code>SlippageRule</code> · <code>TradeSizeRule</code> · <code>MinLiquidityRule</code></td><td data-g="387337"></td><td class="usd"></td><td>1,579 · 1,382 · 1,398 · 1,175</td></tr>
+  </table>
+  <div class="callout warn"><b>Not in these numbers:</b> real pools (each swap is a real Slipstream swap, which costs more than the mock), the Reactive Network's own fees (paid in its token, not in ETH), and Base's data fee. Re-measure against real Base contracts before quoting any of this.</div>
+</section>
+
+<script>
+  (function () {
+    var gwei = document.getElementById('gwei'), eth = document.getElementById('eth'), runs = document.getElementById('runs');
+    function usd(gas) {
+      var cost = gas * gwei.value * 1e-9 * eth.value;
+      return cost < 0.01 ? '< $0.01' : '$' + cost.toFixed(cost < 1 ? 3 : 2);
+    }
+    function update() {
+      document.querySelectorAll('td[data-g]').forEach(function (cell) {
+        var gas = Number(cell.dataset.g);
+        cell.textContent = gas.toLocaleString('en-US');
+        cell.parentElement.querySelector('.usd').textContent = usd(gas);
+      });
+      document.getElementById('month').textContent = usd(592383 * runs.value);
+    }
+    [gwei, eth, runs].forEach(function (input) { input.addEventListener('input', update); });
+    update();
+  })();
+</script>
+
+<!-- ============================================================ -->
+<section id="why">
+  <h2>Decisions, and why</h2>
+  <p class="why">Each says what was chosen, what was turned down, and what it costs.</p>
+
+  <h3>The app proposes; the chain disposes</h3>
+  <p class="why"><b>Why:</b> a compromised or mistaken app must not be able to lose the person's funds. <b>Turned down:</b> an executor with free rein, because the safety would rest on our server's keys.</p>
+
+  <h3>An ERC-7579 account</h3>
+  <p class="why"><b>Why:</b> typed modules installed and removed by the owner is exactly the plugin system, and it is a standard other tools understand (Zyfai builds on it). <b>Cost:</b> the reference account here is not audited and has no ERC-4337; production should use an audited one.</p>
+
+  <h3>The guard checks calls, not intentions</h3>
+  <p class="why"><b>Why:</b> an executor's calls are decoded and checked for address, function and values, the way Zyfai's gateway does. <b>A bug this found:</b> the guard first checked "approve no more than is held" before the batch ran, but a rebalance sells first and its buys are funded by the sale. It refused honest rotations. Now it checks afterwards that no permission is left open, which is stronger and has no ordering problem.</p>
+
+  <h3>Numbers come from a board</h3>
+  <p class="why"><b>Why:</b> the chain cannot see Yahoo or 126 days of history for every stock. The board is the narrowest door for off-chain data: it refuses stale, out-of-order, future-dated or wild numbers. <b>Cost:</b> the publisher can be wrong, which is why the rules still apply whatever it posts.</p>
+
+  <h3>A registry of what may be traded</h3>
+  <p class="why"><b>Why:</b> the token, the pool and the router are what an attacker would swap. They are pinned, and checked on every trade. <b>Turned down:</b> letting a strategy name any token.</p>
+
+  <h3>The owner's way out is outside the modules</h3>
+  <p class="why"><b>Why:</b> ERC-7579's own review warns that a module can lock an account. <code>emergencyWithdraw</code> and <code>forceUninstall</code> do not call any module.</p>
+
+  <h3>Simulated stocks first</h3>
+  <p class="why"><b>Why:</b> a test can put a stock at $100, then $50, make a pool shallow, or push a price out of line with its average on cue. No real market does. <b>Cost:</b> none of it has met the real Base contracts.</p>
+
+  <h3>Similar projects</h3>
+  <table>
+    <tr><th>Project</th><th>What it is</th><th>What we took</th></tr>
+    <tr><td><a href="http://zyf.ai/">Zyfai</a></td><td>a yield agent on a Safe + ERC-7579 account</td><td>proposal vs execution, a registry check of address / function / values, a scoped key, soft and hard limits, exits without approval</td></tr>
+    <tr><td><a href="https://eips.ethereum.org/EIPS/eip-7579">ERC-7579</a></td><td>modular smart accounts</td><td>typed modules, install / uninstall, hooks before and after</td></tr>
+    <tr><td><a href="https://gnosisguild.github.io/zodiac-wiki/index.php%3Ftitle=Introduction:_Zodiac_Protocol.html">Zodiac</a></td><td>modules, modifiers and guards on a Safe</td><td>guards as a separate kind from what decides</td></tr>
+    <tr><td><a href="https://docs.enzyme.finance/enzyme-blue-protocol/architecture/release">Enzyme</a></td><td>a vault of extensions</td><td>a stack of policies, adapters per venue, fees as a plugin</td></tr>
+    <tr><td><a href="https://help.composer.trade/article/214-6-how-composer-symphonies-work">Composer</a></td><td>symphonies of blocks in a brokerage</td><td>the block vocabulary: asset, group, weight, if, filter, rebalance</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<section id="status">
+  <h2>What is built, and what is not</h2>
+  <table>
+    <tr><th>Piece</th><th>State</th></tr>
+    <tr><td>ERC-7579 interfaces + reference account</td><td><span class="tag bo">built, tested</span> not audited, no ERC-4337</td></tr>
+    <tr><td>Strategy blocks (12) and the signal board</td><td><span class="tag bo">built, tested</span></td></tr>
+    <tr><td>StockRegistry, PoolPricing</td><td><span class="tag bo">built, tested</span></td></tr>
+    <tr><td>TradeGuard (hook), StrategyExecutor (executor)</td><td><span class="tag bo">built, tested</span></td></tr>
+    <tr><td>Rule modules (4), composites (AND, OR, NOT, WHEN), ten off-chain functions with hashes, three placements, factory</td><td><span class="tag bo">built, tested</span></td></tr>
+    <tr><td>Reactive rebalance trigger; owner liquidate and close-the-vault</td><td><span class="tag no">not built yet</span> the executor already accepts the callback proxy; the trigger contract and the kill switch are next</td></tr>
+    <tr><td>100 traced flows</td><td><span class="tag bo">passing</span> 197 contract tests in all</td></tr>
+    <tr><td>Stop-loss / take-profit / portfolio stop as on-chain triggers for this vault</td><td><span class="tag no">not built</span> the vault's exit entry points exist in the older <code>StrategyVault</code>; a Slipstream watcher is needed</td></tr>
+    <tr><td>Ask-before-trading on-chain</td><td><span class="tag no">not built</span></td></tr>
+    <tr><td>ERC-4337 / validators, hook multiplexer, venue adapters, fee plugin, strategy registry and copy-following</td><td><span class="tag no">designed, not built</span></td></tr>
+    <tr><td>Against real Base contracts, and an audit</td><td><span class="tag no">not done</span> nothing here should hold real funds until both are</td></tr>
+  </table>
+</section>
+
+</main>
+
+<footer>
+  Sandworm Stocks · apps/contracts · the written reasoning for each decision is in <code>ARCHITECTURE.md</code>, the signal board's in <code>src/signals/README.md</code>.
+</footer>
+</body>
+</html>
